@@ -13,7 +13,7 @@ import unicodedata
 from datetime import date, timedelta
 from typing import Literal, Optional, TypedDict, Union
 
-from uydatos import ancap, bcu, catalogo, ibge, ideuy, indec, inia, limites, rut, salto_grande, semanas
+from uydatos import ancap, bcu, catalogo, elecciones, ibge, ideuy, indec, inia, limites, rut, salto_grande, semanas
 
 from mcp_uruguay import cache
 
@@ -26,6 +26,7 @@ FUENTE_IBGE = "IBGE, API SIDRA, tabla 1737, variable 2266 (IPCA número-índice)
 FUENTE_ANCAP = "ANCAP, dataset ancap-precio-combustible-pe de catalogodatos.gub.uy"
 FUENTE_INIA = "INIA, Unidad GRAS, estación Salto Grande (dataset inia-precipitacion-temps-extremas-sg)"
 FUENTE_IDE = "IDE.uy, API pública de direcciones (direcciones.ide.uy)"
+FUENTE_ELECCIONES = "Corte Electoral, resultados por mesa publicados en catalogodatos.gub.uy"
 FUENTE_LIMITES = "INE: límites departamentales (vía la IDE) y localidades con población 2023 (vía el MIDES)"
 FUENTE_CTM = "Comisión Técnica Mixta de Salto Grande, web service www.saltogrande.org/ws.php"
 
@@ -997,6 +998,111 @@ def localidad(nombre: str = "", departamento: str = "", cantidad: int = 20) -> L
             "contiene, no un centroide."
         ),
         "fuente": FUENTE_LIMITES,
+        "bajado": bajado,
+    }
+
+
+# --- Elecciones ----------------------------------------------------------------------------------------
+
+
+class MesasElectorales(TypedDict):
+    comunes: int
+    de_observados: int
+
+
+class VotosPartido(TypedDict):
+    lema: str
+    votos: int
+    pct_sobre_emitidos: Optional[float]
+
+
+class VotosOpcion(TypedDict):
+    opcion: str
+    votos: int
+    pct_sobre_emitidos: Optional[float]
+
+
+class ResultadoElectoral(TypedDict):
+    """La respuesta de `resultados_electorales()`."""
+
+    eleccion: str
+    departamento: Optional[str]
+    mesas: MesasElectorales
+    habilitados: int
+    emitidos: int
+    participacion_pct: Optional[float]
+    anulados: int
+    en_blanco: int
+    observados_escrutados: int
+    partidos: list[VotosPartido]
+    opciones: list[VotosOpcion]
+    nota: str
+    fuente: str
+    bajado: str
+
+
+_elecciones: dict[tuple[str, float], list[dict]] = {}
+
+
+def _archivo_electoral(eleccion: str, archivo: str) -> tuple[list[dict], str]:
+    """Totales o desglose de una elección cerrada: se baja una vez (un año en caché) y se lee una vez."""
+    ruta = cache.directorio() / "elecciones" / f"{eleccion}_{archivo}.csv"
+    leer = elecciones.leer_totales if archivo == "totales" else elecciones.leer_desglose
+    if cache.vencido(ruta, 365 * cache.DIA):
+        cache.archivo(ruta, lambda p: elecciones.descargar(eleccion, archivo, p), leer, 365 * cache.DIA)
+    clave = (str(ruta), ruta.stat().st_mtime)
+    if clave not in _elecciones:
+        if len(_elecciones) > 6:
+            _elecciones.clear()
+        _elecciones[clave] = leer(ruta)
+    return _elecciones[clave], cache.sello(ruta)
+
+
+def resultados_electorales(eleccion: str, departamento: str = "") -> ResultadoElectoral:
+    if eleccion not in elecciones.ELECCIONES:
+        raise ValueError(f"elección {eleccion!r}: las disponibles son {', '.join(elecciones.ELECCIONES)}")
+    mesas, bajado = _archivo_electoral(eleccion, "totales")
+    try:
+        r = elecciones.resumen(mesas, departamento)
+    except elecciones.EleccionesInvalido as e:
+        raise ValueError(str(e)) from None
+    emitidos = r["emitidos"]
+
+    def pct(v: int) -> Optional[float]:
+        return round(100 * v / emitidos, 2) if emitidos else None
+
+    partidos: list[VotosPartido] = []
+    if "desglose" in elecciones.ELECCIONES[eleccion]["archivos"]:
+        desglose, _ = _archivo_electoral(eleccion, "desglose")
+        nivel = "departamental" if eleccion.startswith("departamentales") else "nacional"
+        partidos = [
+            {"lema": p["lema"], "votos": p["votos"], "pct_sobre_emitidos": pct(p["votos"])}
+            for p in elecciones.votos_por_lema(desglose, nivel, departamento)
+        ]
+    opciones: list[VotosOpcion] = [
+        {"opcion": k, "votos": v, "pct_sobre_emitidos": pct(v)}
+        for k, v in sorted(r["opciones"].items(), key=lambda kv: -kv[1])
+    ]
+    return {
+        "eleccion": eleccion,
+        "departamento": elecciones._sin_tildes(departamento) if departamento else None,
+        "mesas": {"comunes": r["mesas_comunes"], "de_observados": r["mesas_de_observados"]},
+        "habilitados": r["habilitados"],
+        "emitidos": emitidos,
+        "participacion_pct": r["participacion_pct"],
+        "anulados": r["anulados"],
+        "en_blanco": r["en_blanco"],
+        "observados_escrutados": r["escrutados_en_mesas_de_observados"],
+        "partidos": partidos,
+        "opciones": opciones,
+        "nota": (
+            "Suma de todas las mesas publicadas por la Corte, incluidas las mesas de observados (votos de quienes "
+            "votaron fuera de su circuito, escrutados aparte): es el escrutinio definitivo de los datos abiertos. "
+            "Los observados no tienen localidad, así que no se pueden repartir por barrio o localidad. Partidos: "
+            "votos por hoja más votos al lema. Los porcentajes son sobre los votos emitidos; los porcentajes "
+            "oficiales de la Corte pueden usar otra base. En las nacionales, opciones son los plebiscitos."
+        ),
+        "fuente": FUENTE_ELECCIONES,
         "bajado": bajado,
     }
 

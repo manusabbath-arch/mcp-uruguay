@@ -1,5 +1,13 @@
 # Cambios
 
+## 0.5.0 — 2026-10-10
+
+- **Nuevo: `resultados_electorales`**: nacionales 2024, balotaje 2024 y departamentales 2025, del país
+  o de un departamento, desde los datos por mesa de la Corte Electoral. Incluye los votos observados,
+  que la Corte escruta en mesas especiales sin localidad, y lo dice en cada respuesta. Porcentajes
+  sobre los votos emitidos, con ese nombre.
+- Depende de `uydatos>=0.6,<0.7`.
+
 ## 0.4.0 — 2026-10-10
 
 ### Nuevo

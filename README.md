@@ -39,6 +39,7 @@ decirlo; uno que recibe un número plausible pero falso lo repite.
 | `geocodificar_direccion` | Coordenadas de una dirección o esquina, con su calidad; descarta otra calle o el centro de la localidad | IDE.uy |
 | `ubicar_punto` | En qué departamento y localidad cae un punto, con la población 2023 de la localidad | INE, IDE.uy |
 | `localidad` | Población y viviendas 2023 de una localidad, o las de un departamento ordenadas | INE |
+| `resultados_electorales` | Nacionales 2024, balotaje 2024 y departamentales 2025: participación y votos por partido o candidato, del país o un departamento | Corte Electoral |
 | `validar_documento` | Dígito verificador de RUT o cédula | sin red |
 | `semana` | Semana ISO (`W41`) de una fecha, con su lunes y su domingo | sin red |
 | `recursos_catalogo` | Archivos vigentes de un dataset de catalogodatos.gub.uy | Catálogo de datos abiertos |
@@ -93,6 +94,7 @@ Después, preguntale al agente cosas como:
 - *"¿Hizo más calor de lo normal en Salto en enero de 2026?"*
 - *"¿El río Uruguay en Salto está alto para esta época del año?"*
 - *"¿En qué departamento cae el punto -31.10, -57.30, y cuál es el pueblo más cercano?"*
+- *"¿Cómo votó Salto en el balotaje de 2024?"*
 - *"¿Cuál es la estación meteorológica más cercana a 18 de Julio y Ejido, en Montevideo?"*
 
 ## Caché

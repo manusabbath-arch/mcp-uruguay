@@ -25,6 +25,7 @@ ESPERADAS = {
     "geocodificar_direccion",
     "ubicar_punto",
     "localidad",
+    "resultados_electorales",
     "semana",
     "recursos_catalogo",
     "diagnostico",

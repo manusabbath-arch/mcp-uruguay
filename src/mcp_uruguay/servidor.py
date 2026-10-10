@@ -165,6 +165,17 @@ def localidad(nombre: str = "", departamento: str = "", cantidad: int = 20) -> h
     return h.localidad(nombre, departamento, cantidad)
 
 
+@herramienta("Resultados electorales (Corte Electoral)", EN_RED)
+def resultados_electorales(
+    eleccion: Literal["nacionales-2024", "balotaje-2024", "departamentales-2025"], departamento: str = ""
+) -> h.ResultadoElectoral:
+    """Resultados de una elección uruguaya, del país o de un departamento: habilitados, emitidos,
+    participación, votos por partido (nacionales y departamentales) y por opción (candidatos del balotaje,
+    plebiscitos). Sale de los datos por mesa de la Corte Electoral e incluye los votos observados, que se
+    escrutan en mesas especiales sin localidad. Los porcentajes son sobre los votos emitidos."""
+    return h.resultados_electorales(eleccion, departamento)
+
+
 @herramienta("Validar RUT o cédula uruguaya", LOCAL)
 def validar_documento(numero: str, tipo: Literal["rut", "ci"]) -> h.Validacion:
     """Valida el dígito verificador de un RUT (12 dígitos) o una cédula de identidad (8 dígitos) de

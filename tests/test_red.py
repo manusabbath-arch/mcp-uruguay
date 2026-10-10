@@ -67,3 +67,9 @@ def test_ubicar_un_punto_en_el_centro_de_salto():
 def test_localidad_con_nombre_repetido():
     r = h.localidad("San Antonio")
     assert len({x["departamento"] for x in r["localidades"]}) >= 2
+
+
+def test_resultados_del_balotaje_en_salto():
+    r = h.resultados_electorales("balotaje-2024", "Salto")
+    assert r["mesas"]["comunes"] > 200 and r["participacion_pct"] > 80
+    assert len(r["opciones"]) == 2

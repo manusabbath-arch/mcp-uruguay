@@ -84,7 +84,7 @@ class TestAncap:
     def csv_en_cache(self, cache_temporal):
         cache_temporal.mkdir(parents=True, exist_ok=True)
         (cache_temporal / "ancap.csv").write_text(
-            "﻿﻿Año;Mes;Producto;Unidad;Valor\n"
+            "\ufeff\ufeffAño;Mes;Producto;Unidad;Valor\n"
             "2026;7;GASOIL 50-S *;58,68;$/lt\n"
             "2026;7;GASOIL 50-S *;58,68;$/lt\n"
             "2026;8;GASOIL 50-S *;S/C;S/C\n"

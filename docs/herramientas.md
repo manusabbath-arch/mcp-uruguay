@@ -164,6 +164,18 @@ identificador (por ejemplo `inia-precipitacion-temps-extremas-sg`).
 |---|---|---|
 | `dataset` | `string` | si |
 
+## `resultados_electorales` — Resultados electorales (Corte Electoral)
+
+Resultados de una elección uruguaya, del país o de un departamento: habilitados, emitidos,
+participación, votos por partido (nacionales y departamentales) y por opción (candidatos del balotaje,
+plebiscitos). Sale de los datos por mesa de la Corte Electoral e incluye los votos observados, que se
+escrutan en mesas especiales sin localidad. Los porcentajes son sobre los votos emitidos.
+
+| parametro | tipo | obligatorio |
+|---|---|---|
+| `eleccion` | `string` | si |
+| `departamento` | `string` | no |
+
 ## `semana` — Semana ISO de una fecha
 
 Semana ISO 8601 (W1, W2...) de una fecha AAAA-MM-DD, con su lunes y su domingo.
