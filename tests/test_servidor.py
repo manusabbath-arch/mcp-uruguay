@@ -16,8 +16,7 @@ ESPERADAS = {
     "ipc_argentina",
     "ipca_brasil",
     "combustible_ancap",
-    "clima_salto",
-    "clima_tendencia",
+    "clima",
     "estaciones_cercanas",
     "validar_documento",
     "geocodificar_direccion",
@@ -90,3 +89,17 @@ async def test_diagnostico_muestra_lo_que_hay_y_de_cuando(monkeypatch, tmp_path)
     assert archivos == ["bcu/2225_2026-10.xml"]  # el .nuevo no cuenta: es una descarga en curso
     (uno,) = r.structured_content["archivos"]
     assert uno["bytes"] == 4 and uno["bajado"]
+
+
+async def test_clima_sin_fechas_no_rompe():
+    async with Client(servidor) as c:
+        r = await c.call_tool("clima", {})
+    # no se afirma el valor (depende de internet): se afirma que contesta y que no explota
+    assert not r.is_error or "No se pudo consultar" in r.content[0].text
+
+
+async def test_clima_con_una_sola_fecha_lo_dice():
+    async with Client(servidor) as c:
+        r = await c.call_tool("clima", {"desde": "2026-01-01"})
+    assert r.is_error
+    assert "no se adivina" in r.content[0].text.lower()

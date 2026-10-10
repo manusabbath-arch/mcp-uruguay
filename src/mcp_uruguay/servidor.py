@@ -98,19 +98,15 @@ def combustible_ancap(
     return h.combustible_ancap(producto, anio, mes)
 
 
-@herramienta("Clima diario en Salto (INIA)", EN_RED)
-def clima_salto(desde: str, hasta: str) -> dict[str, Any]:
-    """Lluvia y temperaturas máxima y mínima diarias de la estación INIA Salto Grande, entre dos fechas
-    AAAA-MM-DD (hasta 400 días), con la anomalía de temperatura respecto de la normal 1971-2025.
-    Serie desde 1970."""
-    return h.clima_salto(desde, hasta)
+@herramienta("Clima en Salto Grande (INIA)", EN_RED)
+def clima(desde: str = "", hasta: str = "") -> dict[str, Any]:
+    """Clima de la estacion INIA Salto Grande, la misma serie desde 1970.
 
-
-@herramienta("Tendencia de temperatura en Salto (INIA)", EN_RED)
-def clima_tendencia() -> dict[str, Any]:
-    """Tendencia lineal de la temperatura media anual (máxima y mínima) en INIA Salto Grande, en °C por
-    década, con su error estándar."""
-    return h.clima_tendencia()
+    Sin fechas: la tendencia de la temperatura media anual, en grados Celsius por decada, con su
+    error estandar. Con `desde` y `hasta` (AAAA-MM-DD, hasta 400 dias): la lluvia y las temperaturas
+    maxima y minima de cada dia, con la anomalia respecto de la normal 1971-2025. Se pasan las dos
+    fechas o ninguna."""
+    return h.clima(desde, hasta)
 
 
 @herramienta("Estaciones hidrometeorológicas cercanas (Salto Grande)", EN_RED)

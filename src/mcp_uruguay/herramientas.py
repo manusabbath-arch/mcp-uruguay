@@ -288,6 +288,29 @@ def clima_tendencia() -> dict:
     }
 
 
+DISPONIBLES = {
+    "dias": "lluvia y temperaturas de cada dia de un rango, con la anomalia respecto de la normal",
+    "tendencia": "cuanto cambio la temperatura media anual, en grados por decada, desde 1970",
+}
+
+
+def clima(desde: str = "", hasta: str = "") -> dict:
+    """La puerta de entrada al clima de Salto Grande: dias, o tendencia. **Sale a la red.**
+
+    Con `desde` y `hasta` (AAAA-MM-DD) devuelve los dias de ese rango; sin ninguna de las dos, la
+    tendencia de la serie completa. No se pueden pasar una sola de las dos: una fecha sola no dice
+    que se quiere, y adivinarlo desde aca seria inventar el rango.
+    """
+    if bool(desde) != bool(hasta):
+        raise ValueError(
+            "clima: o van las dos fechas (`desde` y `hasta`, AAAA-MM-DD) o no va ninguna. "
+            "Una sola no alcanza: no se adivina el otro extremo."
+        )
+    if desde:
+        return clima_salto(desde, hasta)
+    return clima_tendencia()
+
+
 # --- Salto Grande --------------------------------------------------------------------------------
 
 

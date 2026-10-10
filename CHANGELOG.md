@@ -1,5 +1,13 @@
 # Cambios
 
+## Sin publicar
+
+### Cambiado
+
+- `clima_salto` y `clima_tendencia` se fusionaron en **`clima`**: sin fechas devuelve la tendencia
+  y con `desde`/`hasta` los dias. Las dos preguntan lo mismo, y tener dos herramientas parecidas
+  hace que el modelo elija mal. **Quita dos herramientas**, asi que la proxima version es 0.3.0.
+
 ## 0.2.1 — 2026-10-09
 
 - Publicado en PyPI (`uvx mcp-uruguay`) y en el registro oficial de MCP como

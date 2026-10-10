@@ -4,23 +4,19 @@
 `python -m mcp_uruguay.documentar`, y `tests/test_docs.py` falla si quedo viejo.
 
 
-## `clima_salto` — Clima diario en Salto (INIA)
+## `clima` — Clima en Salto Grande (INIA)
 
-Lluvia y temperaturas máxima y mínima diarias de la estación INIA Salto Grande, entre dos fechas
-AAAA-MM-DD (hasta 400 días), con la anomalía de temperatura respecto de la normal 1971-2025.
-Serie desde 1970.
+Clima de la estacion INIA Salto Grande, la misma serie desde 1970.
+
+Sin fechas: la tendencia de la temperatura media anual, en grados Celsius por decada, con su
+error estandar. Con `desde` y `hasta` (AAAA-MM-DD, hasta 400 dias): la lluvia y las temperaturas
+maxima y minima de cada dia, con la anomalia respecto de la normal 1971-2025. Se pasan las dos
+fechas o ninguna.
 
 | parametro | tipo | obligatorio |
 |---|---|---|
-| `desde` | `string` | si |
-| `hasta` | `string` | si |
-
-## `clima_tendencia` — Tendencia de temperatura en Salto (INIA)
-
-Tendencia lineal de la temperatura media anual (máxima y mínima) en INIA Salto Grande, en °C por
-década, con su error estándar.
-
-_Sin parametros._
+| `desde` | `string` | no |
+| `hasta` | `string` | no |
 
 ## `combustible_ancap` — Precios de combustibles de ANCAP
 
