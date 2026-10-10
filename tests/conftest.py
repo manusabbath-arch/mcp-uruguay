@@ -56,3 +56,35 @@ class BcuFalso:
         contenido = xml_bcu([], status=0, codigo=104) if self.respuesta_mala else xml_bcu(datos)
         p.write_text(contenido, encoding="utf-8")
         return [p]
+
+
+class SgFalso:
+    """Reemplaza `salto_grande.descargar_datos`: una lectura cada 15 minutos con `H = altura(fecha)`."""
+
+    def __init__(self, altura=lambda f: 5.0, hasta=None):
+        self.altura, self.hasta = altura, hasta
+        self.pedidos: list[tuple[str, date, date]] = []
+
+    def __call__(self, estacion, desde, hasta, destino):
+        from datetime import datetime
+
+        self.pedidos.append((estacion, desde, hasta))
+        items, f = [], datetime.combine(desde, datetime.min.time())
+        fin = datetime.combine(hasta, datetime.min.time())
+        while f <= fin:
+            if self.hasta is None or f.date() <= self.hasta:
+                items.append(
+                    "<item><Fecha>" + f.strftime("%Y-%m-%d %H:%M:%S") + "</Fecha><P>0</P>"
+                    f"<H>{self.altura(f)}</H><Q>-999</Q></item>"
+                )
+            f += timedelta(minutes=15)
+        xml = (
+            '<?xml version="1.0" encoding="UTF-8"?>'
+            '<SOAP-ENV:Envelope xmlns:SOAP-ENV="http://schemas.xmlsoap.org/soap/envelope/" '
+            'xmlns:ns1="https://www.saltogrande.org/ws.php"><SOAP-ENV:Body><ns1:R><return>'
+            + "".join(items)
+            + "</return></ns1:R></SOAP-ENV:Body></SOAP-ENV:Envelope>"
+        )
+        Path(destino).parent.mkdir(parents=True, exist_ok=True)
+        Path(destino).write_text(xml, encoding="utf-8")
+        return Path(destino)

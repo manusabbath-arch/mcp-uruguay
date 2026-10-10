@@ -21,7 +21,7 @@ from datetime import date, datetime, timedelta
 from pathlib import Path
 from typing import Callable, TypeVar
 
-from uydatos import bcu
+from uydatos import bcu, salto_grande
 
 T = TypeVar("T")
 
@@ -75,11 +75,34 @@ def _meses(desde: date, hasta: date) -> list[date]:
     return out
 
 
+def _fin_de_mes(mes: date) -> date:
+    return (mes.replace(day=28) + timedelta(days=4)).replace(day=1) - timedelta(days=1)
+
+
+def cerrado_en_disco(ruta: Path, mes: date) -> bool:
+    """¿La copia de `mes` se bajó **después** de que el mes terminó?
+
+    Un mes bajado mientras corría tiene solo los días hasta ese momento. Cuando el mes termina, el
+    archivo ya existe y parece cerrado, pero está incompleto: hay que volver a pedirlo una vez.
+    """
+    return ruta.exists() and datetime.fromtimestamp(ruta.stat().st_mtime).date() > _fin_de_mes(mes)
+
+
+def _vigente(ruta: Path, mes: date, hoy: date, ttl_en_curso: float) -> bool:
+    """Si la copia de `mes` sirve: cerrada, o del mes en curso y todavía fresca."""
+    if not ruta.exists():
+        return False
+    if (mes.year, mes.month) == (hoy.year, hoy.month):
+        return not vencido(ruta, ttl_en_curso)
+    return cerrado_en_disco(ruta, mes)
+
+
 def bcu_serie(moneda: int, desde: date, hasta: date, hoy: date | None = None) -> tuple[dict[date, float], str]:
     """La serie diaria de una moneda entre dos fechas, bajando solo los meses que faltan.
 
-    El mes en curso se vuelve a pedir si el archivo tiene más de 3 horas. Un mes en curso sin
-    publicaciones todavía (el 1.º de enero, por ejemplo) no es un error: aporta cero días.
+    El mes en curso se vuelve a pedir si el archivo tiene más de 3 horas, y un mes bajado mientras
+    corría se vuelve a pedir una vez cerrado. Un mes en curso sin publicaciones todavía (el 1.º de
+    enero, por ejemplo) no es un error: aporta cero días.
     """
     hoy = hoy or date.today()
     if desde > hoy:
@@ -92,7 +115,7 @@ def bcu_serie(moneda: int, desde: date, hasta: date, hoy: date | None = None) ->
     for mes in _meses(desde, hasta):
         ruta = carpeta / f"{moneda}_{mes:%Y-%m}.xml"
         en_curso = (mes.year, mes.month) == (hoy.year, hoy.month)
-        if ruta.exists() and en_curso and vencido(ruta, 3 * HORA):
+        if ruta.exists() and not _vigente(ruta, mes, hoy, 3 * HORA):
             ruta.unlink()
         if not ruta.exists():
             bcu.descargar(moneda, f"{mes:%Y-%m}", f"{mes:%Y-%m}", carpeta)
@@ -106,3 +129,40 @@ def bcu_serie(moneda: int, desde: date, hasta: date, hoy: date | None = None) ->
             raise
         sellos.append(sello(ruta))
     return dict(sorted(serie.items())), min(sellos) if sellos else ""
+
+
+def sg_lecturas(estacion: str, desde: date, hasta: date, hoy: date | None = None) -> tuple[list[dict], str]:
+    """Las lecturas de una estación de Salto Grande, `desde`..`hasta` inclusive, por mes en disco.
+
+    Cada mes es un pedido (a lo sumo 31 días, el límite del servicio). Un mes cerrado no se vuelve a
+    pedir; el mes en curso vence a la media hora. Una respuesta con error no queda en la caché.
+    """
+    hoy = hoy or date.today()
+    if desde > hoy:
+        raise ValueError(f"{desde} es posterior a hoy ({hoy})")
+    hasta = min(hasta, hoy)
+    carpeta = directorio() / "salto_grande"
+    carpeta.mkdir(parents=True, exist_ok=True)
+    lecturas: list[dict] = []
+    sellos = []
+    for mes in _meses(desde, hasta):
+        ruta = carpeta / f"{estacion}_{mes:%Y-%m}.xml"
+        if not _vigente(ruta, mes, hoy, 30 * 60):
+            nueva = ruta.with_name(ruta.name + ".nuevo")
+            try:
+                salto_grande.descargar_datos(estacion, mes, _fin_de_mes(mes) + timedelta(days=1), nueva)
+                salto_grande.leer_datos(nueva)
+            except Exception:
+                nueva.unlink(missing_ok=True)
+                raise
+            nueva.replace(ruta)
+        lecturas += salto_grande.leer_datos(ruta)
+        sellos.append(sello(ruta))
+    ini = datetime.combine(desde, datetime.min.time())
+    fin = datetime.combine(hasta + timedelta(days=1), datetime.min.time())
+    vistas, unicas = set(), []
+    for f in lecturas:  # la medianoche que cierra un mes es también la que abre el siguiente
+        if ini <= f["fecha"] < fin and f["fecha"] not in vistas:
+            vistas.add(f["fecha"])
+            unicas.append(f)
+    return unicas, min(sellos) if sellos else ""

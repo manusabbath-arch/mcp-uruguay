@@ -9,6 +9,7 @@ error de la herramienta.
 
 from __future__ import annotations
 
+import unicodedata
 from datetime import date, timedelta
 from typing import Literal, Optional, TypedDict
 
@@ -527,6 +528,201 @@ def estaciones_cercanas(lat: float, lon: float, cantidad: int = 5) -> Estaciones
         "nota": "Distancia en línea recta. El servicio no declara las unidades de las variables (P, H, Q).",
         "fuente": FUENTE_CTM,
         "bajado": cache.sello(ruta),
+    }
+
+
+# --- Nivel del río (Salto Grande) ------------------------------------------------------------------
+
+ESTACION_SALTO = "A501258E"
+MAX_DIAS_RIO = 92
+PRIMER_ANIO_RIO = 2017  # desde cuándo hay lecturas en la estación Salto (medido el 10/10/2026)
+COBERTURA_MINIMA = 0.5
+
+
+def _sin_tildes(texto: str) -> str:
+    return unicodedata.normalize("NFKD", texto).encode("ascii", "ignore").decode().upper().strip()
+
+
+def _estacion(estacion: str) -> dict:
+    """Resuelve una estación por id o por nombre (sin importar tildes ni mayúsculas)."""
+    estaciones, _ = cache.archivo(
+        cache.directorio() / "salto_grande.xml",
+        salto_grande.descargar_lista,
+        salto_grande.leer_estaciones,
+        cache.DIA,
+    )
+    buscado = _sin_tildes(estacion)
+    for e in estaciones:
+        if e["id"].upper() == buscado or _sin_tildes(e["nombre"]) == buscado:
+            return e
+    parecidas = [e["nombre"] for e in estaciones if any(p in _sin_tildes(e["nombre"]) for p in buscado.split())]
+    raise ValueError(
+        f"estación {estacion!r} no existe. Parecidas: {parecidas[:10] or 'ninguna'}. "
+        "Para ver las cercanas a un punto, usar estaciones_cercanas."
+    )
+
+
+def _lecturas(estacion: dict, desde: date, hasta: date, hoy: Optional[date]) -> tuple[list[dict], str]:
+    return cache.sg_lecturas(estacion["id"], desde, hasta, hoy=hoy)
+
+
+def nivel_rio(estacion: str = "Salto", desde: str = "", hasta: str = "", hoy: Optional[date] = None) -> dict:
+    hoy_ = hoy or date.today()
+    fin = _fecha(hasta, "hasta") if hasta else hoy_
+    ini = _fecha(desde, "desde") if desde else fin - timedelta(days=13)
+    if ini > fin:
+        raise ValueError(f"desde {ini} es posterior a hasta {fin}")
+    if (fin - ini).days >= MAX_DIAS_RIO:
+        raise ValueError(f"rango demasiado largo: hasta {MAX_DIAS_RIO} días por consulta")
+    e = _estacion(estacion)
+    lecturas, bajado = _lecturas(e, ini, fin, hoy)
+    dias = salto_grande.resumen_diario(lecturas, "H")
+    con_dato = [d for d in dias if d["media"] is not None]
+    con_h = [f for f in lecturas if f["H"] is not None]
+    caudal = [f["Q"] for f in lecturas if f["Q"] is not None]
+    return {
+        "estacion": {"id": e["id"], "nombre": e["nombre"]},
+        "dias": [{**d, "dia": d["dia"].isoformat()} for d in dias],
+        "ultima_lectura": (
+            {"fecha": con_h[-1]["fecha"].strftime("%Y-%m-%d %H:%M"), "H": con_h[-1]["H"]} if con_h else None
+        ),
+        "variacion_en_el_periodo": (
+            round(con_dato[-1]["media"] - con_dato[0]["media"], 3) if len(con_dato) > 1 else None
+        ),
+        "caudal_Q_media": round(sum(caudal) / len(caudal), 1) if caudal else None,
+        "cobertura": salto_grande.cobertura(lecturas, ini, min(fin, hoy_)),
+        "nota": (
+            "H es la altura del río tal como la publica la CTM, una lectura cada 15 minutos; el servicio no "
+            "declara la unidad. variacion_en_el_periodo es la media del último día menos la del primero. "
+            "Q (caudal) es null cuando la estación no lo mide: la fuente usa -999 para 'sin dato'."
+        ),
+        "fuente": FUENTE_CTM,
+        "bajado": bajado,
+    }
+
+
+def _misma_ventana(anio: int, desde: date, hasta: date) -> tuple[date, date]:
+    """La misma ventana de calendario, corrida para que termine en `anio`. Una ventana que cruza el
+    año nuevo empieza en el anterior. El 29/02 cae en el 28/02."""
+    corrimiento = hasta.year - anio
+
+    def mover(d: date) -> date:
+        try:
+            return d.replace(year=d.year - corrimiento)
+        except ValueError:
+            return d.replace(year=d.year - corrimiento, day=28)
+
+    return mover(desde), mover(hasta)
+
+
+def nivel_rio_comparado(estacion: str = "Salto", dias: int = 7, hasta: str = "", hoy: Optional[date] = None) -> dict:
+    hoy_ = hoy or date.today()
+    if not 1 <= dias <= 31:
+        raise ValueError("dias: de 1 a 31")
+    fin = _fecha(hasta, "hasta") if hasta else hoy_
+    ini = fin - timedelta(days=dias - 1)
+    e = _estacion(estacion)
+
+    def media(desde: date, hasta_: date) -> tuple[Optional[float], float]:
+        lecturas, _ = _lecturas(e, desde, hasta_, hoy)
+        valores = [f["H"] for f in lecturas if f["H"] is not None]
+        esperadas = ((min(hasta_, hoy_) - desde).days + 1) * salto_grande.LECTURAS_POR_DIA
+        return (round(sum(valores) / len(valores), 3) if valores else None), len(valores) / esperadas
+
+    actual, cob_actual = media(ini, fin)
+    if actual is None:
+        raise ValueError(f"la estación {e['nombre']} no tiene lecturas de altura entre {ini} y {fin}")
+    anteriores, excluidos = [], []
+    for anio in range(PRIMER_ANIO_RIO, fin.year):
+        a_ini, a_fin = _misma_ventana(anio, ini, fin)
+        m, cob = media(a_ini, a_fin)
+        if m is None or cob < COBERTURA_MINIMA:
+            excluidos.append(anio)
+        else:
+            anteriores.append({"anio": anio, "desde": a_ini.isoformat(), "hasta": a_fin.isoformat(), "media": m})
+    todas = sorted([actual] + [a["media"] for a in anteriores], reverse=True)
+    return {
+        "estacion": {"id": e["id"], "nombre": e["nombre"]},
+        "actual": {
+            "desde": ini.isoformat(),
+            "hasta": fin.isoformat(),
+            "media": actual,
+            "cobertura": round(cob_actual, 3),
+        },
+        "anios_anteriores": anteriores,
+        "anios_excluidos": excluidos,
+        "posicion": {"lugar": todas.index(actual) + 1, "de": len(todas), "orden": "de mayor a menor"},
+        "nota": (
+            f"Media de la altura H en los mismos {dias} días de calendario de cada año desde {PRIMER_ANIO_RIO}. "
+            f"Un año con menos del {int(COBERTURA_MINIMA * 100)}% de las lecturas esperadas se excluye y se "
+            "lista en anios_excluidos. La primera consulta baja un mes por año y puede tardar; después queda en caché."
+        ),
+        "fuente": FUENTE_CTM,
+        "bajado": cache.sello(cache.directorio() / "salto_grande.xml"),
+    }
+
+
+# --- Variación real ----------------------------------------------------------------------------------
+
+INDICES = {
+    "UI": ("pesos uruguayos", "Unidad Indexada promedio del mes, BCU"),
+    "IPC_AR": ("pesos argentinos", "IPC nacional de Argentina, INDEC"),
+    "IPCA_BR": ("reales", "IPCA de Brasil, IBGE"),
+}
+
+
+def _indice_mensual(indice: str, meses: list[str], hoy: Optional[date]) -> tuple[dict[str, float], str, str]:
+    if indice == "UI":
+        fechas = [_mes(m, "mes") for m in meses]
+        serie, bajado = cache.bcu_serie(MONEDAS["UI"], min(fechas), _fin_de_mes(max(fechas)), hoy=hoy)
+        return {f["mes"]: f["promedio"] for f in bcu.promedio_mensual(serie)}, bajado, FUENTE_BCU
+    if indice == "IPC_AR":
+        serie, ruta = cache.archivo(cache.directorio() / "indec_ipc.json", indec.descargar, indec.leer, cache.DIA)
+        return {p_["periodo"]: p_["valor"] for p_ in serie}, cache.sello(ruta), FUENTE_INDEC
+    if indice == "IPCA_BR":
+        serie, ruta = cache.archivo(cache.directorio() / "ibge_ipca.json", ibge.descargar, ibge.leer, cache.DIA)
+        return {p_["periodo"]: p_["valor"] for p_ in serie}, cache.sello(ruta), FUENTE_IBGE
+    raise ValueError(f"indice {indice!r}: {', '.join(INDICES)}")
+
+
+def variacion_real(
+    monto_inicial: float,
+    mes_inicial: str,
+    monto_final: float,
+    mes_final: str,
+    indice: Literal["UI", "IPC_AR", "IPCA_BR"] = "UI",
+    hoy: Optional[date] = None,
+) -> dict:
+    if monto_inicial == 0:
+        raise ValueError("monto_inicial es cero: la variación no está definida")
+    if indice not in INDICES:
+        raise ValueError(f"indice {indice!r}: {', '.join(INDICES)}")
+    _mes(mes_inicial, "mes_inicial"), _mes(mes_final, "mes_final")
+    valores, bajado, fuente = _indice_mensual(indice, [mes_inicial, mes_final], hoy)
+    faltan = [m for m in (mes_inicial, mes_final) if m not in valores]
+    if faltan:
+        ultimo = max(valores) if valores else "ninguno"
+        raise ValueError(
+            f"sin {indice} para {faltan}: todavía no se publicó o está fuera de la serie (último: {ultimo})"
+        )
+    factor = valores[mes_final] / valores[mes_inicial]
+    nominal = monto_final / monto_inicial
+    moneda, descripcion = INDICES[indice]
+    pct = lambda x: round((x - 1) * 100, 4)  # noqa: E731
+    return {
+        "variacion_nominal_pct": pct(nominal),
+        "inflacion_del_periodo_pct": pct(factor),
+        "variacion_real_pct": pct(nominal / factor),
+        "monto_inicial_en_moneda_final": round(monto_inicial * factor, 2),
+        "moneda": moneda,
+        "indice": {mes_inicial: valores[mes_inicial], mes_final: valores[mes_final], "descripcion": descripcion},
+        "nota": (
+            "real = (final / inicial) / (índice final / índice inicial) - 1. monto_inicial_en_moneda_final es lo "
+            f"que valdría el monto inicial en {moneda} de {mes_final}. Con la UI, el mes en curso usa los días "
+            "publicados hasta hoy."
+        ),
+        "fuente": fuente,
+        "bajado": bajado,
     }
 
 

@@ -17,7 +17,7 @@ classifiers = [
 ]
 dependencies = [
     "mcp>=2.3,<3",
-    "uydatos>=0.2.1,<0.3",
+    "uydatos>=0.3,<0.4",
 ]
 
 [project.optional-dependencies]

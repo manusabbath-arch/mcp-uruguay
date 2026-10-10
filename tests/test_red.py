@@ -46,3 +46,13 @@ def test_clima_y_tendencia():
 def test_geocodificar_un_edificio_publico():
     r = h.geocodificar_direccion("Avenida 18 de Julio 1360", "Montevideo", "Montevideo")
     assert r["calidad"] == "puerta_exacta"
+
+
+def test_nivel_rio_en_salto():
+    r = h.nivel_rio("Salto", "2026-09-01", "2026-09-03")
+    assert len(r["dias"]) == 3 and all(d["media"] is not None for d in r["dias"])
+
+
+def test_variacion_real_con_la_ui():
+    r = h.variacion_real(100.0, "2025-09", 130.0, "2026-09")
+    assert 0 < r["inflacion_del_periodo_pct"] < 10

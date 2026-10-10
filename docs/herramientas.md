@@ -107,6 +107,31 @@ Devuelve el índice, no la inflación.
 | `desde` | `string` | si |
 | `hasta` | `string` | si |
 
+## `nivel_rio` — Nivel del río en una estación de Salto Grande
+
+Altura del río (H) en una estación de la Comisión Técnica Mixta de Salto Grande, resumida por día
+(mínimo, media y máximo), con la última lectura y cuánto subió o bajó en el período. Lecturas cada 15
+minutos. `estacion` es el nombre o el id (por defecto Salto); `desde`/`hasta` AAAA-MM-DD, hasta 92 días,
+por defecto los últimos 14. Para encontrar una estación cerca de un lugar, usar estaciones_cercanas.
+
+| parametro | tipo | obligatorio |
+|---|---|---|
+| `estacion` | `string` | no |
+| `desde` | `string` | no |
+| `hasta` | `string` | no |
+
+## `nivel_rio_comparado` — Nivel del río comparado con años anteriores
+
+¿El río está alto o bajo para la época? Media de la altura en los últimos `dias` (1 a 31) hasta
+`hasta` (por defecto hoy), comparada con los mismos días de cada año desde 2017, y en qué lugar queda.
+Los años con pocas lecturas se excluyen y se listan. La primera consulta puede tardar.
+
+| parametro | tipo | obligatorio |
+|---|---|---|
+| `estacion` | `string` | no |
+| `dias` | `integer` | no |
+| `hasta` | `string` | no |
+
 ## `pesos_constantes` — Pesos constantes con la Unidad Indexada
 
 Lleva montos en pesos corrientes de distintos meses a pesos de un mes base, deflactando con la
@@ -144,3 +169,18 @@ Uruguay. Acepta puntos, guiones y comas. No consulta a DGI: es validez aritméti
 |---|---|---|
 | `numero` | `string` | si |
 | `tipo` | `string` | si |
+
+## `variacion_real` — Variación real descontando la inflación
+
+Cuánto cambió un monto entre dos meses (AAAA-MM) en términos nominales y reales: ventas, precios,
+sueldos o alquileres. `indice`: UI para pesos uruguayos (Unidad Indexada del BCU), IPC_AR para pesos
+argentinos (INDEC), IPCA_BR para reales (IBGE). Devuelve la variación nominal, la inflación del período,
+la variación real y cuánto valdría el monto inicial en moneda del mes final.
+
+| parametro | tipo | obligatorio |
+|---|---|---|
+| `monto_inicial` | `number` | si |
+| `mes_inicial` | `string` | si |
+| `monto_final` | `number` | si |
+| `mes_final` | `string` | si |
+| `indice` | `string` | no |

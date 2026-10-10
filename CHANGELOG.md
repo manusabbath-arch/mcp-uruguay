@@ -2,6 +2,22 @@
 
 ## Sin publicar
 
+### Nuevo
+
+- **`nivel_rio`**: la altura del río en una estación de Salto Grande (por nombre o id), por día,
+  con la última lectura, cuánto subió o bajó y la cobertura de lecturas.
+- **`nivel_rio_comparado`**: los últimos días contra los mismos días de cada año desde 2017, y en
+  qué lugar quedan. El 10/10/2026 la estación Salto estaba en el nivel más alto de los 10 años.
+- **`variacion_real`**: variación nominal, inflación y variación real entre dos meses, con la UI,
+  el IPC argentino o el IPCA brasileño.
+
+### Corregido
+
+- **Un mes bajado mientras corría quedaba incompleto para siempre.** La caché del BCU lo daba por
+  cerrado apenas existía el archivo; ahora un mes se da por cerrado solo si se bajó después de
+  terminar, y si no se vuelve a pedir una vez. Aplica también a las lecturas del río.
+- Depende de `uydatos>=0.3,<0.4` (lecturas de Salto Grande).
+
 ### Cambiado
 
 - Las trece herramientas declaran los campos de su salida, y hay una guarda que impide que vuelva
