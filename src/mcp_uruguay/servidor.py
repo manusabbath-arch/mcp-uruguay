@@ -186,6 +186,39 @@ def compras_estado(anio: int, organismo: str = "", buscar: str = "", cantidad: i
     return h.compras_estado(anio, organismo, buscar, cantidad)
 
 
+@herramienta("Asistencia de legisladores (Parlamento)", EN_RED)
+def asistencia_parlamentaria(
+    camara: Literal["senado", "diputados"],
+    legislatura: int = 50,
+    nombre: str = "",
+    minimo_citaciones: int = 10,
+    cantidad: int = 10,
+) -> h.AsistenciaParlamentaria:
+    """Asistencia a sesiones del Senado o de Diputados en una legislatura (46 a 50, la actual): menor y mayor
+    asistencia entre quienes tuvieron al menos `minimo_citaciones` (para no comparar suplentes con dos citaciones),
+    y las filas que contienen `nombre`. Avisa de nombres repetidos, que pueden ser homónimos."""
+    return h.asistencia_parlamentaria(camara, legislatura, nombre, minimo_citaciones, cantidad)
+
+
+@herramienta("Leyes promulgadas (Parlamento)", EN_RED)
+def leyes(
+    buscar: str = "", desde: str = "", hasta: str = "", numero: Optional[int] = None, cantidad: int = 20
+) -> h.Leyes:
+    """Leyes promulgadas desde 1985: por texto del título (sin importar tildes), por rango de fechas AAAA-MM-DD o
+    por número. Devuelve el enlace al texto actualizado en IMPO."""
+    return h.leyes(buscar, desde, hasta, numero, cantidad)
+
+
+@herramienta("Proyectos entrados al Parlamento", EN_RED)
+def proyectos_parlamento(
+    buscar: str = "", legislatura: Optional[int] = None, tipo: str = "", cantidad: int = 20
+) -> h.ProyectosParlamento:
+    """Proyectos entrados al Parlamento desde 1985 (legislaturas 42 a 50), por texto del título, legislatura o
+    tipo («ley», «resolución», «minuta», «declaración»). Un proyecto que aparece en dos legislaturas cuenta una
+    vez. La primera búsqueda sin legislatura baja nueve archivos."""
+    return h.proyectos_parlamento(buscar, legislatura, tipo, cantidad)
+
+
 @herramienta("Validar RUT o cédula uruguaya", LOCAL)
 def validar_documento(numero: str, tipo: Literal["rut", "ci"]) -> h.Validacion:
     """Valida el dígito verificador de un RUT (12 dígitos) o una cédula de identidad (8 dígitos) de

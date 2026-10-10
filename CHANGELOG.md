@@ -1,5 +1,13 @@
 # Cambios
 
+## 0.7.0 — 2026-10-10
+
+- **Nuevas: `asistencia_parlamentaria`, `leyes` y `proyectos_parlamento`**, sobre `uydatos.parlamento`.
+  La asistencia exige un mínimo de citaciones (hay 3 a 4 veces más personas que bancas, por los
+  suplentes) y avisa de nombres repetidos, que pueden ser homónimos. Las leyes salen sin duplicados ni
+  la «ley 0», con el enlace a IMPO. Un proyecto que aparece en dos legislaturas cuenta una vez.
+- Depende de `uydatos>=0.8,<0.9`.
+
 ## 0.6.0 — 2026-10-10
 
 - **Nuevo: `compras_estado`**: cuánto adjudicó el Estado en un año, en pesos (cada moneda con la

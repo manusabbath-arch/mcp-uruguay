@@ -79,3 +79,9 @@ def test_compras_2025_con_aviso_de_concentracion():
     r = h.compras_estado(2025)
     assert r["adjudicaciones"] > 100_000 and r["total_pesos"] > 0
     assert r["mayores_items"] and r["aviso"]
+
+
+def test_parlamento_senado_actual_y_leyes():
+    r = h.asistencia_parlamentaria("senado", 50)
+    assert r["personas"] > 31 and r["menor_asistencia"]
+    assert h.leyes(numero=20531)["total"] == 1

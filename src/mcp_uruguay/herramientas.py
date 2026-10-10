@@ -11,6 +11,7 @@ from __future__ import annotations
 
 import unicodedata
 from datetime import date, timedelta
+from pathlib import Path
 from typing import Literal, Optional, TypedDict, Union
 
 from uydatos import (
@@ -24,6 +25,7 @@ from uydatos import (
     indec,
     inia,
     limites,
+    parlamento,
     rut,
     salto_grande,
     semanas,
@@ -41,6 +43,7 @@ FUENTE_ANCAP = "ANCAP, dataset ancap-precio-combustible-pe de catalogodatos.gub.
 FUENTE_INIA = "INIA, Unidad GRAS, estación Salto Grande (dataset inia-precipitacion-temps-extremas-sg)"
 FUENTE_IDE = "IDE.uy, API pública de direcciones (direcciones.ide.uy)"
 FUENTE_COMPRAS = "ARCE, compras del Estado en OCDS (dataset arce-datos-historicos-de-compras)"
+FUENTE_PARLAMENTO = "Parlamento del Uruguay, datos abiertos en catalogodatos.gub.uy"
 FUENTE_ELECCIONES = "Corte Electoral, resultados por mesa publicados en catalogodatos.gub.uy"
 FUENTE_LIMITES = "INE: límites departamentales (vía la IDE) y localidades con población 2023 (vía el MIDES)"
 FUENTE_CTM = "Comisión Técnica Mixta de Salto Grande, web service www.saltogrande.org/ws.php"
@@ -1289,6 +1292,223 @@ def compras_estado(
         ),
         "fuente": FUENTE_COMPRAS,
         "bajado": bajado,
+    }
+
+
+# --- Parlamento ----------------------------------------------------------------------------------------
+
+LEGISLATURA_ACTUAL = 50
+LEGISLATURAS_ASISTENCIA = range(46, LEGISLATURA_ACTUAL + 1)
+LEGISLATURAS_PROYECTOS = range(42, LEGISLATURA_ACTUAL + 1)
+
+
+class FilaAsistencia(TypedDict):
+    nombre: Optional[str]
+    citaciones: int
+    asistencias: int
+    faltas_con_aviso: int
+    faltas_sin_aviso: int
+    licencias: int
+    pasajes_a_presidente: int
+    pct_asistencia: Optional[float]
+
+
+class AsistenciaParlamentaria(TypedDict):
+    """La respuesta de `asistencia_parlamentaria()`."""
+
+    camara: str
+    legislatura: int
+    personas: int
+    filas_sin_nombre: int
+    nombres_repetidos: list[str]
+    minimo_citaciones: int
+    con_el_minimo: int
+    fuera_por_pocas_citaciones: int
+    menor_asistencia: list[FilaAsistencia]
+    mayor_asistencia: list[FilaAsistencia]
+    encontrados: list[FilaAsistencia]
+    nota: str
+    fuente: str
+    bajado: str
+
+
+class Ley(TypedDict):
+    numero: int
+    fecha: str
+    titulo: str
+    texto_impo: str
+    texto_parlamento: str
+    cantidad_que_cita: Optional[int]
+    cantidad_que_la_citan: Optional[int]
+
+
+class Leyes(TypedDict):
+    """La respuesta de `leyes()`."""
+
+    total: int
+    leyes: list[Ley]
+    duplicadas_descartadas: int
+    sin_numero_descartadas: int
+    nota: str
+    fuente: str
+    bajado: str
+
+
+class Proyecto(TypedDict):
+    asunto: int
+    fecha: str
+    titulo: str
+    tipo: Optional[str]
+    legislaturas: list[int]
+
+
+class ProyectosParlamento(TypedDict):
+    """La respuesta de `proyectos_parlamento()`."""
+
+    total: int
+    proyectos: list[Proyecto]
+    nota: str
+    fuente: str
+    bajado: str
+
+
+def _archivo_parlamento(clave: str, legislatura: Optional[int] = None) -> Path:
+    """Un archivo del Parlamento en caché: la legislatura en curso y las leyes vencen al día, las
+    legislaturas cerradas al año."""
+    nombre = "leyes.csv" if clave == "leyes" else f"{clave}-{legislatura}.csv"
+    ruta = cache.directorio() / "parlamento" / nombre
+    ttl = cache.DIA if clave == "leyes" or legislatura == LEGISLATURA_ACTUAL else 365 * cache.DIA
+    if cache.vencido(ruta, ttl):
+        cache.archivo(ruta, lambda p: parlamento.descargar(clave, p, legislatura), lambda p: p, ttl)
+    return ruta
+
+
+def asistencia_parlamentaria(
+    camara: str,
+    legislatura: int = LEGISLATURA_ACTUAL,
+    nombre: str = "",
+    minimo_citaciones: int = 10,
+    cantidad: int = 10,
+) -> AsistenciaParlamentaria:
+    if camara not in ("senado", "diputados"):
+        raise ValueError("camara: senado o diputados")
+    if legislatura not in LEGISLATURAS_ASISTENCIA:
+        primera = LEGISLATURAS_ASISTENCIA.start
+        raise ValueError(f"legislatura {legislatura}: hay asistencias de la {primera} a la {LEGISLATURA_ACTUAL}")
+    ruta = _archivo_parlamento(f"asistencias-{camara}", legislatura)
+    try:
+        r = parlamento.resumen_asistencias(
+            parlamento.leer_asistencias(ruta), max(0, minimo_citaciones), nombre, max(1, min(cantidad, 50))
+        )
+    except parlamento.ParlamentoInvalido as e:
+        raise ValueError(str(e)) from None
+    campos = ("menor_asistencia", "mayor_asistencia", "encontrados")
+    return {
+        "camara": camara,
+        "legislatura": legislatura,
+        **{k: v for k, v in r.items() if k not in ("citaciones_totales",)},
+        **{k: r[k] for k in campos},
+        "nota": (
+            "Hay muchas más personas que bancas: los suplentes, a veces con una o dos citaciones. El ranking solo "
+            f"incluye a quienes tuvieron al menos {minimo_citaciones} citaciones. Citaciones = asistencias + faltas "
+            "con y sin aviso; las licencias no son citaciones. El archivo no trae un identificador de persona: dos "
+            "filas con el mismo nombre (nombres_repetidos) pueden ser dos períodos de una persona o dos homónimos, "
+            "y no se unen. El porcentaje es un dato de asistencia a sesiones, no una evaluación del trabajo."
+        ),
+        "fuente": FUENTE_PARLAMENTO,
+        "bajado": cache.sello(ruta),
+    }
+
+
+def leyes(
+    buscar: str = "", desde: str = "", hasta: str = "", numero: Optional[int] = None, cantidad: int = 20
+) -> Leyes:
+    ruta = _archivo_parlamento("leyes")
+    try:
+        datos = parlamento.leer_leyes(ruta)
+    except parlamento.ParlamentoInvalido as e:
+        raise ValueError(str(e)) from None
+    txt = _sin_tildes(buscar)
+    ini = _fecha(desde, "desde") if desde else None
+    fin = _fecha(hasta, "hasta") if hasta else None
+    elegidas = [
+        x
+        for x in datos["leyes"]
+        if (numero is None or x["numero"] == numero)
+        and (not txt or txt in _sin_tildes(x["titulo"]))
+        and (ini is None or x["fecha"] >= ini)
+        and (fin is None or x["fecha"] <= fin)
+    ]
+    elegidas.sort(key=lambda x: -x["numero"])
+    return {
+        "total": len(elegidas),
+        "leyes": [
+            {
+                "numero": x["numero"],
+                "fecha": x["fecha"].isoformat(),
+                "titulo": x["titulo"],
+                "texto_impo": x["texto_impo"],
+                "texto_parlamento": x["texto_parlamento"],
+                "cantidad_que_cita": x["cantidad_que_cita"],
+                "cantidad_que_la_citan": x["cantidad_que_la_citan"],
+            }
+            for x in elegidas[: max(1, min(cantidad, 100))]
+        ],
+        "duplicadas_descartadas": datos["duplicadas"],
+        "sin_numero_descartadas": len(datos["sin_numero"]),
+        "nota": (
+            "Leyes promulgadas desde 1985, de la más nueva a la más vieja. texto_impo es el texto actualizado en "
+            "IMPO. cantidad_que_cita y cantidad_que_la_citan son cantidades de leyes relacionadas, no listas."
+        ),
+        "fuente": FUENTE_PARLAMENTO,
+        "bajado": cache.sello(ruta),
+    }
+
+
+def proyectos_parlamento(
+    buscar: str = "", legislatura: Optional[int] = None, tipo: str = "", cantidad: int = 20
+) -> ProyectosParlamento:
+    if legislatura is not None and legislatura not in LEGISLATURAS_PROYECTOS:
+        raise ValueError(
+            f"legislatura {legislatura}: hay proyectos de la {LEGISLATURAS_PROYECTOS.start} a la {LEGISLATURA_ACTUAL}"
+        )
+    legs = [legislatura] if legislatura is not None else list(LEGISLATURAS_PROYECTOS)
+    txt, tip = _sin_tildes(buscar), _sin_tildes(tipo)
+    por_asunto: dict[int, Proyecto] = {}
+    sellos = []
+    for leg in legs:
+        ruta = _archivo_parlamento("proyectos", leg)
+        sellos.append(cache.sello(ruta))
+        try:
+            filas = parlamento.leer_proyectos(ruta)
+        except parlamento.ParlamentoInvalido as e:
+            raise ValueError(str(e)) from None
+        for x in filas:
+            if txt and txt not in _sin_tildes(x["titulo"]):
+                continue
+            if tip and tip not in _sin_tildes(x["tipo"] or ""):
+                continue
+            if x["asunto"] in por_asunto:
+                por_asunto[x["asunto"]]["legislaturas"].append(leg)
+                continue
+            por_asunto[x["asunto"]] = {
+                "asunto": x["asunto"],
+                "fecha": x["fecha"].isoformat(),
+                "titulo": x["titulo"],
+                "tipo": x["tipo"],
+                "legislaturas": [leg],
+            }
+    proyectos = sorted(por_asunto.values(), key=lambda p: p["fecha"], reverse=True)
+    return {
+        "total": len(proyectos),
+        "proyectos": proyectos[: max(1, min(cantidad, 100))],
+        "nota": (
+            "Proyectos entrados al Parlamento desde 1985 (legislatura 42). Un mismo asunto puede aparecer en dos "
+            "legislaturas (311 casos medidos): se cuenta una vez y legislaturas dice en cuáles está. Que un proyecto "
+            "haya entrado no dice si se aprobó: para eso, leyes."
+        ),
+        "fuente": FUENTE_PARLAMENTO,
+        "bajado": min(sellos) if sellos else "",
     }
 
 

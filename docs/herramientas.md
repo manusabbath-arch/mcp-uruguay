@@ -4,6 +4,20 @@
 `python -m mcp_uruguay.documentar`, y `tests/test_docs.py` falla si quedo viejo.
 
 
+## `asistencia_parlamentaria` — Asistencia de legisladores (Parlamento)
+
+Asistencia a sesiones del Senado o de Diputados en una legislatura (46 a 50, la actual): menor y mayor
+asistencia entre quienes tuvieron al menos `minimo_citaciones` (para no comparar suplentes con dos citaciones),
+y las filas que contienen `nombre`. Avisa de nombres repetidos, que pueden ser homónimos.
+
+| parametro | tipo | obligatorio |
+|---|---|---|
+| `camara` | `string` | si |
+| `legislatura` | `integer` | no |
+| `nombre` | `string` | no |
+| `minimo_citaciones` | `integer` | no |
+| `cantidad` | `integer` | no |
+
 ## `clima` — Clima en Salto Grande (INIA)
 
 Clima de la estacion INIA Salto Grande, la misma serie desde 1970.
@@ -122,6 +136,19 @@ Devuelve el índice, no la inflación.
 | `desde` | `string` | si |
 | `hasta` | `string` | si |
 
+## `leyes` — Leyes promulgadas (Parlamento)
+
+Leyes promulgadas desde 1985: por texto del título (sin importar tildes), por rango de fechas AAAA-MM-DD o
+por número. Devuelve el enlace al texto actualizado en IMPO.
+
+| parametro | tipo | obligatorio |
+|---|---|---|
+| `buscar` | `string` | no |
+| `desde` | `string` | no |
+| `hasta` | `string` | no |
+| `numero` | `integer | null` | no |
+| `cantidad` | `integer` | no |
+
 ## `localidad` — Población y viviendas de una localidad (INE)
 
 Población y viviendas 2023 de una localidad uruguaya, por nombre (sin importar tildes). Si el nombre
@@ -169,6 +196,19 @@ Sirve para comparar en términos reales pesos de fechas distintas.
 |---|---|---|
 | `montos` | `object` | si |
 | `base` | `string` | si |
+
+## `proyectos_parlamento` — Proyectos entrados al Parlamento
+
+Proyectos entrados al Parlamento desde 1985 (legislaturas 42 a 50), por texto del título, legislatura o
+tipo («ley», «resolución», «minuta», «declaración»). Un proyecto que aparece en dos legislaturas cuenta una
+vez. La primera búsqueda sin legislatura baja nueve archivos.
+
+| parametro | tipo | obligatorio |
+|---|---|---|
+| `buscar` | `string` | no |
+| `legislatura` | `integer | null` | no |
+| `tipo` | `string` | no |
+| `cantidad` | `integer` | no |
 
 ## `recursos_catalogo` — Recursos de un dataset del catálogo de Uruguay
 

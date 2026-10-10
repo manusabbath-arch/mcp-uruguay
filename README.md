@@ -41,6 +41,9 @@ decirlo; uno que recibe un número plausible pero falso lo repite.
 | `localidad` | Población y viviendas 2023 de una localidad, o las de un departamento ordenadas | INE |
 | `resultados_electorales` | Nacionales 2024, balotaje 2024 y departamentales 2025: participación y votos por partido o candidato, del país o un departamento | Corte Electoral |
 | `compras_estado` | Cuánto adjudicó el Estado en un año, en pesos, por organismo o por texto, con los mayores ítems y un aviso si uno domina el total | ARCE (OCDS) |
+| `asistencia_parlamentaria` | Asistencia a sesiones del Senado o Diputados por legislatura, con un mínimo de citaciones y aviso de homónimos | Parlamento |
+| `leyes` | Leyes promulgadas desde 1985 por texto, fecha o número, con el enlace a IMPO | Parlamento |
+| `proyectos_parlamento` | Proyectos entrados desde 1985 por texto, legislatura o tipo | Parlamento |
 | `validar_documento` | Dígito verificador de RUT o cédula | sin red |
 | `semana` | Semana ISO (`W41`) de una fecha, con su lunes y su domingo | sin red |
 | `recursos_catalogo` | Archivos vigentes de un dataset de catalogodatos.gub.uy | Catálogo de datos abiertos |
@@ -97,6 +100,7 @@ Después, preguntale al agente cosas como:
 - *"¿En qué departamento cae el punto -31.10, -57.30, y cuál es el pueblo más cercano?"*
 - *"¿Cómo votó Salto en el balotaje de 2024?"*
 - *"¿Cuánto gastó el Estado en ambulancias en 2025?"*
+- *"¿Qué leyes sobre riego se aprobaron desde 2020?"*
 - *"¿Cuál es la estación meteorológica más cercana a 18 de Julio y Ejido, en Montevideo?"*
 
 ## Caché
