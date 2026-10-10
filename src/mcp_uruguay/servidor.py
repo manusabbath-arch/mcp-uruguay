@@ -117,7 +117,7 @@ def estaciones_cercanas(lat: float, lon: float, cantidad: int = 5) -> h.Estacion
 
 
 @herramienta("Nivel del río en una estación de Salto Grande", EN_RED)
-def nivel_rio(estacion: str = "Salto", desde: str = "", hasta: str = "") -> dict[str, Any]:
+def nivel_rio(estacion: str = "Salto", desde: str = "", hasta: str = "") -> h.NivelRio:
     """Altura del río (H) en una estación de la Comisión Técnica Mixta de Salto Grande, resumida por día
     (mínimo, media y máximo), con la última lectura y cuánto subió o bajó en el período. Lecturas cada 15
     minutos. `estacion` es el nombre o el id (por defecto Salto); `desde`/`hasta` AAAA-MM-DD, hasta 92 días,
@@ -126,7 +126,7 @@ def nivel_rio(estacion: str = "Salto", desde: str = "", hasta: str = "") -> dict
 
 
 @herramienta("Nivel del río comparado con años anteriores", EN_RED)
-def nivel_rio_comparado(estacion: str = "Salto", dias: int = 7, hasta: str = "") -> dict[str, Any]:
+def nivel_rio_comparado(estacion: str = "Salto", dias: int = 7, hasta: str = "") -> h.NivelRioComparado:
     """¿El río está alto o bajo para la época? Media de la altura en los últimos `dias` (1 a 31) hasta
     `hasta` (por defecto hoy), comparada con los mismos días de cada año desde 2017, y en qué lugar queda.
     Los años con pocas lecturas se excluyen y se listan. La primera consulta puede tardar."""
@@ -140,7 +140,7 @@ def variacion_real(
     monto_final: float,
     mes_final: str,
     indice: Literal["UI", "IPC_AR", "IPCA_BR"] = "UI",
-) -> dict[str, Any]:
+) -> h.VariacionReal:
     """Cuánto cambió un monto entre dos meses (AAAA-MM) en términos nominales y reales: ventas, precios,
     sueldos o alquileres. `indice`: UI para pesos uruguayos (Unidad Indexada del BCU), IPC_AR para pesos
     argentinos (INDEC), IPCA_BR para reales (IBGE). Devuelve la variación nominal, la inflación del período,

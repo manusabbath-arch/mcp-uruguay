@@ -74,7 +74,7 @@ async def test_ninguna_herramienta_publica_un_esquema_vacio():
     """
     async with Client(servidor) as c:
         herramientas = (await c.list_tools()).tools
-    assert len(herramientas) == 13
+    assert len(herramientas) == len(ESPERADAS)
     vacias = [
         t.name
         for t in herramientas
@@ -112,7 +112,9 @@ async def test_diagnostico_muestra_lo_que_hay_y_de_cuando(monkeypatch, tmp_path)
     assert uno["bytes"] == 4 and uno["bajado"]
 
 
+@pytest.mark.red
 async def test_clima_sin_fechas_no_rompe():
+    """Sale a internet: baja la serie de INIA (unos 57 archivos). Por eso va con `-m red`."""
     async with Client(servidor) as c:
         r = await c.call_tool("clima", {})
     # no se afirma el valor (depende de internet): se afirma que contesta y que no explota

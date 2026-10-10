@@ -11,7 +11,7 @@ from __future__ import annotations
 
 import unicodedata
 from datetime import date, timedelta
-from typing import Literal, Optional, TypedDict
+from typing import Literal, Optional, TypedDict, Union
 
 from uydatos import ancap, bcu, catalogo, ibge, ideuy, indec, inia, rut, salto_grande, semanas
 
@@ -533,6 +533,94 @@ def estaciones_cercanas(lat: float, lon: float, cantidad: int = 5) -> Estaciones
 
 # --- Nivel del río (Salto Grande) ------------------------------------------------------------------
 
+
+class EstacionRio(TypedDict):
+    id: str
+    nombre: str
+
+
+class DiaRio(TypedDict):
+    """Un día de lecturas de altura: mínimo, media y máximo, y cuántas lecturas con dato lo forman."""
+
+    dia: str
+    min: Optional[float]
+    media: Optional[float]
+    max: Optional[float]
+    lecturas: int
+
+
+class LecturaRio(TypedDict):
+    fecha: str
+    H: float
+
+
+class CoberturaRio(TypedDict):
+    esperadas: int
+    recibidas: int
+    con_H: int
+
+
+class NivelRio(TypedDict):
+    """La respuesta de `nivel_rio()`."""
+
+    estacion: EstacionRio
+    dias: list[DiaRio]
+    ultima_lectura: Optional[LecturaRio]
+    variacion_en_el_periodo: Optional[float]
+    caudal_Q_media: Optional[float]
+    cobertura: CoberturaRio
+    nota: str
+    fuente: str
+    bajado: str
+
+
+class VentanaActual(TypedDict):
+    desde: str
+    hasta: str
+    media: float
+    cobertura: float
+
+
+class VentanaAnterior(TypedDict):
+    anio: int
+    desde: str
+    hasta: str
+    media: float
+
+
+class Posicion(TypedDict):
+    lugar: int
+    de: int
+    orden: str
+
+
+class NivelRioComparado(TypedDict):
+    """La respuesta de `nivel_rio_comparado()`."""
+
+    estacion: EstacionRio
+    actual: VentanaActual
+    anios_anteriores: list[VentanaAnterior]
+    anios_excluidos: list[int]
+    posicion: Posicion
+    nota: str
+    fuente: str
+    bajado: str
+
+
+class VariacionReal(TypedDict):
+    """La respuesta de `variacion_real()`. `indice` trae el valor de cada mes y su descripción."""
+
+    variacion_nominal_pct: float
+    inflacion_del_periodo_pct: float
+    variacion_real_pct: float
+    monto_inicial_en_moneda_final: float
+    moneda: str
+    indice: dict[str, Union[float, str]]
+    nota: str
+    fuente: str
+    bajado: str
+
+
 ESTACION_SALTO = "A501258E"
 MAX_DIAS_RIO = 92
 PRIMER_ANIO_RIO = 2017  # desde cuándo hay lecturas en la estación Salto (medido el 10/10/2026)
@@ -566,7 +654,7 @@ def _lecturas(estacion: dict, desde: date, hasta: date, hoy: Optional[date]) -> 
     return cache.sg_lecturas(estacion["id"], desde, hasta, hoy=hoy)
 
 
-def nivel_rio(estacion: str = "Salto", desde: str = "", hasta: str = "", hoy: Optional[date] = None) -> dict:
+def nivel_rio(estacion: str = "Salto", desde: str = "", hasta: str = "", hoy: Optional[date] = None) -> NivelRio:
     hoy_ = hoy or date.today()
     fin = _fecha(hasta, "hasta") if hasta else hoy_
     ini = _fecha(desde, "desde") if desde else fin - timedelta(days=13)
@@ -615,7 +703,9 @@ def _misma_ventana(anio: int, desde: date, hasta: date) -> tuple[date, date]:
     return mover(desde), mover(hasta)
 
 
-def nivel_rio_comparado(estacion: str = "Salto", dias: int = 7, hasta: str = "", hoy: Optional[date] = None) -> dict:
+def nivel_rio_comparado(
+    estacion: str = "Salto", dias: int = 7, hasta: str = "", hoy: Optional[date] = None
+) -> NivelRioComparado:
     hoy_ = hoy or date.today()
     if not 1 <= dias <= 31:
         raise ValueError("dias: de 1 a 31")
@@ -692,7 +782,7 @@ def variacion_real(
     mes_final: str,
     indice: Literal["UI", "IPC_AR", "IPCA_BR"] = "UI",
     hoy: Optional[date] = None,
-) -> dict:
+) -> VariacionReal:
     if monto_inicial == 0:
         raise ValueError("monto_inicial es cero: la variación no está definida")
     if indice not in INDICES:
