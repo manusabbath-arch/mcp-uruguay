@@ -22,6 +22,7 @@ decirlo; uno que recibe un número plausible pero falso lo repite.
 | `clima_salto` | Lluvia y temperaturas diarias desde 1970, con la anomalía contra la normal | INIA |
 | `clima_tendencia` | Tendencia de la temperatura media anual, en °C por década | INIA |
 | `estaciones_cercanas` | Estaciones hidrometeorológicas de la cuenca del río Uruguay cerca de un punto | CTM Salto Grande |
+| `geocodificar_direccion` | Coordenadas de una dirección o esquina, con su calidad; descarta otra calle o el centro de la localidad | IDE.uy |
 | `validar_documento` | Dígito verificador de RUT o cédula | sin red |
 | `semana` | Semana ISO (`W41`) de una fecha, con su lunes y su domingo | sin red |
 | `recursos_catalogo` | Archivos vigentes de un dataset de catalogodatos.gub.uy | Catálogo de datos abiertos |
@@ -73,6 +74,7 @@ Después, preguntale al agente cosas como:
 - *"¿Cuánto valía el dólar el 4 de octubre de 2026?"*
 - *"Vendí 1.200.000 pesos en septiembre de 2025 y 1.450.000 en septiembre de 2026. ¿Cuánto crecí en términos reales?"*
 - *"¿Hizo más calor de lo normal en Salto en enero de 2026?"*
+- *"¿Cuál es la estación meteorológica más cercana a 18 de Julio y Ejido, en Montevideo?"*
 
 ## Caché
 
@@ -95,7 +97,7 @@ uv run --with pytest --with-editable . pytest            # sin red
 uv run --with pytest --with-editable . pytest -m red     # contra las fuentes reales
 ```
 
-Los tests del servidor conectan un cliente MCP real en el mismo proceso. Verifican que las 12
+Los tests del servidor conectan un cliente MCP real en el mismo proceso. Verifican que las 13
 herramientas existan, que todas sean de solo lectura y que un error vuelva con su motivo.
 
 ## Licencia

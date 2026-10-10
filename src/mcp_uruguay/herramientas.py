@@ -12,7 +12,7 @@ from __future__ import annotations
 from datetime import date, timedelta
 from typing import Literal, Optional
 
-from uydatos import ancap, bcu, catalogo, ibge, indec, inia, rut, salto_grande, semanas
+from uydatos import ancap, bcu, catalogo, ibge, ideuy, indec, inia, rut, salto_grande, semanas
 
 from mcp_uruguay import cache
 
@@ -24,6 +24,7 @@ FUENTE_INDEC = "INDEC, vía la API de series de tiempo de datos.gob.ar (serie 14
 FUENTE_IBGE = "IBGE, API SIDRA, tabla 1737, variable 2266 (IPCA número-índice)"
 FUENTE_ANCAP = "ANCAP, dataset ancap-precio-combustible-pe de catalogodatos.gub.uy"
 FUENTE_INIA = "INIA, Unidad GRAS, estación Salto Grande (dataset inia-precipitacion-temps-extremas-sg)"
+FUENTE_IDE = "IDE.uy, API pública de direcciones (direcciones.ide.uy)"
 FUENTE_CTM = "Comisión Técnica Mixta de Salto Grande, web service www.saltogrande.org/ws.php"
 
 MAX_DIAS = 400
@@ -308,6 +309,21 @@ def semana(fecha: str) -> dict:
         "hasta": s.hasta.isoformat(),
         "de_total": s.de_total,
         "nota": "Semana ISO 8601, de lunes a domingo. El año de la semana puede no ser el del día.",
+    }
+
+
+def geocodificar_direccion(direccion: str, localidad: str = "", departamento: str = "") -> dict:
+    if not direccion.strip():
+        raise ValueError("direccion vacía")
+    r = ideuy.geocodificar(direccion, localidad, departamento)
+    return {
+        **r,
+        "nota": (
+            "calidad, de mejor a peor: puerta_exacta, puerta_aproximada (la API ajustó a una puerta vecina), "
+            "esquina, calle_sin_numero (centro de la calle). calle_distinta, localidad_descartada y "
+            "no_encontrado no traen coordenada: la API devolvió otra calle o el centro de la localidad."
+        ),
+        "fuente": FUENTE_IDE,
     }
 
 

@@ -120,3 +120,28 @@ class TestSinRed:
     def test_semana(self):
         r = h.semana("2027-01-01")
         assert (r["etiqueta_con_anio"], r["desde"], r["hasta"]) == ("2026-W53", "2026-12-28", "2027-01-03")
+
+
+class TestGeocodificar:
+    def test_devuelve_calidad_coordenada_y_fuente(self, monkeypatch):
+        from uydatos import ideuy
+
+        respuesta = {
+            "idTipoClasificacion": 1,
+            "error": "",
+            "puntoX": -56.18,
+            "puntoY": -34.90,
+            "direccion": {
+                "calle": {"nombre_normalizado": "AVENIDA 18 DE JULIO"},
+                "numero": {"nro_puerta": 1360},
+                "localidad": {"nombre_normalizado": "MONTEVIDEO"},
+            },
+        }
+        monkeypatch.setattr(ideuy, "_consultar", lambda url: [respuesta])
+        r = h.geocodificar_direccion("Av. 18 de Julio 1360", "Montevideo", "Montevideo")
+        assert (r["calidad"], r["lat"], r["lon"]) == ("puerta_exacta", -34.90, -56.18)
+        assert r["fuente"].startswith("IDE.uy")
+
+    def test_direccion_vacia(self):
+        with pytest.raises(ValueError, match="vacía"):
+            h.geocodificar_direccion("  ")

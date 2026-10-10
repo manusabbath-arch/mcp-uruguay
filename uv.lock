@@ -384,7 +384,7 @@ wheels = [
 
 [[package]]
 name = "mcp-uruguay"
-version = "0.1.0"
+version = "0.2.0"
 source = { editable = "." }
 dependencies = [
     { name = "mcp" },
@@ -400,7 +400,7 @@ test = [
 requires-dist = [
     { name = "mcp", specifier = ">=2.3,<3" },
     { name = "pytest", marker = "extra == 'test'", specifier = ">=8" },
-    { name = "uydatos", git = "https://github.com/manusabbath-arch/uy-datos-abiertos?rev=v0.1.0" },
+    { name = "uydatos", git = "https://github.com/manusabbath-arch/uy-datos-abiertos?rev=v0.2.0" },
 ]
 provides-extras = ["test"]
 
@@ -1107,5 +1107,5 @@ wheels = [
 
 [[package]]
 name = "uydatos"
-version = "0.1.0"
-source = { git = "https://github.com/manusabbath-arch/uy-datos-abiertos?rev=v0.1.0#39989f18afb884b8a5470a76c9f90435040f1c23" }
+version = "0.2.0"
+source = { git = "https://github.com/manusabbath-arch/uy-datos-abiertos?rev=v0.2.0#1a9eeb0f6dec921c7a88a0da967ff80455d2c37c" }

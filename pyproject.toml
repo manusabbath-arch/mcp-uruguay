@@ -1,7 +1,7 @@
 [project]
 name = "mcp-uruguay"
-version = "0.1.0"
-description = "Servidor MCP con datos públicos de Uruguay y la región: cotizaciones del BCU, IPC de Argentina y Brasil, combustibles de ANCAP, clima de INIA, estaciones de Salto Grande, RUT y cédula."
+version = "0.2.0"
+description = "Servidor MCP con datos públicos de Uruguay y la región: cotizaciones del BCU, IPC de Argentina y Brasil, combustibles de ANCAP, clima de INIA, estaciones de Salto Grande, geocodificación con IDE.uy, RUT y cédula."
 readme = "README.md"
 requires-python = ">=3.10"
 license = { file = "LICENSE" }
@@ -9,7 +9,7 @@ authors = [{ name = "Manu Martinez" }]
 keywords = ["mcp", "uruguay", "datos-abiertos", "open-data", "bcu"]
 dependencies = [
     "mcp>=2.3,<3",
-    "uydatos @ git+https://github.com/manusabbath-arch/uy-datos-abiertos@v0.1.0",
+    "uydatos @ git+https://github.com/manusabbath-arch/uy-datos-abiertos@v0.2.0",
 ]
 
 [project.optional-dependencies]

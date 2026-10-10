@@ -41,3 +41,8 @@ def test_clima_y_tendencia():
     r = h.clima_salto("2025-01-01", "2025-01-31")
     assert len(r["dias"]) == 31
     assert h.clima_tendencia()["dias"] > 20000
+
+
+def test_geocodificar_un_edificio_publico():
+    r = h.geocodificar_direccion("Avenida 18 de Julio 1360", "Montevideo", "Montevideo")
+    assert r["calidad"] == "puerta_exacta"

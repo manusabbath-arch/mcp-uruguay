@@ -133,6 +133,15 @@ def semana(fecha: str) -> dict[str, Any]:
     return h.semana(fecha)
 
 
+@herramienta("Geocodificar una dirección de Uruguay (IDE.uy)", EN_RED)
+def geocodificar_direccion(direccion: str, localidad: str = "", departamento: str = "") -> dict[str, Any]:
+    """Coordenadas (lat, lon) de una dirección o esquina de Uruguay con la API oficial de IDE.uy, con la
+    calidad del resultado: puerta exacta, puerta aproximada, esquina o centro de calle. Si la API devuelve
+    otra calle o el centro de la localidad, no se da coordenada. Pasar localidad y departamento mejora
+    mucho el resultado. Esquinas: '18 de Julio y Ejido' o 'Artigas esq. Solari'."""
+    return h.geocodificar_direccion(direccion, localidad, departamento)
+
+
 @herramienta("Recursos de un dataset del catálogo de Uruguay", EN_RED)
 def recursos_catalogo(dataset: str) -> dict[str, Any]:
     """Los archivos vigentes (nombre, URL, formato, fecha) de un dataset de catalogodatos.gub.uy, por su

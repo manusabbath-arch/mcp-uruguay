@@ -20,6 +20,7 @@ ESPERADAS = {
     "clima_tendencia",
     "estaciones_cercanas",
     "validar_documento",
+    "geocodificar_direccion",
     "semana",
     "recursos_catalogo",
 }
