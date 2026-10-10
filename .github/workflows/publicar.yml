@@ -1,0 +1,38 @@
+name: publicar
+
+# Se dispara al publicar una Release en GitHub. PyPI y el registro de MCP confían en este
+# workflow por OIDC: no hay tokens ni contraseñas guardadas en el repo.
+on:
+  release:
+    types: [published]
+
+jobs:
+  publicar:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      id-token: write
+    steps:
+      - uses: actions/checkout@v7
+      - uses: astral-sh/setup-uv@v10.2.0
+      - name: Etiqueta, pyproject y server.json dicen la misma versión
+        run: |
+          version=$(grep -m1 '^version = ' pyproject.toml | cut -d'"' -f2)
+          test "v$version" = "${GITHUB_REF_NAME}" || { echo "etiqueta ${GITHUB_REF_NAME} != pyproject $version"; exit 1; }
+          test "$(jq -r .version server.json)" = "$version" || { echo "server.json .version != $version"; exit 1; }
+          test "$(jq -r '.packages[0].version' server.json)" = "$version" || { echo "server.json packages[0].version != $version"; exit 1; }
+      - name: Tests
+        run: uv run --python 3.13 --with pytest --with-editable . pytest -q
+      - name: Construir
+        run: uv build && uvx twine check dist/*
+      - name: Publicar en PyPI
+        run: uv publish --trusted-publishing always
+      - name: Publicar en el registro de MCP
+        run: |
+          curl -sL -o mcp-publisher.tar.gz https://github.com/modelcontextprotocol/registry/releases/download/v1.8.1/mcp-publisher_linux_amd64.tar.gz
+          echo "$(curl -sL https://github.com/modelcontextprotocol/registry/releases/download/v1.8.1/registry_1.8.1_checksums.txt | grep ' mcp-publisher_linux_amd64.tar.gz$' | cut -d' ' -f1)  mcp-publisher.tar.gz" | sha256sum -c -
+          tar xzf mcp-publisher.tar.gz mcp-publisher
+          # PyPI tarda un poco en exponer una versión recién subida; el registro la verifica ahí.
+          for i in 1 2 3 4 5 6; do curl -sf "https://pypi.org/pypi/mcp-uruguay/${GITHUB_REF_NAME#v}/json" >/dev/null && break; sleep 20; done
+          ./mcp-publisher login github-oidc
+          ./mcp-publisher publish

@@ -1,5 +1,12 @@
 # Cambios
 
+## 0.2.1 — 2026-10-09
+
+- Publicado en PyPI (`uvx mcp-uruguay`) y en el registro oficial de MCP como
+  `io.github.manusabbath-arch/mcp-uruguay`, con trusted publishing al crear una Release.
+- Depende de `uydatos` desde PyPI (`>=0.2.1,<0.3`) en vez de una etiqueta de GitHub.
+- Insignias y un resumen en inglés en el README.
+
 ## 0.2.0 — 2026-10-09
 
 - **Nueva herramienta: `geocodificar_direccion`**, sobre `uydatos.ideuy` (IDE.uy). Devuelve la

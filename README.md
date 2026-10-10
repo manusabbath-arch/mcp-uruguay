@@ -1,5 +1,17 @@
 # mcp-uruguay
 
+<!-- mcp-name: io.github.manusabbath-arch/mcp-uruguay -->
+
+[![tests](https://github.com/manusabbath-arch/mcp-uruguay/actions/workflows/tests.yml/badge.svg)](https://github.com/manusabbath-arch/mcp-uruguay/actions/workflows/tests.yml)
+[![PyPI](https://img.shields.io/pypi/v/mcp-uruguay)](https://pypi.org/project/mcp-uruguay/)
+[![Licencia: MIT](https://img.shields.io/badge/licencia-MIT-blue)](LICENSE)
+
+> **In English:** an MCP server that gives AI agents Uruguayan and regional public data straight
+> from the primary sources: Central Bank of Uruguay exchange rates and inflation-adjusted pesos,
+> Argentina's CPI, Brazil's IPCA, ANCAP fuel prices, INIA weather in Salto, Uruguay River stations,
+> IDE.uy geocoding and RUT/ID validation. Read-only, and every answer carries its source and
+> retrieval time.
+
 Servidor [MCP](https://modelcontextprotocol.io) con **datos públicos de Uruguay y la región**,
 leídos de la fuente primaria. Le da a cualquier agente de IA (Claude, o cualquier cliente MCP)
 cotizaciones del BCU, pesos constantes, IPC de Argentina y Brasil, combustibles de ANCAP, clima
@@ -53,7 +65,7 @@ Requiere [uv](https://docs.astral.sh/uv/). No hace falta clonar nada.
 **Claude Code**
 
 ```sh
-claude mcp add uruguay -- uvx --from git+https://github.com/manusabbath-arch/mcp-uruguay mcp-uruguay
+claude mcp add uruguay -- uvx mcp-uruguay
 ```
 
 **Claude Desktop y otros clientes** (`claude_desktop_config.json` o el equivalente de tu cliente)
@@ -63,7 +75,7 @@ claude mcp add uruguay -- uvx --from git+https://github.com/manusabbath-arch/mcp
   "mcpServers": {
     "uruguay": {
       "command": "uvx",
-      "args": ["--from", "git+https://github.com/manusabbath-arch/mcp-uruguay", "mcp-uruguay"]
+      "args": ["mcp-uruguay"]
     }
   }
 }

@@ -1,15 +1,23 @@
 [project]
 name = "mcp-uruguay"
-version = "0.2.0"
+version = "0.2.1"
 description = "Servidor MCP con datos públicos de Uruguay y la región: cotizaciones del BCU, IPC de Argentina y Brasil, combustibles de ANCAP, clima de INIA, estaciones de Salto Grande, geocodificación con IDE.uy, RUT y cédula."
 readme = "README.md"
 requires-python = ">=3.10"
 license = { file = "LICENSE" }
 authors = [{ name = "Manu Martinez" }]
-keywords = ["mcp", "uruguay", "datos-abiertos", "open-data", "bcu"]
+keywords = ["mcp", "mcp-server", "uruguay", "datos-abiertos", "open-data", "bcu"]
+classifiers = [
+    "Development Status :: 4 - Beta",
+    "Intended Audience :: Developers",
+    "License :: OSI Approved :: MIT License",
+    "Natural Language :: Spanish",
+    "Programming Language :: Python :: 3",
+    "Topic :: Scientific/Engineering :: Information Analysis",
+]
 dependencies = [
     "mcp>=2.3,<3",
-    "uydatos @ git+https://github.com/manusabbath-arch/uy-datos-abiertos@v0.2.0",
+    "uydatos>=0.2.1,<0.3",
 ]
 
 [project.optional-dependencies]
@@ -20,13 +28,11 @@ mcp-uruguay = "mcp_uruguay.servidor:main"
 
 [project.urls]
 Repository = "https://github.com/manusabbath-arch/mcp-uruguay"
+Changelog = "https://github.com/manusabbath-arch/mcp-uruguay/blob/main/CHANGELOG.md"
 
 [build-system]
 requires = ["hatchling"]
 build-backend = "hatchling.build"
-
-[tool.hatch.metadata]
-allow-direct-references = true
 
 [tool.hatch.build.targets.wheel]
 packages = ["src/mcp_uruguay"]
