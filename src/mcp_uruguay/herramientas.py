@@ -12,8 +12,11 @@ from __future__ import annotations
 import unicodedata
 from datetime import date, timedelta
 from pathlib import Path
-from typing import Literal, Optional, TypedDict, Union
+from typing import Literal, Optional, Union
 
+# En Python < 3.12, pydantic no arma el esquema de un `typing.TypedDict`: el SDK se queda sin
+# esquema de salida y la respuesta sin `structuredContent`. Medido en el CI de 3.10 y 3.11.
+from typing_extensions import TypedDict
 from uydatos import (
     ancap,
     ancap_ventas,

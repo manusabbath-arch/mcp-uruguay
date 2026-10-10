@@ -1,5 +1,16 @@
 # Cambios
 
+## 0.8.1 — 2026-10-10
+
+- **Arreglo para Python 3.10 y 3.11**: desde la 0.3.0, en esas versiones las herramientas no
+  declaraban su esquema de salida y `diagnostico` fallaba. Los tipos de salida eran `typing.TypedDict`,
+  que pydantic sólo acepta desde Python 3.12; ahora salen de `typing_extensions`, que pasa a ser
+  dependencia explícita. En 3.12 y posteriores nada cambia.
+- **Por qué se publicó así cinco versiones**: el CI de cada push fallaba en 3.10 y 3.11, pero la
+  publicación corría los tests sólo en 3.13. Ahora los corre en 3.10 y en 3.13, y no publica si fallan.
+- `docs/herramientas.md` se genera igual en cualquier versión de Python (desde la 3.13 el compilador
+  quita la sangría de los docstrings; ahora se normaliza siempre).
+
 ## 0.8.0 — 2026-10-10
 
 - **Nueva: `ventas_combustible`**, sobre `uydatos.ancap_ventas`: la cantidad vendida por ANCAP de cada

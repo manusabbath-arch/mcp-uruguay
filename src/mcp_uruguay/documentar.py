@@ -3,10 +3,15 @@
 La lista de herramientas de un servidor MCP es su contrato con quien lo usa: un documento que
 cita herramientas que ya no existen es peor que no tener documento. Este archivo NO se escribe a
 mano: se genera con `python -m mcp_uruguay.documentar`, y hay un test que falla si quedo viejo.
+
+La descripcion pasa por `inspect.cleandoc`: desde Python 3.13 el compilador ya le saca la sangria a
+los docstrings y antes no, asi que sin normalizar el documento cambiaba segun la version de Python
+con que se generara (paso en la 0.8.0: generado en 3.14, el CI en 3.10 a 3.12 fallaba).
 """
 
 from __future__ import annotations
 
+import inspect
 import sys
 from pathlib import Path
 
@@ -42,7 +47,8 @@ async def markdown() -> str:
         herramientas = (await c.list_tools()).tools
     partes = [CABECERA]
     for t in sorted(herramientas, key=lambda x: x.name):
-        partes.append(f"\n## `{t.name}` — {t.title or ''}\n\n{t.description or ''}\n\n{_tabla(t.input_schema)}")
+        descripcion = inspect.cleandoc(t.description or "")
+        partes.append(f"\n## `{t.name}` — {t.title or ''}\n\n{descripcion}\n\n{_tabla(t.input_schema)}")
     return "\n".join(partes).rstrip() + "\n"
 
 

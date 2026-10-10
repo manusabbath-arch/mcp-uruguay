@@ -22,7 +22,11 @@ jobs:
           test "$(jq -r .version server.json)" = "$version" || { echo "server.json .version != $version"; exit 1; }
           test "$(jq -r '.packages[0].version' server.json)" = "$version" || { echo "server.json packages[0].version != $version"; exit 1; }
       - name: Tests
-        run: uv run --python 3.13 --with pytest --with-editable . pytest -q
+        run: |
+          # La más vieja que se declara y la más nueva: en la 0.3.0 a 0.8.0 los tests pasaban en 3.13
+          # y fallaban en 3.10 y 3.11, y se publicó igual porque acá corrían sólo en 3.13.
+          uv run --python 3.10 --with pytest --with-editable . pytest -q
+          uv run --python 3.13 --with pytest --with-editable . pytest -q
       - name: Construir
         run: uv build && uvx twine check dist/*
       - name: Publicar en PyPI
