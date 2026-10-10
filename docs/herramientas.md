@@ -107,6 +107,18 @@ Devuelve el índice, no la inflación.
 | `desde` | `string` | si |
 | `hasta` | `string` | si |
 
+## `localidad` — Población y viviendas de una localidad (INE)
+
+Población y viviendas 2023 de una localidad uruguaya, por nombre (sin importar tildes). Si el nombre
+existe en más de un departamento, devuelve todas; `departamento` desambigua. Solo con `departamento`,
+lista sus localidades de mayor a menor población (hasta `cantidad`).
+
+| parametro | tipo | obligatorio |
+|---|---|---|
+| `nombre` | `string` | no |
+| `departamento` | `string` | no |
+| `cantidad` | `integer` | no |
+
 ## `nivel_rio` — Nivel del río en una estación de Salto Grande
 
 Altura del río (H) en una estación de la Comisión Técnica Mixta de Salto Grande, resumida por día
@@ -159,6 +171,18 @@ Semana ISO 8601 (W1, W2...) de una fecha AAAA-MM-DD, con su lunes y su domingo.
 | parametro | tipo | obligatorio |
 |---|---|---|
 | `fecha` | `string` | si |
+
+## `ubicar_punto` — En qué departamento y localidad cae un punto
+
+Dado un punto (latitud y longitud en grados), en qué departamento y en qué localidad de Uruguay cae,
+según los polígonos oficiales del INE, con la población 2023 de la localidad. Si cae en el campo, la
+localidad más cercana y a qué distancia. Suma la dirección más cercana de IDE.uy con su distancia.
+Combinar con geocodificar_direccion para pasar de una dirección a su departamento.
+
+| parametro | tipo | obligatorio |
+|---|---|---|
+| `lat` | `number` | si |
+| `lon` | `number` | si |
 
 ## `validar_documento` — Validar RUT o cédula uruguaya
 

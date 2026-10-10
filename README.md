@@ -28,16 +28,21 @@ decirlo; uno que recibe un número plausible pero falso lo repite.
 | `cotizacion` | Dólar, UI, peso argentino o real de un día; si es fin de semana, dice qué día hábil usó | BCU |
 | `cotizacion_mensual` | Promedio mensual, con los días publicados y el mes en curso marcado como parcial | BCU |
 | `pesos_constantes` | Lleva montos de distintos meses a pesos de un mes base, con la Unidad Indexada | BCU |
+| `variacion_real` | Cuánto cambió un monto entre dos meses descontando la inflación (UI, IPC argentino o IPCA) | BCU, INDEC, IBGE |
 | `ipc_argentina` | IPC nacional, base dic-2016 = 100 | INDEC |
 | `ipca_brasil` | IPCA número-índice, base dic-1993 = 100 | IBGE |
 | `combustible_ancap` | Precio máximo al público de cada combustible, por mes | ANCAP |
-| `clima_salto` | Lluvia y temperaturas diarias desde 1970, con la anomalía contra la normal | INIA |
-| `clima_tendencia` | Tendencia de la temperatura media anual, en °C por década | INIA |
+| `clima` | Lluvia y temperaturas diarias en Salto desde 1970 con su anomalía, o la tendencia por década | INIA |
+| `nivel_rio` | Altura del río en una estación de la cuenca del río Uruguay, por día, y cuánto subió o bajó | CTM Salto Grande |
+| `nivel_rio_comparado` | ¿El río está alto o bajo para la época? Contra los mismos días de cada año desde 2017 | CTM Salto Grande |
 | `estaciones_cercanas` | Estaciones hidrometeorológicas de la cuenca del río Uruguay cerca de un punto | CTM Salto Grande |
 | `geocodificar_direccion` | Coordenadas de una dirección o esquina, con su calidad; descarta otra calle o el centro de la localidad | IDE.uy |
+| `ubicar_punto` | En qué departamento y localidad cae un punto, con la población 2023 de la localidad | INE, IDE.uy |
+| `localidad` | Población y viviendas 2023 de una localidad, o las de un departamento ordenadas | INE |
 | `validar_documento` | Dígito verificador de RUT o cédula | sin red |
 | `semana` | Semana ISO (`W41`) de una fecha, con su lunes y su domingo | sin red |
 | `recursos_catalogo` | Archivos vigentes de un dataset de catalogodatos.gub.uy | Catálogo de datos abiertos |
+| `diagnostico` | De cuándo es cada copia en caché y si está vencida | sin red |
 
 **Todas son de solo lectura**, y así lo declaran al cliente.
 
@@ -86,6 +91,8 @@ Después, preguntale al agente cosas como:
 - *"¿Cuánto valía el dólar el 4 de octubre de 2026?"*
 - *"Vendí 1.200.000 pesos en septiembre de 2025 y 1.450.000 en septiembre de 2026. ¿Cuánto crecí en términos reales?"*
 - *"¿Hizo más calor de lo normal en Salto en enero de 2026?"*
+- *"¿El río Uruguay en Salto está alto para esta época del año?"*
+- *"¿En qué departamento cae el punto -31.10, -57.30, y cuál es el pueblo más cercano?"*
 - *"¿Cuál es la estación meteorológica más cercana a 18 de Julio y Ejido, en Montevideo?"*
 
 ## Caché

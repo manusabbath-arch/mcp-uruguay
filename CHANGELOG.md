@@ -1,5 +1,18 @@
 # Cambios
 
+## 0.4.0 — 2026-10-10
+
+### Nuevo
+
+- **`ubicar_punto`**: en qué departamento y localidad cae un punto, según los polígonos oficiales del
+  INE, con la población 2023 de la localidad. Si cae en el campo, la localidad más cercana y la
+  distancia; si cae en el mar o en un río limítrofe, lo dice. El límite contestado con Brasil se
+  informa como tal, asignado a Artigas. Suma la dirección más cercana de IDE.uy con su distancia.
+- **`localidad`**: población y viviendas 2023 por nombre (sin importar tildes). Un nombre que existe
+  en varios departamentos —«San Antonio» está en Canelones, Salto y Rocha— devuelve todos; solo con
+  el departamento, sus localidades de mayor a menor población.
+- Depende de `uydatos>=0.4,<0.5`.
+
 ## 0.3.0 — 2026-10-10
 
 ### Nuevo

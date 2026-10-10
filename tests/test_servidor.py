@@ -23,6 +23,8 @@ ESPERADAS = {
     "variacion_real",
     "validar_documento",
     "geocodificar_direccion",
+    "ubicar_punto",
+    "localidad",
     "semana",
     "recursos_catalogo",
     "diagnostico",

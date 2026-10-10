@@ -56,3 +56,14 @@ def test_nivel_rio_en_salto():
 def test_variacion_real_con_la_ui():
     r = h.variacion_real(100.0, "2025-09", 130.0, "2026-09")
     assert 0 < r["inflacion_del_periodo_pct"] < 10
+
+
+def test_ubicar_un_punto_en_el_centro_de_salto():
+    r = h.ubicar_punto(-31.3833, -57.9606)
+    assert r["departamento"]["nombre"] == "SALTO" and r["localidad"]["nombre"] == "SALTO"
+    assert r["localidad"]["adentro"] and r["localidad"]["poblacion_2023"] > 100_000
+
+
+def test_localidad_con_nombre_repetido():
+    r = h.localidad("San Antonio")
+    assert len({x["departamento"] for x in r["localidades"]}) >= 2
