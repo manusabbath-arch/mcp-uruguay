@@ -50,7 +50,7 @@ def herramienta(titulo: str, anotaciones: ToolAnnotations) -> Callable:
 
 
 @herramienta("Cotización del BCU de un día", EN_RED)
-def cotizacion(moneda: Literal["USD", "UI", "ARS", "BRL"], fecha: str, hacia_atras: bool = False) -> dict[str, Any]:
+def cotizacion(moneda: Literal["USD", "UI", "ARS", "BRL"], fecha: str, hacia_atras: bool = False) -> h.Cotizacion:
     """Cotización oficial del Banco Central del Uruguay, en pesos uruguayos, para una fecha AAAA-MM-DD.
 
     Monedas: USD (dólar billete), UI (Unidad Indexada), ARS (peso argentino billete), BRL (real billete).
@@ -121,14 +121,14 @@ def estaciones_cercanas(lat: float, lon: float, cantidad: int = 5) -> dict[str, 
 
 
 @herramienta("Validar RUT o cédula uruguaya", LOCAL)
-def validar_documento(numero: str, tipo: Literal["rut", "ci"]) -> dict[str, Any]:
+def validar_documento(numero: str, tipo: Literal["rut", "ci"]) -> h.Validacion:
     """Valida el dígito verificador de un RUT (12 dígitos) o una cédula de identidad (8 dígitos) de
     Uruguay. Acepta puntos, guiones y comas. No consulta a DGI: es validez aritmética."""
     return h.validar_documento(numero, tipo)
 
 
 @herramienta("Semana ISO de una fecha", LOCAL)
-def semana(fecha: str) -> dict[str, Any]:
+def semana(fecha: str) -> h.SemanaTyped:
     """Semana ISO 8601 (W1, W2...) de una fecha AAAA-MM-DD, con su lunes y su domingo."""
     return h.semana(fecha)
 

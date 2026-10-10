@@ -10,7 +10,7 @@ error de la herramienta.
 from __future__ import annotations
 
 from datetime import date, timedelta
-from typing import Literal, Optional
+from typing import Literal, Optional, TypedDict
 
 from uydatos import ancap, bcu, catalogo, ibge, ideuy, indec, inia, rut, salto_grande, semanas
 
@@ -26,6 +26,41 @@ FUENTE_ANCAP = "ANCAP, dataset ancap-precio-combustible-pe de catalogodatos.gub.
 FUENTE_INIA = "INIA, Unidad GRAS, estación Salto Grande (dataset inia-precipitacion-temps-extremas-sg)"
 FUENTE_IDE = "IDE.uy, API pública de direcciones (direcciones.ide.uy)"
 FUENTE_CTM = "Comisión Técnica Mixta de Salto Grande, web service www.saltogrande.org/ws.php"
+
+
+class Cotizacion(TypedDict):
+    """La respuesta de `cotizacion()`."""
+
+    moneda: str
+    nombre_bcu: str
+    fecha_pedida: str
+    fecha_cotizacion: Optional[str]
+    valor_en_pesos: Optional[float]
+    nota: str
+    fuente: str
+    bajado: str
+
+
+class Validacion(TypedDict):
+    """La respuesta de `validar_documento()`."""
+
+    tipo: str
+    normalizado: str
+    estado: str
+    valido: bool
+    nota: str
+
+
+class SemanaTyped(TypedDict):
+    """La respuesta de `semana()`. Se llama asi para no chocar con el modulo `uydatos.semanas`."""
+
+    etiqueta: str
+    etiqueta_con_anio: str
+    desde: str
+    hasta: str
+    de_total: str
+    nota: str
+
 
 MAX_DIAS = 400
 MAX_MESES = 240
@@ -59,7 +94,7 @@ def _codigo(moneda: str) -> int:
 # --- BCU ---------------------------------------------------------------------------------------
 
 
-def cotizacion(moneda: Moneda, fecha: str, hacia_atras: bool = False, hoy: Optional[date] = None) -> dict:
+def cotizacion(moneda: Moneda, fecha: str, hacia_atras: bool = False, hoy: Optional[date] = None) -> Cotizacion:
     dia = _fecha(fecha, "fecha")
     codigo = _codigo(moneda)
     desde = dia - timedelta(days=bcu.MAX_DIAS_ATRAS) if hacia_atras else dia
@@ -284,7 +319,7 @@ def estaciones_cercanas(lat: float, lon: float, cantidad: int = 5) -> dict:
 # --- Sin red -------------------------------------------------------------------------------------
 
 
-def validar_documento(numero: str, tipo: Literal["rut", "ci"]) -> dict:
+def validar_documento(numero: str, tipo: Literal["rut", "ci"]) -> Validacion:
     if tipo == "rut":
         estado, digitos = rut.validar_rut(numero)
     elif tipo == "ci":
@@ -300,7 +335,7 @@ def validar_documento(numero: str, tipo: Literal["rut", "ci"]) -> dict:
     }
 
 
-def semana(fecha: str) -> dict:
+def semana(fecha: str) -> SemanaTyped:
     s = semanas.semana_de(_fecha(fecha, "fecha"))
     return {
         "etiqueta": s.corta,

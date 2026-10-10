@@ -52,3 +52,18 @@ async def test_un_error_vuelve_como_error_con_el_motivo():
         r = await c.call_tool("semana", {"fecha": "09/10/2026"})
     assert r.is_error
     assert "AAAA-MM-DD" in r.content[0].text
+
+
+async def test_el_esquema_de_salida_declara_los_campos():
+    async with Client(servidor) as c:
+        herramientas = {t.name: t for t in (await c.list_tools()).tools}
+    campos = set(herramientas["semana"].output_schema["properties"])
+    assert {"etiqueta", "desde", "hasta"} <= campos
+    assert set(herramientas["validar_documento"].output_schema["properties"]) >= {"tipo", "valido"}
+
+
+async def test_la_respuesta_no_se_recorta_a_lo_declarado():
+    async with Client(servidor) as c:
+        r = await c.call_tool("semana", {"fecha": "2026-10-09"})
+    assert not r.is_error
+    assert set(r.structured_content) >= {"etiqueta", "etiqueta_con_anio", "desde", "hasta", "de_total", "nota"}
