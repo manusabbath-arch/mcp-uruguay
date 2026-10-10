@@ -145,3 +145,45 @@ class TestGeocodificar:
     def test_direccion_vacia(self):
         with pytest.raises(ValueError, match="vacía"):
             h.geocodificar_direccion("  ")
+
+
+class TestVentasCombustible:
+    @pytest.fixture(autouse=True)
+    def ventas(self, cache_temporal):
+        cache_temporal.mkdir(parents=True, exist_ok=True)
+        (cache_temporal / "ancap_ventas.csv").write_text(
+            "Mercado;Mes;Anio;FamiliaDeProducto;LineaDeProducto;Bandera;CantidadCorregida;Unidad\n"
+            "INTERNO;01;2024;BLANCOS;GAS OIL;B/N;100,5;Miles de m3\n"
+            "INTERNO;02;2024;BLANCOS;GAS OIL;B/N;90;Miles de m3\n"
+            "Bunker;01;2024;BLANCOS;GAS OIL;B/E;10;Miles de m3\n"
+            "Bunker;01;2024;BLANCOS;GAS OIL;B/N;5;Miles de m3\n"
+            "INTERNO;01;2025;BLANCOS;GAS OIL;B/N;-0,5;Miles de m3\n"
+            "INTERNO;01;2024;SOLVENTES;QUEROSENOS;B/N;1;Miles de m3\n"
+            "INTERNO;01;2024;BLANCOS;QUEROSENO;B/N;2;Miles de m3\n"
+            "INTERNO;02;2024;COMBUSTIBLES SÓLIDOS;PETCOKE;B/N;3000;Toneladas\n",
+            encoding="utf-8",
+        )
+
+    def test_sin_linea_lista_productos_y_meses_que_faltan(self):
+        r = h.ventas_combustible()
+        assert {x["linea"] for x in r["lineas"]} == {"GAS OIL", "QUEROSENOS", "QUEROSENO", "PETCOKE"}
+        assert next(x for x in r["lineas"] if x["linea"] == "PETCOKE")["unidad"] == "Toneladas"
+        assert r["cobertura"]["2025"] == list(range(2, 13))
+
+    def test_suma_banderas_y_mercados_y_dice_cuantos_meses_tiene_cada_anio(self):
+        r = h.ventas_combustible("gas oil")
+        assert r["ventas"][0] == {"mes": "2024-01", "cantidad": 115.5}
+        assert r["por_anio"][0]["meses"] == 2 and r["por_anio"][1]["cantidad"] == -0.5
+
+    def test_un_mercado_y_un_periodo(self):
+        r = h.ventas_combustible("GAS OIL", "bunker", "2024-01", "2024-12")
+        assert r["mercado"] == "Bunker" and r["ventas"] == [{"mes": "2024-01", "cantidad": 15.0}]
+
+    def test_queroseno_y_querosenos_no_se_mezclan(self):
+        assert h.ventas_combustible("QUEROSENO")["ventas"][0]["cantidad"] == 2.0
+
+    def test_linea_o_mercado_inexistente_dicen_que_hay(self):
+        with pytest.raises(ValueError, match="GAS OIL"):
+            h.ventas_combustible("gasoil")
+        with pytest.raises(ValueError, match="INTERNO"):
+            h.ventas_combustible("GAS OIL", "Montevideo")

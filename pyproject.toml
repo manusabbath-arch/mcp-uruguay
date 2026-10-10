@@ -1,6 +1,6 @@
 [project]
 name = "mcp-uruguay"
-version = "0.7.0"
+version = "0.8.0"
 description = "Servidor MCP con datos públicos de Uruguay y la región: cotizaciones del BCU, IPC de Argentina y Brasil, combustibles de ANCAP, clima de INIA, estaciones de Salto Grande, geocodificación con IDE.uy, RUT y cédula."
 readme = "README.md"
 requires-python = ">=3.10"
@@ -17,7 +17,7 @@ classifiers = [
 ]
 dependencies = [
     "mcp>=2.3,<3",
-    "uydatos>=0.8,<0.9",
+    "uydatos>=0.9,<0.10",
 ]
 
 [project.optional-dependencies]

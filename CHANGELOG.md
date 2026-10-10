@@ -1,5 +1,15 @@
 # Cambios
 
+## 0.8.0 — 2026-10-10
+
+- **Nueva: `ventas_combustible`**, sobre `uydatos.ancap_ventas`: la cantidad vendida por ANCAP de cada
+  combustible, por mes y mercado. Sin `linea` lista los productos con su familia y su unidad (el
+  petcoke viene en toneladas y el resto en miles de m³: no se suman) y los meses que la fuente no
+  publicó; con `linea`, la serie y el total de cada año **con cuántos meses lo forman**, porque el
+  archivo tiene huecos (2024 sin octubre, 2025 sin agosto a octubre) y un año de 9 meses no se compara
+  con uno de 12. `QUEROSENO` y `QUEROSENOS` quedan separados: son de familias distintas.
+- Depende de `uydatos>=0.9,<0.10`.
+
 ## 0.7.0 — 2026-10-10
 
 - **Nuevas: `asistencia_parlamentaria`, `leyes` y `proyectos_parlamento`**, sobre `uydatos.parlamento`.

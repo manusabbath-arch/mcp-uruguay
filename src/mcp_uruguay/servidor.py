@@ -98,6 +98,17 @@ def combustible_ancap(
     return h.combustible_ancap(producto, anio, mes)
 
 
+@herramienta("Ventas de combustibles de ANCAP", EN_RED)
+def ventas_combustible(linea: str = "", mercado: str = "", desde: str = "", hasta: str = "") -> h.VentasCombustible:
+    """Cantidad vendida por ANCAP de cada combustible, por mes (volúmenes, no precios; para precios usar
+    combustible_ancap). Sin `linea`, lista los productos (GAS OIL, GASOLINAS, JET A1, SUPERGAS...) con su
+    familia, su unidad y los mercados, y los meses que la fuente no publicó. Con `linea`, la serie
+    mensual y el total de cada año con cuántos meses lo forman: no comparar años con distinta cantidad
+    de meses. `mercado`: INTERNO, Bunker, UTE, ZONA FRANCA o Exportaciones (vacío = todos). `desde` y
+    `hasta` en AAAA-MM. Unidades: miles de m3, salvo el petcoke en toneladas."""
+    return h.ventas_combustible(linea, mercado, desde, hasta)
+
+
 @herramienta("Clima en Salto Grande (INIA)", EN_RED)
 def clima(desde: str = "", hasta: str = "") -> h.Clima:
     """Clima de la estacion INIA Salto Grande, la misma serie desde 1970.

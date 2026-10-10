@@ -16,6 +16,7 @@ ESPERADAS = {
     "ipc_argentina",
     "ipca_brasil",
     "combustible_ancap",
+    "ventas_combustible",
     "clima",
     "estaciones_cercanas",
     "nivel_rio",
