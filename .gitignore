@@ -6,3 +6,5 @@ __pycache__/
 dist/
 build/
 *.egg-info/
+# lo que la guarda de privacidad verifica y no se publica (ver tests/test_privacidad.py)
+.privacidad-local
