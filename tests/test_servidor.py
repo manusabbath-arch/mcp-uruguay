@@ -26,6 +26,7 @@ ESPERADAS = {
     "ubicar_punto",
     "localidad",
     "resultados_electorales",
+    "compras_estado",
     "semana",
     "recursos_catalogo",
     "diagnostico",

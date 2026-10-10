@@ -73,3 +73,9 @@ def test_resultados_del_balotaje_en_salto():
     r = h.resultados_electorales("balotaje-2024", "Salto")
     assert r["mesas"]["comunes"] > 200 and r["participacion_pct"] > 80
     assert len(r["opciones"]) == 2
+
+
+def test_compras_2025_con_aviso_de_concentracion():
+    r = h.compras_estado(2025)
+    assert r["adjudicaciones"] > 100_000 and r["total_pesos"] > 0
+    assert r["mayores_items"] and r["aviso"]

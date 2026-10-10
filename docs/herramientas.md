@@ -30,6 +30,21 @@ Con `producto`, la serie mensual; con `anio` y `mes`, ese mes.
 | `anio` | `integer | null` | no |
 | `mes` | `integer | null` | no |
 
+## `compras_estado` — Compras del Estado (ARCE)
+
+Cuánto adjudicó el Estado uruguayo en un año (2002 en adelante), en pesos, con los organismos que más
+compraron y los mayores ítems. `organismo` filtra por comprador (por ejemplo «Intendencia de Montevideo»);
+`buscar` filtra los ítems por texto (por ejemplo «ambulancia»). Las monedas se convierten con la
+cotización del día. Avisa cuando un solo ítem domina el total: hay registros con cantidad × precio
+imposibles. La primera consulta de un año baja unos 30 MB y tarda.
+
+| parametro | tipo | obligatorio |
+|---|---|---|
+| `anio` | `integer` | si |
+| `organismo` | `string` | no |
+| `buscar` | `string` | no |
+| `cantidad` | `integer` | no |
+
 ## `cotizacion` — Cotización del BCU de un día
 
 Cotización oficial del Banco Central del Uruguay, en pesos uruguayos, para una fecha AAAA-MM-DD.

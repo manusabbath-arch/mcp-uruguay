@@ -1,5 +1,16 @@
 # Cambios
 
+## 0.6.0 — 2026-10-10
+
+- **Nuevo: `compras_estado`**: cuánto adjudicó el Estado en un año, en pesos (cada moneda con la
+  cotización del día), por organismo o por texto de los ítems, con los organismos que más compraron y
+  los mayores ítems. **Avisa cuando un solo ítem pasa del 20% del total**: en los datos de la ARCE un
+  ítem es el 77% de lo adjudicado en pesos en 2024 y otro el 53% en 2025. No devuelve nombres de
+  proveedores, que pueden ser personas físicas.
+- Guarda de privacidad (idea de Hermes): falla si un archivo versionado cita internos; los nombres
+  específicos van en un archivo local que git ignora.
+- Depende de `uydatos>=0.7,<0.8`.
+
 ## 0.5.0 — 2026-10-10
 
 - **Nuevo: `resultados_electorales`**: nacionales 2024, balotaje 2024 y departamentales 2025, del país

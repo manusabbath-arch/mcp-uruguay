@@ -13,7 +13,21 @@ import unicodedata
 from datetime import date, timedelta
 from typing import Literal, Optional, TypedDict, Union
 
-from uydatos import ancap, bcu, catalogo, elecciones, ibge, ideuy, indec, inia, limites, rut, salto_grande, semanas
+from uydatos import (
+    ancap,
+    bcu,
+    catalogo,
+    compras,
+    elecciones,
+    ibge,
+    ideuy,
+    indec,
+    inia,
+    limites,
+    rut,
+    salto_grande,
+    semanas,
+)
 
 from mcp_uruguay import cache
 
@@ -26,6 +40,7 @@ FUENTE_IBGE = "IBGE, API SIDRA, tabla 1737, variable 2266 (IPCA número-índice)
 FUENTE_ANCAP = "ANCAP, dataset ancap-precio-combustible-pe de catalogodatos.gub.uy"
 FUENTE_INIA = "INIA, Unidad GRAS, estación Salto Grande (dataset inia-precipitacion-temps-extremas-sg)"
 FUENTE_IDE = "IDE.uy, API pública de direcciones (direcciones.ide.uy)"
+FUENTE_COMPRAS = "ARCE, compras del Estado en OCDS (dataset arce-datos-historicos-de-compras)"
 FUENTE_ELECCIONES = "Corte Electoral, resultados por mesa publicados en catalogodatos.gub.uy"
 FUENTE_LIMITES = "INE: límites departamentales (vía la IDE) y localidades con población 2023 (vía el MIDES)"
 FUENTE_CTM = "Comisión Técnica Mixta de Salto Grande, web service www.saltogrande.org/ws.php"
@@ -1103,6 +1118,176 @@ def resultados_electorales(eleccion: str, departamento: str = "") -> ResultadoEl
             "oficiales de la Corte pueden usar otra base. En las nacionales, opciones son los plebiscitos."
         ),
         "fuente": FUENTE_ELECCIONES,
+        "bajado": bajado,
+    }
+
+
+# --- Compras del Estado --------------------------------------------------------------------------------
+
+
+class OrganismoComprador(TypedDict):
+    nombre: str
+    adjudicaciones: int
+    pesos: float
+
+
+class ItemMayor(TypedDict):
+    ocid: str
+    organismo: str
+    descripcion: str
+    cantidad: float
+    precio_unitario: float
+    moneda: str
+    importe_pesos: float
+    pct_del_total: float
+
+
+class ComprasEstado(TypedDict):
+    """La respuesta de `compras_estado()`."""
+
+    anio: int
+    organismo: Optional[str]
+    buscar: Optional[str]
+    adjudicaciones: int
+    items: int
+    total_pesos: float
+    importes_por_moneda: dict[str, float]
+    sin_moneda: float
+    sin_convertir: dict[str, float]
+    excluidas_por_estado: dict[str, int]
+    organismos: list[OrganismoComprador]
+    mayores_items: list[ItemMayor]
+    aviso: str
+    nota: str
+    fuente: str
+    bajado: str
+
+
+PRIMER_ANIO_COMPRAS = 2002
+UMBRAL_AVISO_PCT = 20.0
+MINIMO_ITEMS_AVISO = 20  # con pocos ítems, que uno sea mucho del total es lo esperable
+_compras_memo: dict[tuple[int, float], list[dict]] = {}
+
+
+def _es_zip(ruta) -> bool:
+    import zipfile
+
+    if not zipfile.is_zipfile(ruta):
+        raise ValueError(f"{ruta}: lo bajado no es un ZIP")
+    return True
+
+
+def _compras(anio: int) -> tuple[list[dict], str]:
+    """Las adjudicaciones de un año: el ZIP en caché (el año en curso vence a la semana, los cerrados
+    al año) y leído una sola vez por proceso. Solo se guarda un año en memoria: pesa."""
+    ruta = cache.directorio() / "compras" / f"{anio}.zip"
+    ttl = 7 * cache.DIA if anio >= date.today().year else 365 * cache.DIA
+    if cache.vencido(ruta, ttl):
+        cache.archivo(ruta, lambda p: compras.descargar(anio, p), _es_zip, ttl)
+    clave = (anio, ruta.stat().st_mtime)
+    if clave not in _compras_memo:
+        _compras_memo.clear()
+        _compras_memo[clave] = compras.leer_adjudicaciones(ruta)
+    return _compras_memo[clave], cache.sello(ruta)
+
+
+def compras_estado(
+    anio: int, organismo: str = "", buscar: str = "", cantidad: int = 10, hoy: Optional[date] = None
+) -> ComprasEstado:
+    hoy_ = hoy or date.today()
+    if not PRIMER_ANIO_COMPRAS <= anio <= hoy_.year:
+        raise ValueError(f"año {anio}: la ARCE publica de {PRIMER_ANIO_COMPRAS} a {hoy_.year}")
+    adjs, bajado = _compras(anio)
+    base = compras.resumen(adjs, organismo, buscar)
+    org, txt = _sin_tildes(organismo), _sin_tildes(buscar)
+
+    elegidos = []  # (adjudicacion, item) activos que pasan los filtros
+    for a in adjs:
+        if a["estado"] != "active":
+            continue
+        comp = a["comprador"] or {"id": "", "nombre": "(sin comprador en el archivo)"}
+        if org and org not in (_sin_tildes(comp["nombre"]), _sin_tildes(comp["id"])):
+            continue
+        for i in a["items"]:
+            if i["moneda"] and (not txt or txt in _sin_tildes(i["descripcion"])):
+                elegidos.append((a, comp, i))
+
+    monedas = {i["moneda"] for _, _, i in elegidos if i["moneda"] != "UYU"}
+    series: dict[int, dict] = {}
+    if monedas and elegidos:
+        desde = min(a["fecha"] for a, _, _ in elegidos)
+        hasta = min(max(a["fecha"] for a, _, _ in elegidos), hoy_)
+        for m in monedas:
+            codigo = compras.BCU_POR_MONEDA.get(m)
+            if codigo:
+                series[codigo], _ = cache.bcu_serie(codigo, desde, hasta, hoy=hoy_)
+
+    def cotizar(codigo: int, fecha: date) -> Optional[float]:
+        serie = series.get(codigo)
+        return bcu.cotizacion_del_dia(serie, fecha, hacia_atras=True) if serie else None
+
+    total, sin_convertir = 0.0, {}
+    por_org: dict[str, dict] = {}
+    con_pesos = []
+    for a, comp, i in elegidos:
+        c = compras.convertir({i["moneda"]: i["importe"]}, a["fecha"], cotizar)
+        for m, v in c["sin_convertir"].items():
+            sin_convertir[m] = round(sin_convertir.get(m, 0.0) + v, 2)
+        if c["sin_convertir"]:
+            continue
+        total += c["pesos"]
+        o = por_org.setdefault(comp["id"], {"nombre": comp["nombre"], "ocids": set(), "pesos": 0.0})
+        o["ocids"].add(a["ocid"])
+        o["pesos"] += c["pesos"]
+        con_pesos.append((c["pesos"], a, comp, i))
+    con_pesos.sort(key=lambda x: -x[0])
+    mayores: list[ItemMayor] = [
+        {
+            "ocid": a["ocid"],
+            "organismo": comp["nombre"],
+            "descripcion": i["descripcion"],
+            "cantidad": i["cantidad"],
+            "precio_unitario": i["precio_unitario"],
+            "moneda": i["moneda"],
+            "importe_pesos": round(p, 2),
+            "pct_del_total": round(100 * p / total, 2) if total else 0.0,
+        }
+        for p, a, comp, i in con_pesos[:5]
+    ]
+    aviso = ""
+    if mayores and len(con_pesos) >= MINIMO_ITEMS_AVISO and mayores[0]["pct_del_total"] > UMBRAL_AVISO_PCT:
+        aviso = (
+            f"Atención: un solo ítem es el {mayores[0]['pct_del_total']}% del total "
+            f"({mayores[0]['descripcion'][:60]}, {mayores[0]['cantidad']} × {mayores[0]['precio_unitario']}). "
+            "En estos archivos hay registros con cantidad × precio imposibles; revisar los mayores ítems antes "
+            "de citar el total."
+        )
+    organismos: list[OrganismoComprador] = [
+        {"nombre": o["nombre"], "adjudicaciones": len(o["ocids"]), "pesos": round(o["pesos"], 2)}
+        for o in sorted(por_org.values(), key=lambda o: -o["pesos"])[: max(1, min(cantidad, 50))]
+    ]
+    return {
+        "anio": anio,
+        "organismo": organismo or None,
+        "buscar": buscar or None,
+        "adjudicaciones": base["adjudicaciones"],
+        "items": base["items"],
+        "total_pesos": round(total, 2),
+        "importes_por_moneda": base["importes"],
+        "sin_moneda": base["sin_moneda"],
+        "sin_convertir": sin_convertir,
+        "excluidas_por_estado": base["excluidas_por_estado"],
+        "organismos": organismos,
+        "mayores_items": mayores,
+        "aviso": aviso,
+        "nota": (
+            "Adjudicaciones activas del año (los llamados, las anulaciones y las adjudicaciones canceladas, "
+            "fallidas o pendientes no son gasto). Importe = cantidad × precio unitario; cada moneda se lleva a "
+            "pesos con la cotización del BCU del día de la adjudicación (dólar y real billete). sin_moneda son "
+            "ítems sin moneda declarada, que no se suman. `aviso` salta cuando, entre al menos 20 ítems, uno solo "
+            "pasa del 20% del total. No se devuelven nombres de proveedores: pueden ser personas físicas."
+        ),
+        "fuente": FUENTE_COMPRAS,
         "bajado": bajado,
     }
 

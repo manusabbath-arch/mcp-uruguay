@@ -176,6 +176,16 @@ def resultados_electorales(
     return h.resultados_electorales(eleccion, departamento)
 
 
+@herramienta("Compras del Estado (ARCE)", EN_RED)
+def compras_estado(anio: int, organismo: str = "", buscar: str = "", cantidad: int = 10) -> h.ComprasEstado:
+    """Cuánto adjudicó el Estado uruguayo en un año (2002 en adelante), en pesos, con los organismos que más
+    compraron y los mayores ítems. `organismo` filtra por comprador (por ejemplo «Intendencia de Montevideo»);
+    `buscar` filtra los ítems por texto (por ejemplo «ambulancia»). Las monedas se convierten con la
+    cotización del día. Avisa cuando un solo ítem domina el total: hay registros con cantidad × precio
+    imposibles. La primera consulta de un año baja unos 30 MB y tarda."""
+    return h.compras_estado(anio, organismo, buscar, cantidad)
+
+
 @herramienta("Validar RUT o cédula uruguaya", LOCAL)
 def validar_documento(numero: str, tipo: Literal["rut", "ci"]) -> h.Validacion:
     """Valida el dígito verificador de un RUT (12 dígitos) o una cédula de identidad (8 dígitos) de
