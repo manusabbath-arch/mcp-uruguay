@@ -60,14 +60,14 @@ def cotizacion(moneda: Literal["USD", "UI", "ARS", "BRL"], fecha: str, hacia_atr
 
 
 @herramienta("Promedio mensual de una cotización del BCU", EN_RED)
-def cotizacion_mensual(moneda: Literal["USD", "UI", "ARS", "BRL"], desde: str, hasta: str) -> dict[str, Any]:
+def cotizacion_mensual(moneda: Literal["USD", "UI", "ARS", "BRL"], desde: str, hasta: str) -> h.CotizacionMensual:
     """Promedio mensual de una cotización del BCU entre dos meses AAAA-MM (hasta 240 meses), con la
     cantidad de días publicados de cada mes. El mes en curso viene marcado como incompleto."""
     return h.cotizacion_mensual(moneda, desde, hasta)
 
 
 @herramienta("Pesos constantes con la Unidad Indexada", EN_RED)
-def pesos_constantes(montos: dict[str, float], base: str) -> dict[str, Any]:
+def pesos_constantes(montos: dict[str, float], base: str) -> h.PesosConstantes:
     """Lleva montos en pesos corrientes de distintos meses a pesos de un mes base, deflactando con la
     Unidad Indexada promedio del BCU. `montos` es {"AAAA-MM": monto}; `base` es "AAAA-MM".
     Sirve para comparar en términos reales pesos de fechas distintas."""
@@ -75,14 +75,14 @@ def pesos_constantes(montos: dict[str, float], base: str) -> dict[str, Any]:
 
 
 @herramienta("IPC de Argentina (INDEC)", EN_RED)
-def ipc_argentina(desde: str, hasta: str) -> dict[str, Any]:
+def ipc_argentina(desde: str, hasta: str) -> h.IpcArgentina:
     """Índice de precios al consumidor nacional de Argentina, base dic-2016 = 100, entre dos meses AAAA-MM.
     Devuelve el índice, no la inflación."""
     return h.ipc_argentina(desde, hasta)
 
 
 @herramienta("IPCA de Brasil (IBGE)", EN_RED)
-def ipca_brasil(desde: str, hasta: str) -> dict[str, Any]:
+def ipca_brasil(desde: str, hasta: str) -> h.IpcaBrasil:
     """IPCA de Brasil como número-índice (base dic-1993 = 100), entre dos meses AAAA-MM.
     Devuelve el índice, no la inflación."""
     return h.ipca_brasil(desde, hasta)
@@ -91,7 +91,7 @@ def ipca_brasil(desde: str, hasta: str) -> dict[str, Any]:
 @herramienta("Precios de combustibles de ANCAP", EN_RED)
 def combustible_ancap(
     producto: Optional[str] = None, anio: Optional[int] = None, mes: Optional[int] = None
-) -> dict[str, Any]:
+) -> h.CombustibleAncap:
     """Precio máximo al público, con IVA, de los combustibles de ANCAP fijado por el Poder Ejecutivo.
     Sin `producto`, lista los productos disponibles (los nombres hay que pasarlos tal cual).
     Con `producto`, la serie mensual; con `anio` y `mes`, ese mes."""
@@ -99,7 +99,7 @@ def combustible_ancap(
 
 
 @herramienta("Clima en Salto Grande (INIA)", EN_RED)
-def clima(desde: str = "", hasta: str = "") -> dict[str, Any]:
+def clima(desde: str = "", hasta: str = "") -> h.Clima:
     """Clima de la estacion INIA Salto Grande, la misma serie desde 1970.
 
     Sin fechas: la tendencia de la temperatura media anual, en grados Celsius por decada, con su
@@ -110,7 +110,7 @@ def clima(desde: str = "", hasta: str = "") -> dict[str, Any]:
 
 
 @herramienta("Estaciones hidrometeorológicas cercanas (Salto Grande)", EN_RED)
-def estaciones_cercanas(lat: float, lon: float, cantidad: int = 5) -> dict[str, Any]:
+def estaciones_cercanas(lat: float, lon: float, cantidad: int = 5) -> h.EstacionesCercanas:
     """Estaciones de la red de la Comisión Técnica Mixta de Salto Grande (cuenca del río Uruguay, las dos
     orillas) más cercanas a un punto, con las variables que publica cada una y su último dato."""
     return h.estaciones_cercanas(lat, lon, cantidad)
@@ -130,7 +130,7 @@ def semana(fecha: str) -> h.SemanaTyped:
 
 
 @herramienta("Geocodificar una dirección de Uruguay (IDE.uy)", EN_RED)
-def geocodificar_direccion(direccion: str, localidad: str = "", departamento: str = "") -> dict[str, Any]:
+def geocodificar_direccion(direccion: str, localidad: str = "", departamento: str = "") -> h.Geocodificacion:
     """Coordenadas (lat, lon) de una dirección o esquina de Uruguay con la API oficial de IDE.uy, con la
     calidad del resultado: puerta exacta, puerta aproximada, esquina o centro de calle. Si la API devuelve
     otra calle o el centro de la localidad, no se da coordenada. Pasar localidad y departamento mejora
@@ -139,14 +139,14 @@ def geocodificar_direccion(direccion: str, localidad: str = "", departamento: st
 
 
 @herramienta("Recursos de un dataset del catálogo de Uruguay", EN_RED)
-def recursos_catalogo(dataset: str) -> dict[str, Any]:
+def recursos_catalogo(dataset: str) -> h.RecursosCatalogo:
     """Los archivos vigentes (nombre, URL, formato, fecha) de un dataset de catalogodatos.gub.uy, por su
     identificador (por ejemplo `inia-precipitacion-temps-extremas-sg`)."""
     return h.recursos_catalogo(dataset)
 
 
 @herramienta("Que copia de cada fuente se esta usando", LOCAL)
-def diagnostico() -> dict[str, Any]:
+def diagnostico() -> h.Diagnostico:
     """Que archivo de cada fuente esta cacheado en esta maquina, de cuando es la copia que se esta
     usando, y cuanto pesa. Sirve para saber si un numero viejo viene de una copia vieja.
     No sale a la red."""

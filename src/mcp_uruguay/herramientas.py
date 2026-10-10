@@ -62,6 +62,195 @@ class SemanaTyped(TypedDict):
     nota: str
 
 
+class MesBCU(TypedDict):
+    """Una fila de `cotizacion_mensual()`: el promedio de un mes y cuantos dias entraron."""
+
+    mes: str
+    promedio: float
+    dias: int
+    completo: bool
+
+
+class CotizacionMensual(TypedDict):
+    """La respuesta de `cotizacion_mensual()`."""
+
+    moneda: str
+    nombre_bcu: str
+    meses: list[MesBCU]
+    nota: str
+    fuente: str
+    bajado: str
+
+
+class PesosConstantes(TypedDict):
+    """La respuesta de `pesos_constantes()`."""
+
+    base: str
+    montos_en_pesos_de_la_base: dict[str, float]
+    ui_promedio_usada: dict[str, float]
+    metodo: str
+    fuente: str
+    bajado: str
+
+
+class PuntoIndice(TypedDict):
+    """Un mes de una serie de precios: el indice, no la variacion."""
+
+    periodo: str
+    valor: float
+
+
+class IpcArgentina(TypedDict):
+    """La respuesta de `ipc_argentina()`."""
+
+    serie: str
+    puntos: list[PuntoIndice]
+    nota: str
+    fuente: str
+    bajado: str
+
+
+class IpcaBrasil(TypedDict):
+    """La respuesta de `ipca_brasil()`."""
+
+    serie: str
+    puntos: list[PuntoIndice]
+    nota: str
+    fuente: str
+    bajado: str
+
+
+class PrecioCombustible(TypedDict):
+    """Un mes de precio de un producto de ANCAP. `precio` en None = sin cotizacion (S/C)."""
+
+    mes: str
+    precio: Optional[float]
+    unidad: str
+
+
+class CombustibleAncap(TypedDict, total=False):
+    """La respuesta de `combustible_ancap()`, en sus dos caminos.
+
+    Sin `producto` trae solo `productos`; con `producto`, trae `producto` y `precios`. `nota`,
+    `fuente` y `bajado` van siempre.
+    """
+
+    productos: list[str]
+    producto: str
+    precios: list[PrecioCombustible]
+    nota: str
+    fuente: str
+    bajado: str
+
+
+class DiaClima(TypedDict):
+    """Un dia del clima de Salto Grande. Las claves `anomalia_*` en None = sin dato, nunca cero."""
+
+    fecha: str
+    tmax: Optional[float]
+    tmin: Optional[float]
+    lluvia_mm: Optional[float]
+    anomalia_tmax: Optional[float]
+    anomalia_tmin: Optional[float]
+
+
+class TendenciaTemperatura(TypedDict):
+    """La tendencia de una temperatura (tmax o tmin), en grados Celsius por decada."""
+
+    por_decada: float
+    error_estandar: float
+    anios: int
+
+
+class Clima(TypedDict, total=False):
+    """La respuesta de `clima()`, en sus dos caminos.
+
+    Con `desde`/`hasta` trae `dias` (una fila por dia) y `ultimo_dato`; sin fechas, `dias` es el
+    conteo de dias y trae `periodo` y `tendencia_c_por_decada`. `nota`, `fuente` y `bajado` van
+    siempre.
+    """
+
+    estacion: str
+    dias: list[DiaClima] | int
+    ultimo_dato: str
+    periodo: str
+    tendencia_c_por_decada: dict[str, TendenciaTemperatura]
+    nota: str
+    fuente: str
+    bajado: str
+
+
+class EstacionCercana(TypedDict):
+    """Una estacion de la red de Salto Grande y su distancia en linea recta al punto pedido."""
+
+    id: str
+    nombre: str
+    distancia_km: float
+    variables: list[str]
+    ultimo_dato: Optional[str]
+
+
+class EstacionesCercanas(TypedDict):
+    """La respuesta de `estaciones_cercanas()`."""
+
+    estaciones: list[EstacionCercana]
+    nota: str
+    fuente: str
+    bajado: str
+
+
+class Geocodificacion(TypedDict):
+    """La respuesta de `geocodificar_direccion()`. Sin coordenada, `lat`/`lon` van en None."""
+
+    direccion: str
+    localidad: str
+    departamento: str
+    calidad: str
+    lat: Optional[float]
+    lon: Optional[float]
+    dentro_de_uruguay: Optional[bool]
+    puerta_pedida: Optional[int]
+    puerta_devuelta: Optional[int]
+    direccion_devuelta: str
+    metodo: str
+    aviso_de_la_api: str
+    nota: str
+    fuente: str
+
+
+class Recurso(TypedDict):
+    """Un archivo vigente de un dataset del catalogo de datos abiertos."""
+
+    nombre: str
+    url: str
+    formato: str
+    modificado: str
+
+
+class RecursosCatalogo(TypedDict):
+    """La respuesta de `recursos_catalogo()`."""
+
+    dataset: str
+    recursos: list[Recurso]
+    fuente: str
+
+
+class ArchivoCache(TypedDict):
+    """Un archivo cacheado en disco: de cuando es la copia que se usa y cuanto pesa."""
+
+    archivo: str
+    bajado: str
+    bytes: int
+
+
+class Diagnostico(TypedDict):
+    """La respuesta de `diagnostico()`."""
+
+    directorio: str
+    archivos: list[ArchivoCache]
+    nota: str
+
+
 MAX_DIAS = 400
 MAX_MESES = 240
 
@@ -124,7 +313,7 @@ def cotizacion(moneda: Moneda, fecha: str, hacia_atras: bool = False, hoy: Optio
     }
 
 
-def cotizacion_mensual(moneda: Moneda, desde: str, hasta: str, hoy: Optional[date] = None) -> dict:
+def cotizacion_mensual(moneda: Moneda, desde: str, hasta: str, hoy: Optional[date] = None) -> CotizacionMensual:
     ini, fin = _mes(desde, "desde"), _fin_de_mes(_mes(hasta, "hasta"))
     if (fin.year - ini.year) * 12 + fin.month - ini.month >= MAX_MESES:
         raise ValueError(f"rango demasiado largo: hasta {MAX_MESES} meses por consulta")
@@ -144,7 +333,7 @@ def cotizacion_mensual(moneda: Moneda, desde: str, hasta: str, hoy: Optional[dat
     }
 
 
-def pesos_constantes(montos: dict[str, float], base: str, hoy: Optional[date] = None) -> dict:
+def pesos_constantes(montos: dict[str, float], base: str, hoy: Optional[date] = None) -> PesosConstantes:
     if not montos:
         raise ValueError("montos vacío: se espera {'AAAA-MM': pesos corrientes}")
     meses = [_mes(m, "montos") for m in montos] + [_mes(base, "base")]
@@ -169,7 +358,7 @@ def _recortar(serie: list[dict], desde: str, hasta: str) -> list[dict]:
     return [p for p in serie if desde <= p["periodo"] <= hasta]
 
 
-def ipc_argentina(desde: str, hasta: str) -> dict:
+def ipc_argentina(desde: str, hasta: str) -> IpcArgentina:
     serie, ruta = cache.archivo(cache.directorio() / "indec_ipc.json", indec.descargar, indec.leer, cache.DIA)
     puntos = _recortar(serie, desde, hasta)
     return {
@@ -181,7 +370,7 @@ def ipc_argentina(desde: str, hasta: str) -> dict:
     }
 
 
-def ipca_brasil(desde: str, hasta: str) -> dict:
+def ipca_brasil(desde: str, hasta: str) -> IpcaBrasil:
     serie, ruta = cache.archivo(cache.directorio() / "ibge_ipca.json", ibge.descargar, ibge.leer, cache.DIA)
     puntos = _recortar(serie, desde, hasta)
     return {
@@ -196,7 +385,9 @@ def ipca_brasil(desde: str, hasta: str) -> dict:
 # --- ANCAP ---------------------------------------------------------------------------------------
 
 
-def combustible_ancap(producto: Optional[str] = None, anio: Optional[int] = None, mes: Optional[int] = None) -> dict:
+def combustible_ancap(
+    producto: Optional[str] = None, anio: Optional[int] = None, mes: Optional[int] = None
+) -> CombustibleAncap:
     publicaciones, ruta = cache.archivo(
         cache.directorio() / "ancap.csv", ancap.descargar, ancap.leer_publicaciones, cache.DIA
     )
@@ -294,7 +485,7 @@ DISPONIBLES = {
 }
 
 
-def clima(desde: str = "", hasta: str = "") -> dict:
+def clima(desde: str = "", hasta: str = "") -> Clima:
     """La puerta de entrada al clima de Salto Grande: dias, o tendencia. **Sale a la red.**
 
     Con `desde` y `hasta` (AAAA-MM-DD) devuelve los dias de ese rango; sin ninguna de las dos, la
@@ -314,7 +505,7 @@ def clima(desde: str = "", hasta: str = "") -> dict:
 # --- Salto Grande --------------------------------------------------------------------------------
 
 
-def estaciones_cercanas(lat: float, lon: float, cantidad: int = 5) -> dict:
+def estaciones_cercanas(lat: float, lon: float, cantidad: int = 5) -> EstacionesCercanas:
     estaciones, ruta = cache.archivo(
         cache.directorio() / "salto_grande.xml",
         salto_grande.descargar_lista,
@@ -370,7 +561,7 @@ def semana(fecha: str) -> SemanaTyped:
     }
 
 
-def geocodificar_direccion(direccion: str, localidad: str = "", departamento: str = "") -> dict:
+def geocodificar_direccion(direccion: str, localidad: str = "", departamento: str = "") -> Geocodificacion:
     if not direccion.strip():
         raise ValueError("direccion vacía")
     r = ideuy.geocodificar(direccion, localidad, departamento)
@@ -385,7 +576,7 @@ def geocodificar_direccion(direccion: str, localidad: str = "", departamento: st
     }
 
 
-def recursos_catalogo(dataset: str) -> dict:
+def recursos_catalogo(dataset: str) -> RecursosCatalogo:
     return {
         "dataset": dataset,
         "recursos": catalogo.recursos(dataset),
@@ -396,7 +587,7 @@ def recursos_catalogo(dataset: str) -> dict:
 # --- Diagnostico ----------------------------------------------------------------------------------
 
 
-def diagnostico() -> dict:
+def diagnostico() -> Diagnostico:
     """Que copia de cada fuente esta en disco, de cuando es, y si esta vencida.
 
     Es la primera pregunta cuando un numero no cierra: no todos los archivos se refrescan igual (un

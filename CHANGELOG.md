@@ -4,6 +4,8 @@
 
 ### Cambiado
 
+- Las trece herramientas declaran los campos de su salida, y hay una guarda que impide que vuelva
+  a haber una que no lo haga. Sin eso, el modelo que llama tiene que adivinar los nombres.
 - `clima_salto` y `clima_tendencia` se fusionaron en **`clima`**: sin fechas devuelve la tendencia
   y con `desde`/`hasta` los dias. Las dos preguntan lo mismo, y tener dos herramientas parecidas
   hace que el modelo elija mal. **Quita dos herramientas**, asi que la proxima version es 0.3.0.

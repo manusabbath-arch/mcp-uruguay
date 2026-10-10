@@ -62,6 +62,24 @@ async def test_el_esquema_de_salida_declara_los_campos():
     assert set(herramientas["validar_documento"].output_schema["properties"]) >= {"tipo", "valido"}
 
 
+async def test_ninguna_herramienta_publica_un_esquema_vacio():
+    """Si el modelo no sabe que campos devuelve una herramienta, los inventa.
+
+    Con la anotacion de retorno en `dict[str, Any]` el SDK publica un esquema vacio y quien llama
+    queda adivinando los nombres. Todas declaran su forma (un objeto con `properties`, o un array
+    con `items`): ninguna puede volver a quedar muda.
+    """
+    async with Client(servidor) as c:
+        herramientas = (await c.list_tools()).tools
+    assert len(herramientas) == 13
+    vacias = [
+        t.name
+        for t in herramientas
+        if not ((t.output_schema or {}).get("properties") or (t.output_schema or {}).get("items"))
+    ]
+    assert not vacias, f"estas herramientas no declaran su salida: {vacias}"
+
+
 async def test_la_respuesta_no_se_recorta_a_lo_declarado():
     async with Client(servidor) as c:
         r = await c.call_tool("semana", {"fecha": "2026-10-09"})
