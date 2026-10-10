@@ -59,6 +59,14 @@ cantidad de días publicados de cada mes. El mes en curso viene marcado como inc
 | `desde` | `string` | si |
 | `hasta` | `string` | si |
 
+## `diagnostico` — Que copia de cada fuente se esta usando
+
+Que archivo de cada fuente esta cacheado en esta maquina, de cuando es la copia que se esta
+usando, y cuanto pesa. Sirve para saber si un numero viejo viene de una copia vieja.
+No sale a la red.
+
+_Sin parametros._
+
 ## `estaciones_cercanas` — Estaciones hidrometeorológicas cercanas (Salto Grande)
 
 Estaciones de la red de la Comisión Técnica Mixta de Salto Grande (cuenca del río Uruguay, las dos

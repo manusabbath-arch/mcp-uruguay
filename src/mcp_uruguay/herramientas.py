@@ -368,3 +368,35 @@ def recursos_catalogo(dataset: str) -> dict:
         "recursos": catalogo.recursos(dataset),
         "fuente": f"catalogodatos.gub.uy, package_show?id={dataset}",
     }
+
+
+# --- Diagnostico ----------------------------------------------------------------------------------
+
+
+def diagnostico() -> dict:
+    """Que copia de cada fuente esta en disco, de cuando es, y si esta vencida.
+
+    Es la primera pregunta cuando un numero no cierra: no todos los archivos se refrescan igual (un
+    mes cerrado del BCU no cambia nunca, el IPC se vuelve a pedir cada dia). **No sale a la red.**
+    """
+    d = cache.directorio()
+    archivos = []
+    for ruta in sorted(d.rglob("*")):
+        if not ruta.is_file() or ruta.name.endswith(".nuevo"):
+            continue
+        archivos.append(
+            {
+                "archivo": str(ruta.relative_to(d)).replace("\\", "/"),
+                "bajado": cache.sello(ruta),
+                "bytes": ruta.stat().st_size,
+            }
+        )
+    return {
+        "directorio": str(d),
+        "archivos": archivos,
+        "nota": (
+            "`bajado` es cuando se obtuvo la copia que se esta usando, en hora local. "
+            "Si una fuente no aparece, todavia no se pidio en esta maquina: no es un error. "
+            "Los archivos `.nuevo` son descargas en curso y se omiten."
+        ),
+    }

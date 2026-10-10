@@ -149,6 +149,14 @@ def recursos_catalogo(dataset: str) -> dict[str, Any]:
     return h.recursos_catalogo(dataset)
 
 
+@herramienta("Que copia de cada fuente se esta usando", LOCAL)
+def diagnostico() -> dict[str, Any]:
+    """Que archivo de cada fuente esta cacheado en esta maquina, de cuando es la copia que se esta
+    usando, y cuanto pesa. Sirve para saber si un numero viejo viene de una copia vieja.
+    No sale a la red."""
+    return h.diagnostico()
+
+
 def main() -> None:
     servidor.run()
 
