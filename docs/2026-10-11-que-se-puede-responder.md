@@ -7,8 +7,7 @@ catálogo de deseos: cada fila de §1 y §2 trae la respuesta real de una corrid
 ## 0. Cómo se midió
 
 ```sh
-uv run --quiet --with-editable . python scripts/sonda.py \
-  --salida "C:/Users/Usuario/AppData/Local/hermes/cache/scratch/sonda-2026-10-11.json"
+uv run --quiet --with-editable . python scripts/sonda.py --salida sonda.json
 ```
 
 `scripts/sonda.py` reusa la lista de llamadas de `scripts/humo.py` (una sola lista para las dos
@@ -84,7 +83,7 @@ tabla es un informe que **hoy no existe** y que se arma con dos o tres llamadas.
 ### 3.1 Dos módulos de la librería no tienen herramienta
 
 ```sh
-cd /c/Users/Usuario/mcp-uruguay
+# desde la raíz del repo de mcp-uruguay, con los dos repos clonados uno al lado del otro
 for m in $(ls ../uy-datos-abiertos/src/uydatos/*.py | xargs -n1 basename | sed 's/\.py$//' \
           | grep -v -E "^(red|procedencia|__init__|__main__|hojas|py)$"); do
   grep -q "\b$m\b" src/mcp_uruguay/herramientas.py || echo "SIN HERRAMIENTA: $m"

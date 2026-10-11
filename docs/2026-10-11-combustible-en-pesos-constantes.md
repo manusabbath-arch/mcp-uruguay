@@ -151,8 +151,10 @@ Para reproducirlo:
 ```sh
 uv run --quiet python -c "
 import csv, collections
+from pathlib import Path
+ruta = Path.home() / '.cache' / 'mcp-uruguay' / 'ancap.csv'
 filas = [{k.lstrip('\ufeff'): v for k, v in f.items()} for f in
-         csv.DictReader(open(r'C:\Users\Usuario\.cache\mcp-uruguay\ancap.csv', encoding='utf-8'), delimiter=';')]
+         csv.DictReader(open(ruta, encoding='utf-8'), delimiter=';')]
 g = [f for f in filas if f['Producto'].strip() == 'GASOIL 50-S *']
 meses = collections.defaultdict(set)
 for f in g: meses[(f['Año'], f['Mes'])].add(f['Unidad'].strip())   # 'Unidad' trae el precio: invertidas
