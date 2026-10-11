@@ -28,7 +28,7 @@ jobs:
       - uses: actions/checkout@v7
       - uses: astral-sh/setup-uv@v10.2.0
       - name: Lint
-        run: uvx ruff check src tests && uvx ruff format --check src tests
+        run: uvx ruff check scripts src tests && uvx ruff format --check scripts src tests
       - name: Tests sin red
         run: uv run --python ${{ matrix.python }} --with pytest --with-editable . pytest -q
 
@@ -40,3 +40,17 @@ jobs:
       - uses: astral-sh/setup-uv@v10.2.0
       - name: Tests contra las fuentes reales
         run: uv run --python 3.13 --with pytest --with-editable . pytest -q -m red
+
+  instalado-desde-pypi:
+    # Lo que instala un usuario, no el código del repo: cada herramienta contra las fuentes reales.
+    if: github.event_name == 'schedule' || github.event_name == 'workflow_dispatch'
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        python: ["3.10", "3.13"]
+    steps:
+      - uses: actions/checkout@v7
+      - uses: astral-sh/setup-uv@v10.2.0
+      - name: Prueba de humo del paquete publicado
+        run: uv run --isolated --no-project --python ${{ matrix.python }} --with mcp-uruguay python scripts/humo.py

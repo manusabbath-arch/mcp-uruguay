@@ -1,5 +1,16 @@
 # Cambios
 
+## 0.10.1 — 2026-10-11
+
+- **Arreglo: el servidor se anunciaba como 0.7.0** a los clientes MCP desde la 0.7.0 hasta la 0.10.0,
+  porque la versión era una constante que nadie actualizó. Ahora sale del paquete instalado, y
+  `tests/test_version.py` la ata a `pyproject.toml`.
+- **Nuevo: `scripts/humo.py`**, una prueba de humo del paquete **tal como se instala desde PyPI**:
+  llama a las 27 herramientas contra las fuentes reales. La corre cada semana el job
+  `instalado-desde-pypi` (Python 3.10 y 3.13) y avisa si alguna herramienta no responde. Medido al
+  escribirla: 26 de 27 en 3.10 y en 3.13; la que faltó fue `leyes`, porque el Parlamento devolvía
+  un archivo vacío para cualquier cliente, no por el paquete.
+
 ## 0.10.0 — 2026-10-11
 
 - **Nueva: `paridad_combustibles`**, sobre `uydatos.ursea`: el precio ex planta de ANCAP contra el
