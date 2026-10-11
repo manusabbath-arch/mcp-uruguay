@@ -125,6 +125,43 @@ restantes son `S/C` y quedan como huecos: no se rellenan.
 **No confundir este precio con el precio ex planta.** Este es el **máximo al público con IVA**; el ex
 planta (sección 6) es otro dataset y otro número.
 
+### 3.1 El archivo crudo detrás de la tabla: publicaciones apiladas, columnas invertidas y dos meses que se contradicen
+
+Medido el 11/10/26 sobre `~/.cache/mcp-uruguay/ancap.csv` (851.835 bytes), **no** sobre la salida de la
+herramienta:
+
+- **25.364 filas, 22 productos.** De ellas, **1.172** son de `GASOIL 50-S *`.
+- **El archivo apila publicaciones**: cada par (año, mes) de ese producto aparece **29 veces**. No es
+  una serie mensual, es el log de todo lo publicado; el lector (`uydatos.ancap.serie_mensual`)
+  deduplica a una fila por (producto, año, mes).
+- **Las columnas vienen invertidas**: el encabezado dice `Año;Mes;Producto;Unidad;Valor`, pero la
+  columna `Unidad` trae el precio (`52,94`) y la que se llama `Valor` trae la unidad (`$/lt`). El
+  lector lo sabe y lo corrige; quien lea el CSV a mano, no.
+- **572 de esas 1.172 filas traen `S/C`** (sin cotización) y **600 un precio**. `S/C` es un nulo, no un
+  cero.
+- **2 de los 56 meses tienen publicaciones que se contradicen**: `2022-10` aparece como `64,99` en una
+  publicación y como `S/C` en otra; `2023-08`, como `52,82` y como `S/C`. Son los dos únicos. La regla
+  de desempate está declarada en el lector: **el valor manda sobre el `S/C`** (un mes que alguna vez
+  tuvo precio no se pierde porque una publicación posterior diga `S/C`) y, entre dos precios distintos,
+  gana **el de la publicación más reciente**. Por eso los dos aparecen con precio en la tabla de §3 — y
+  por eso hay que saber que el número depende de esa regla y no de una elección de este informe.
+
+Para reproducirlo:
+
+```sh
+uv run --quiet python -c "
+import csv, collections
+filas = [{k.lstrip('\ufeff'): v for k, v in f.items()} for f in
+         csv.DictReader(open(r'C:\Users\Usuario\.cache\mcp-uruguay\ancap.csv', encoding='utf-8'), delimiter=';')]
+g = [f for f in filas if f['Producto'].strip() == 'GASOIL 50-S *']
+meses = collections.defaultdict(set)
+for f in g: meses[(f['Año'], f['Mes'])].add(f['Unidad'].strip())   # 'Unidad' trae el precio: invertidas
+print(len(filas), 'filas |', len(g), 'de GASOIL 50-S * |', sum(len(v) > 1 for v in meses.values()), 'meses contradictorios')
+"
+```
+
+Salida esperada: `25364 filas | 1172 de GASOIL 50-S * | 2 meses contradictorios`.
+
 ---
 
 ## 4. La misma serie en pesos constantes (base julio 2026)
