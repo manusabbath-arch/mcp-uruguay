@@ -303,3 +303,39 @@ class TestParidadCombustibles:
     def test_el_glp_no_se_compara(self):
         with pytest.raises(ValueError, match="GLP no"):
             h.paridad_combustibles("GLP")
+
+
+class TestPedidosDeInformes:
+    @pytest.fixture(autouse=True)
+    def archivos(self, cache_temporal):
+        d = cache_temporal / "parlamento"
+        d.mkdir(parents=True, exist_ok=True)
+        (d / "pedidos-informes.csv").write_text(
+            "Organismo,Fecha,Autores,Tema,Estado,URLoficio,URLcontestacion\n"
+            "MINISTERIO DE SALUD PÚBLICA,2025/03/01,Ana Pérez,VACUNAS,CONTESTADO,https://x/o1.pdf,https://x/c1.pdf\n"
+            "MINISTERIO DE TRANSPORTE Y OBRAS PÚBLICAS,2025/04/10,Ana Pérez +  Juan Gómez,RUTA 3,VENCIDO,https://x/o2.pdf,\n",
+            encoding="utf-8",
+        )
+        (d / "nomina.csv").write_text(
+            "Nombre,Genero,Edad,PartidoPolitico,Departamento,HojaVotacion\n"
+            '"PÉREZ LÓPEZ, ANA",Mujer,40,Partido A,Salto,1.0\n'
+            '"GÓMEZ RUIZ, JUAN",Varón,50,Partido B,Rivera,2.0\n',
+            encoding="utf-8",
+        )
+
+    def test_resumen_general_sin_lista_de_pedidos(self):
+        r = h.pedidos_de_informes()
+        assert r["total"]["pedidos"] == 2 and r["total"]["pct_contestado_con_plazo_cumplido"] == 50.0
+        assert r["pedidos_por_partido"] == {"Partido A": 2, "Partido B": 1} and r["pedidos"] == []
+
+    def test_por_organismo_trae_los_pedidos_con_enlaces(self):
+        r = h.pedidos_de_informes(organismo="transporte")
+        assert r["total"]["pedidos"] == 1 and r["pedidos"][0]["url_oficio"] == "https://x/o2.pdf"
+        assert r["pedidos"][0]["autores"] == ["Ana Pérez", "Juan Gómez"]
+
+    def test_por_tema_sin_tildes(self):
+        assert h.pedidos_de_informes(tema="vacunas")["pedidos"][0]["tema"] == "VACUNAS"
+
+    def test_un_organismo_sin_pedidos_lo_dice(self):
+        with pytest.raises(ValueError, match="ningún pedido"):
+            h.pedidos_de_informes(organismo="turismo")

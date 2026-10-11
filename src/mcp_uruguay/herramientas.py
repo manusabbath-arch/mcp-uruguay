@@ -1522,6 +1522,56 @@ class FilaAsistencia(TypedDict):
     pct_asistencia: Optional[float]
 
 
+class TasaPedidos(TypedDict):
+    """Cuántos pedidos hay en cada estado y qué porcentaje de los que ya cumplieron el plazo se contestó."""
+
+    pedidos: int
+    contestado: int
+    vencido: int
+    sin_contestar: int
+    no_entregado: int
+    con_plazo_cumplido: int
+    pct_contestado_con_plazo_cumplido: Optional[float]
+
+
+class OrganismoPedidos(TasaPedidos):
+    organismo: str
+
+
+class SemestrePedidos(TasaPedidos):
+    semestre: str
+
+
+class PedidoInforme(TypedDict):
+    fecha: str
+    organismo: str
+    autores: list[str]
+    tema: str
+    estado: str
+    url_oficio: str
+    url_contestacion: Optional[str]
+
+
+class PedidosDeInformes(TypedDict):
+    """La respuesta de `pedidos_de_informes()`."""
+
+    desde: str
+    hasta: str
+    plazo_dias: int
+    total: TasaPedidos
+    por_organismo: list[OrganismoPedidos]
+    por_semestre: list[SemestrePedidos]
+    pedidos_por_partido: dict[str, int]
+    autores_sin_identificar: dict[str, int]
+    contestados_sin_enlace: int
+    con_varios_autores: int
+    repetidos: int
+    pedidos: list[PedidoInforme]
+    nota: str
+    fuente: str
+    bajado: str
+
+
 class AsistenciaParlamentaria(TypedDict):
     """La respuesta de `asistencia_parlamentaria()`."""
 
@@ -1584,9 +1634,10 @@ class ProyectosParlamento(TypedDict):
 def _archivo_parlamento(clave: str, legislatura: Optional[int] = None) -> Path:
     """Un archivo del Parlamento en caché: la legislatura en curso y las leyes vencen al día, las
     legislaturas cerradas al año."""
-    nombre = "leyes.csv" if clave == "leyes" else f"{clave}-{legislatura}.csv"
+    unico = legislatura is None
+    nombre = f"{clave}.csv" if unico else f"{clave}-{legislatura}.csv"
     ruta = cache.directorio() / "parlamento" / nombre
-    ttl = cache.DIA if clave == "leyes" or legislatura == LEGISLATURA_ACTUAL else 365 * cache.DIA
+    ttl = cache.DIA if unico or legislatura == LEGISLATURA_ACTUAL else 365 * cache.DIA
     if cache.vencido(ruta, ttl):
         cache.archivo(ruta, lambda p: parlamento.descargar(clave, p, legislatura), lambda p: p, ttl)
     return ruta
@@ -1625,6 +1676,51 @@ def asistencia_parlamentaria(
             "y no se unen. El porcentaje es un dato de asistencia a sesiones, no una evaluación del trabajo."
         ),
         "fuente": FUENTE_PARLAMENTO,
+        "bajado": cache.sello(ruta),
+    }
+
+
+_NOTA_PEDIDOS = (
+    "Pedidos de informes de Diputados (artículo 118 de la Constitución) de la legislatura actual. La Ley 17.673 "
+    "da 45 días para contestar: el porcentaje se calcula sólo sobre los pedidos con ese plazo cumplido. Las "
+    "respuestas siguen llegando después del plazo, así que los pedidos más nuevos tienen menos contestados "
+    "(ver por_semestre): para comparar organismos, usar presentados_hasta y comparar una misma cohorte. Los "
+    "estados son los que publica la Cámara: SIN CONTESTAR incluye pedidos con más de 45 días que no figuran "
+    "como VENCIDO. No hay fecha de respuesta: se sabe si contestó, no cuánto tardó. El organismo es por donde "
+    "se canaliza el pedido (un pedido sobre UTE va al Ministerio de Industria). Un pedido con autores de dos "
+    "partidos cuenta en los dos. Medir cuánto contesta un organismo no evalúa su gestión."
+)
+
+
+def pedidos_de_informes(
+    organismo: str = "", presentados_hasta: str = "", tema: str = "", cantidad: int = 20
+) -> PedidosDeInformes:
+    ruta = _archivo_parlamento("pedidos-informes")
+    ruta_nomina = _archivo_parlamento("nomina")
+    try:
+        pedidos = parlamento.leer_pedidos(ruta)
+        nomina = parlamento.leer_nomina(ruta_nomina)
+        if tema:
+            clave = _sin_tildes(tema)
+            pedidos = [p for p in pedidos if clave in _sin_tildes(p["tema"])]
+            if not pedidos:
+                raise ValueError(f"ningún pedido con {tema!r} en el tema")
+        hasta = _fecha(presentados_hasta, "presentados_hasta") if presentados_hasta else None
+        r = parlamento.resumen_pedidos(pedidos, date.today(), nomina, organismo, hasta)
+    except parlamento.ParlamentoInvalido as e:
+        raise ValueError(str(e)) from None
+    elegidos = pedidos
+    if organismo:
+        clave = _sin_tildes(organismo)
+        elegidos = [p for p in elegidos if clave in _sin_tildes(p["organismo"])]
+    if hasta:
+        elegidos = [p for p in elegidos if p["fecha"] <= hasta]
+    muestra = sorted(elegidos, key=lambda p: p["fecha"], reverse=True)[: max(0, min(cantidad, 100))]
+    return {
+        **r,
+        "pedidos": [{**p, "fecha": p["fecha"].isoformat()} for p in muestra] if (organismo or tema) else [],
+        "nota": _NOTA_PEDIDOS,
+        "fuente": "Cámara de Representantes, dataset crr-pedidos-de-informes y nómina, catalogodatos.gub.uy",
         "bajado": cache.sello(ruta),
     }
 

@@ -1,5 +1,15 @@
 # Cambios
 
+## 0.11.0 — 2026-10-11
+
+- **Nueva: `pedidos_de_informes`**, sobre `uydatos.parlamento` 0.12: los pedidos de informes de
+  Diputados (artículo 118 de la Constitución) de la legislatura actual, cuántos contestó cada
+  organismo sobre los que ya cumplieron el plazo de 45 días, por semestre y por partido de los
+  autores, con el enlace al oficio y a la respuesta. `presentados_hasta` compara una misma cohorte,
+  porque las respuestas llegan tarde: de los pedidos del primer semestre de 2025 está contestado el
+  92,5%, de los del segundo de 2026 el 31,9%.
+- Depende de `uydatos>=0.12,<0.13`.
+
 ## 0.10.1 — 2026-10-11
 
 - **Arreglo: el servidor se anunciaba como 0.7.0** a los clientes MCP desde la 0.7.0 hasta la 0.10.0,

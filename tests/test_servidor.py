@@ -31,6 +31,7 @@ ESPERADAS = {
     "compras_estado",
     "asistencia_parlamentaria",
     "leyes",
+    "pedidos_de_informes",
     "proyectos_parlamento",
     "semana",
     "recursos_catalogo",

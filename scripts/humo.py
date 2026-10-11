@@ -44,6 +44,7 @@ LLAMADAS = [
     ("asistencia_parlamentaria", {"camara": "senado"}),
     ("leyes", {"buscar": "presupuesto"}),
     ("proyectos_parlamento", {"buscar": "agua"}),
+    ("pedidos_de_informes", {"organismo": "transporte", "cantidad": 3}),
     ("buscar_indicador_social", {"texto": "pobreza departamento"}),
     ("indicador_social", {"indicador": "tasa-desempleo-segun-quintil-ingreso-total-pais"}),
     ("recursos_catalogo", {"dataset": "inia-precipitacion-temps-extremas-sg"}),

@@ -44,6 +44,7 @@ decirlo; uno que recibe un número plausible pero falso lo repite.
 | `resultados_electorales` | Nacionales 2024, balotaje 2024 y departamentales 2025: participación y votos por partido o candidato, del país o un departamento | Corte Electoral |
 | `compras_estado` | Cuánto adjudicó el Estado en un año, en pesos, por organismo o por texto, con los mayores ítems y un aviso si uno domina el total | ARCE (OCDS) |
 | `asistencia_parlamentaria` | Asistencia a sesiones del Senado o Diputados por legislatura, con un mínimo de citaciones y aviso de homónimos | Parlamento |
+| `pedidos_de_informes` | Pedidos de informes de Diputados a ministerios: cuántos se contestaron por organismo, semestre y partido, con el enlace al oficio y la respuesta | Parlamento |
 | `leyes` | Leyes promulgadas desde 1985 por texto, fecha o número, con el enlace a IMPO | Parlamento |
 | `proyectos_parlamento` | Proyectos entrados desde 1985 por texto, legislatura o tipo | Parlamento |
 | `validar_documento` | Dígito verificador de RUT o cédula | sin red |

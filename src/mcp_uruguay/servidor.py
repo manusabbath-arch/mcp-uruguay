@@ -222,6 +222,19 @@ def asistencia_parlamentaria(
     return h.asistencia_parlamentaria(camara, legislatura, nombre, minimo_citaciones, cantidad)
 
 
+@herramienta("Pedidos de informes de Diputados y si se contestaron", EN_RED)
+def pedidos_de_informes(
+    organismo: str = "", presentados_hasta: str = "", tema: str = "", cantidad: int = 20
+) -> h.PedidosDeInformes:
+    """Pedidos de informes de la Cámara de Diputados a ministerios y organismos (artículo 118 de la
+    Constitución), legislatura actual: cuántos se contestaron por organismo y por semestre, sobre los que ya
+    cumplieron el plazo legal de 45 días, y cuántos pidió cada partido. `organismo` y `tema` filtran por texto
+    (sin tildes) y devuelven los pedidos con el enlace al oficio y a la respuesta. `presentados_hasta`
+    (AAAA-MM-DD) compara una misma cohorte: las respuestas llegan tarde, así que los pedidos nuevos siempre
+    parecen menos contestados. Leer `nota` antes de comparar."""
+    return h.pedidos_de_informes(organismo, presentados_hasta, tema, cantidad)
+
+
 @herramienta("Leyes promulgadas (Parlamento)", EN_RED)
 def leyes(
     buscar: str = "", desde: str = "", hasta: str = "", numero: Optional[int] = None, cantidad: int = 20

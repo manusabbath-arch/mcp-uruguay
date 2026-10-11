@@ -227,6 +227,22 @@ impuestos. Leer `metodo`: la comparación es una construcción de este servidor,
 | `desde` | `string` | no |
 | `hasta` | `string` | no |
 
+## `pedidos_de_informes` — Pedidos de informes de Diputados y si se contestaron
+
+Pedidos de informes de la Cámara de Diputados a ministerios y organismos (artículo 118 de la
+Constitución), legislatura actual: cuántos se contestaron por organismo y por semestre, sobre los que ya
+cumplieron el plazo legal de 45 días, y cuántos pidió cada partido. `organismo` y `tema` filtran por texto
+(sin tildes) y devuelven los pedidos con el enlace al oficio y a la respuesta. `presentados_hasta`
+(AAAA-MM-DD) compara una misma cohorte: las respuestas llegan tarde, así que los pedidos nuevos siempre
+parecen menos contestados. Leer `nota` antes de comparar.
+
+| parametro | tipo | obligatorio |
+|---|---|---|
+| `organismo` | `string` | no |
+| `presentados_hasta` | `string` | no |
+| `tema` | `string` | no |
+| `cantidad` | `integer` | no |
+
 ## `pesos_constantes` — Pesos constantes con la Unidad Indexada
 
 Lleva montos en pesos corrientes de distintos meses a pesos de un mes base, deflactando con la
