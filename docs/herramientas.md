@@ -18,6 +18,18 @@ y las filas que contienen `nombre`. Avisa de nombres repetidos, que pueden ser h
 | `minimo_citaciones` | `integer` | no |
 | `cantidad` | `integer` | no |
 
+## `buscar_indicador_social` — Buscar indicadores sociales del MIDES
+
+Busca entre los ~1.260 indicadores sociales del Observatorio Social del MIDES (pobreza, empleo,
+desempleo, educación, vivienda, salud, ingresos, cuidados, juventud, personas mayores, censos...) por
+palabras, sin tildes. Devuelve los nombres para pasar a indicador_social. Para un departamento,
+incluir la palabra 'departamento' (por ejemplo 'pobreza departamento').
+
+| parametro | tipo | obligatorio |
+|---|---|---|
+| `texto` | `string` | si |
+| `cantidad` | `integer` | no |
+
 ## `clima` — Clima en Salto Grande (INIA)
 
 Clima de la estacion INIA Salto Grande, la misma serie desde 1970.
@@ -115,6 +127,20 @@ mucho el resultado. Esquinas: '18 de Julio y Ejido' o 'Artigas esq. Solari'.
 | `direccion` | `string` | si |
 | `localidad` | `string` | no |
 | `departamento` | `string` | no |
+
+## `indicador_social` — Un indicador social del MIDES, con su ficha
+
+Lee un indicador del Observatorio Social del MIDES (el nombre sale de buscar_indicador_social):
+título, unidad, forma de cálculo, fuente del dato (casi siempre la Encuesta Continua de Hogares del
+INE) y la tabla por dimensión y período, con datos hasta 2023-2024. `filtro` deja solo las filas con
+esos valores de dimensión, separados por coma (por ejemplo 'Salto' o 'Mujeres,Pobre'). Leer los
+`avisos`: filas de total mezcladas, mapas que muestran un solo año (`parcial`), y una ficha que no
+coincide con la tabla.
+
+| parametro | tipo | obligatorio |
+|---|---|---|
+| `indicador` | `string` | si |
+| `filtro` | `string` | no |
 
 ## `ipc_argentina` — IPC de Argentina (INDEC)
 

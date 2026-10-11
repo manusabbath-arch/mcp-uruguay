@@ -187,3 +187,54 @@ class TestVentasCombustible:
             h.ventas_combustible("gasoil")
         with pytest.raises(ValueError, match="INTERNO"):
             h.ventas_combustible("GAS OIL", "Montevideo")
+
+
+class TestIndicadorSocial:
+    PAGINA = (
+        "<html><head><title>Tasa de empleo según departamento. Total país | MIDES</title>"
+        '<meta name="description" content="Ocupados sobre población en edad de trabajar." /></head><body>'
+        '<input name="current_filters" value="{&quot;Departamento&quot;:{&quot;Salto&quot;:&quot;Salto&quot;},'
+        '&quot;A\\u00f1o&quot;:{&quot;2023&quot;:&quot;2023&quot;,&quot;2024&quot;:&quot;2024&quot;}}" />'
+        "<table><tr><th>Departamento</th><th>2023</th><th>2024</th></tr>"
+        "<tr><td>Salto</td><td>50,1</td><td>-</td></tr><tr><td>Paysandú</td><td>52</td><td>53,5</td></tr>"
+        "<tr><td>Total</td><td>57</td><td>57,9</td></tr></table>"
+        "<h3>Fuente</h3><p>INE Encuesta Continua de Hogares</p><h3>Unidad de observación</h3><p>Por cien</p>"
+        "<h3>Período</h3><ul><li>Año de inicio:\n2006</li><li>Año de fin:\n2024</li></ul>"
+        "<footer></footer></body></html>"
+    )
+
+    @pytest.fixture(autouse=True)
+    def sin_red(self, monkeypatch):
+        import json
+
+        from uydatos import observatorio
+
+        monkeypatch.setattr(
+            observatorio, "indice", lambda: ["tasa-empleo-segun-departamento-total-pais", "tasa-empleo-total-pais"]
+        )
+        monkeypatch.setattr(
+            observatorio.red, "bajar", lambda url, ruta: ruta.write_text(self.PAGINA, encoding="utf-8") or ruta
+        )
+        self.json = json
+
+    def test_buscar_devuelve_nombres_y_el_total(self):
+        r = h.buscar_indicador_social("empleo departamento")
+        assert r["indicadores"] == ["tasa-empleo-segun-departamento-total-pais"] and r["total"] == 2
+
+    def test_lee_la_ficha_la_tabla_y_los_avisos(self):
+        r = h.indicador_social("tasa-empleo-segun-departamento-total-pais")
+        assert r["unidad"] == "Por cien" and r["fuente_del_dato"] == "INE Encuesta Continua de Hogares"
+        assert r["filas"][0] == {"dimensiones": {"Departamento": "Salto"}, "valores": {"2023": 50.1, "2024": None}}
+        assert any("filas de total" in a for a in r["avisos"])
+
+    def test_el_filtro_compara_sin_tildes(self):
+        r = h.indicador_social("tasa-empleo-segun-departamento-total-pais", "paysandu")
+        assert [f["dimensiones"]["Departamento"] for f in r["filas"]] == ["Paysandú"] and r["filas_totales"] == 1
+
+    def test_un_indicador_que_no_esta_en_el_indice_sugiere(self):
+        with pytest.raises(ValueError, match="tasa-empleo-segun-departamento-total-pais"):
+            h.indicador_social("tasa-empleo-segun-departamentos")
+
+    def test_un_filtro_sin_filas_dice_que_valores_hay(self):
+        with pytest.raises(ValueError, match="Salto"):
+            h.indicador_social("tasa-empleo-segun-departamento-total-pais", "Rivera")

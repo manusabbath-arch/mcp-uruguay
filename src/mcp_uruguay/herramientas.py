@@ -29,6 +29,7 @@ from uydatos import (
     indec,
     inia,
     limites,
+    observatorio,
     parlamento,
     rut,
     salto_grande,
@@ -48,6 +49,7 @@ FUENTE_ANCAP_VENTAS = "ANCAP, dataset ancap-cantidad-ventas-combustibles de cata
 FUENTE_INIA = "INIA, Unidad GRAS, estación Salto Grande (dataset inia-precipitacion-temps-extremas-sg)"
 FUENTE_IDE = "IDE.uy, API pública de direcciones (direcciones.ide.uy)"
 FUENTE_COMPRAS = "ARCE, compras del Estado en OCDS (dataset arce-datos-historicos-de-compras)"
+FUENTE_OBSERVATORIO = "MIDES, Observatorio Social: página de cada indicador en www.gub.uy/ministerio-desarrollo-social"
 FUENTE_PARLAMENTO = "Parlamento del Uruguay, datos abiertos en catalogodatos.gub.uy"
 FUENTE_ELECCIONES = "Corte Electoral, resultados por mesa publicados en catalogodatos.gub.uy"
 FUENTE_LIMITES = "INE: límites departamentales (vía la IDE) y localidades con población 2023 (vía el MIDES)"
@@ -302,6 +304,46 @@ class RecursosCatalogo(TypedDict):
     dataset: str
     recursos: list[Recurso]
     fuente: str
+
+
+class IndicadoresEncontrados(TypedDict):
+    """La respuesta de `buscar_indicador_social()`: nombres para pasar a `indicador_social`."""
+
+    indicadores: list[str]
+    encontrados: int
+    total: int
+    nota: str
+    fuente: str
+    bajado: str
+
+
+class FilaIndicador(TypedDict):
+    """Una combinación de dimensiones (por ejemplo Sexo=Mujeres) con su valor en cada período."""
+
+    dimensiones: dict[str, str]
+    valores: dict[str, Optional[float]]
+
+
+class IndicadorSocial(TypedDict):
+    """La respuesta de `indicador_social()`: la ficha del MIDES y la tabla, con sus avisos."""
+
+    titulo: str
+    descripcion: str
+    unidad: str
+    calculo: str
+    fuente_del_dato: str
+    frecuencia: str
+    periodo_ficha: dict[str, Optional[int]]
+    dimensiones: list[str]
+    periodos: list[str]
+    filas: list[FilaIndicador]
+    filas_totales: int
+    parcial: bool
+    periodos_disponibles: list[str]
+    avisos: list[str]
+    url: str
+    fuente: str
+    bajado: str
 
 
 class ArchivoCache(TypedDict):
@@ -1693,6 +1735,100 @@ def recursos_catalogo(dataset: str) -> RecursosCatalogo:
         "dataset": dataset,
         "recursos": catalogo.recursos(dataset),
         "fuente": f"catalogodatos.gub.uy, package_show?id={dataset}",
+    }
+
+
+_NOTA_OBSERVATORIO = (
+    "Indicadores del Observatorio Social del MIDES, leídos de su página viva (la copia del catálogo de "
+    "datos abiertos quedó en 2019). Los valores van en la `unidad` de la ficha; `None` es «sin dato», "
+    "nunca cero. Las filas «Total» van mezcladas con las demás: no sumar la columna."
+)
+_MAX_FILAS_INDICADOR = 80
+
+
+def _indice_observatorio() -> tuple[list[str], Path]:
+    import json
+
+    def bajar(ruta: Path) -> None:
+        ruta.parent.mkdir(parents=True, exist_ok=True)
+        ruta.write_text(json.dumps(observatorio.indice()), encoding="utf-8")
+
+    return cache.archivo(
+        cache.directorio() / "observatorio" / "indice.json",
+        bajar,
+        lambda ruta: json.loads(ruta.read_text(encoding="utf-8")),
+        7 * cache.DIA,
+    )
+
+
+def buscar_indicador_social(texto: str, cantidad: int = 20) -> IndicadoresEncontrados:
+    slugs, ruta = _indice_observatorio()
+    encontrados = observatorio.buscar(slugs, texto, cantidad=len(slugs))
+    return {
+        "indicadores": encontrados[: max(1, min(cantidad, 100))],
+        "encontrados": len(encontrados),
+        "total": len(slugs),
+        "nota": (
+            "Pasar uno de estos nombres, tal cual, a indicador_social. Los nombres salen del título, sin "
+            "tildes: 'segun-departamento' abre por departamento, 'segun-sexo' por sexo, y 'total-pais' "
+            "es del país entero. Los más cortos primero."
+            + ("" if encontrados else " Sin resultados: probar con menos palabras o con su raíz.")
+        ),
+        "fuente": FUENTE_OBSERVATORIO + " (sitemap)",
+        "bajado": cache.sello(ruta),
+    }
+
+
+def indicador_social(indicador: str, filtro: str = "") -> IndicadorSocial:
+    url = observatorio.url_de(indicador)
+    nombre = url.rsplit("/", 1)[-1]
+    slugs, _ = _indice_observatorio()
+    if nombre not in slugs:
+        palabras = " ".join(p for p in nombre.split("-") if len(p) > 4)[:60]
+        try:
+            parecidos = observatorio.buscar(slugs, palabras, cantidad=8) if palabras else []
+        except observatorio.ObservatorioInvalido:
+            parecidos = []
+        sugerencia = parecidos or "buscarlo con buscar_indicador_social"
+        raise ValueError(f"{indicador!r} no es un indicador del MIDES. Parecidos: {sugerencia}")
+    r, ruta = cache.archivo(
+        cache.directorio() / "observatorio" / f"{nombre}.html",
+        lambda ruta: observatorio.red.bajar(url, ruta),
+        lambda ruta: observatorio.leer_pagina(ruta.read_text(encoding="utf-8"), url),
+        cache.DIA,
+    )
+    filas = r["filas"]
+    if filtro:
+        palabras = [_sin_tildes(p) for p in filtro.split(",") if p.strip()]
+        filas = [
+            f
+            for f in filas
+            if all(any(p.strip() == _sin_tildes(v) for v in f["dimensiones"].values()) for p in palabras)
+        ]
+        if not filas:
+            valores = sorted({v for f in r["filas"] for v in f["dimensiones"].values()})
+            raise ValueError(f"ninguna fila tiene {filtro!r}. Valores posibles: {valores[:60]}")
+    avisos = list(r["avisos"])
+    if len(filas) > _MAX_FILAS_INDICADOR:
+        avisos.append(f"se muestran {_MAX_FILAS_INDICADOR} de {len(filas)} filas: usar `filtro` para acotar")
+    return {
+        "titulo": r["titulo"],
+        "descripcion": r["descripcion"],
+        "unidad": r["unidad"],
+        "calculo": r["calculo"],
+        "fuente_del_dato": r["fuente"],
+        "frecuencia": r["frecuencia"],
+        "periodo_ficha": r["periodo_ficha"],
+        "dimensiones": r["dimensiones"],
+        "periodos": r["periodos"],
+        "filas": filas[:_MAX_FILAS_INDICADOR],
+        "filas_totales": len(filas),
+        "parcial": r["parcial"],
+        "periodos_disponibles": r["periodos_disponibles"],
+        "avisos": avisos + [_NOTA_OBSERVATORIO],
+        "url": url,
+        "fuente": FUENTE_OBSERVATORIO,
+        "bajado": cache.sello(ruta),
     }
 
 

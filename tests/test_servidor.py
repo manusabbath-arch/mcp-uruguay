@@ -33,6 +33,8 @@ ESPERADAS = {
     "proyectos_parlamento",
     "semana",
     "recursos_catalogo",
+    "buscar_indicador_social",
+    "indicador_social",
     "diagnostico",
 }
 

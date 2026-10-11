@@ -47,6 +47,8 @@ decirlo; uno que recibe un número plausible pero falso lo repite.
 | `proyectos_parlamento` | Proyectos entrados desde 1985 por texto, legislatura o tipo | Parlamento |
 | `validar_documento` | Dígito verificador de RUT o cédula | sin red |
 | `semana` | Semana ISO (`W41`) de una fecha, con su lunes y su domingo | sin red |
+| `buscar_indicador_social` | Busca entre los ~1.260 indicadores sociales del MIDES por palabras | MIDES (Observatorio Social) |
+| `indicador_social` | Un indicador social (pobreza, empleo, educación, vivienda...) con su unidad, cálculo y fuente, por dimensión y año, hasta 2024 | MIDES (Observatorio Social) |
 | `recursos_catalogo` | Archivos vigentes de un dataset de catalogodatos.gub.uy | Catálogo de datos abiertos |
 | `diagnostico` | De cuándo es cada copia en caché y si está vencida | sin red |
 

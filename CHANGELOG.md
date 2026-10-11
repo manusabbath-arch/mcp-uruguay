@@ -1,5 +1,16 @@
 # Cambios
 
+## 0.9.0 — 2026-10-11
+
+- **Nuevas: `buscar_indicador_social` e `indicador_social`**, sobre `uydatos.observatorio`: los
+  ~1.260 indicadores sociales del MIDES (pobreza, empleo, educación, vivienda, salud...) leídos de su
+  página viva en gub.uy, con la unidad, la forma de cálculo y la fuente del dato. **No se usan los
+  del catálogo de datos abiertos porque esa copia quedó en 2019**; la página viva llega a 2024. La
+  respuesta lleva los avisos del lector: filas «Total» mezcladas, mapas por departamento que muestran
+  un solo año (`parcial`, con los períodos que faltan) y fichas que no coinciden con la tabla. `filtro`
+  acota por valor de dimensión (`Salto`, `Mujeres,Pobre`); más de 80 filas se recortan con aviso.
+- Depende de `uydatos>=0.10,<0.11`.
+
 ## 0.8.1 — 2026-10-10
 
 - **Arreglo para Python 3.10 y 3.11**: desde la 0.3.0, en esas versiones las herramientas no

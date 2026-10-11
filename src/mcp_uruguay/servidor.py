@@ -252,6 +252,26 @@ def geocodificar_direccion(direccion: str, localidad: str = "", departamento: st
     return h.geocodificar_direccion(direccion, localidad, departamento)
 
 
+@herramienta("Buscar indicadores sociales del MIDES", EN_RED)
+def buscar_indicador_social(texto: str, cantidad: int = 20) -> h.IndicadoresEncontrados:
+    """Busca entre los ~1.260 indicadores sociales del Observatorio Social del MIDES (pobreza, empleo,
+    desempleo, educación, vivienda, salud, ingresos, cuidados, juventud, personas mayores, censos...) por
+    palabras, sin tildes. Devuelve los nombres para pasar a indicador_social. Para un departamento,
+    incluir la palabra 'departamento' (por ejemplo 'pobreza departamento')."""
+    return h.buscar_indicador_social(texto, cantidad)
+
+
+@herramienta("Un indicador social del MIDES, con su ficha", EN_RED)
+def indicador_social(indicador: str, filtro: str = "") -> h.IndicadorSocial:
+    """Lee un indicador del Observatorio Social del MIDES (el nombre sale de buscar_indicador_social):
+    título, unidad, forma de cálculo, fuente del dato (casi siempre la Encuesta Continua de Hogares del
+    INE) y la tabla por dimensión y período, con datos hasta 2023-2024. `filtro` deja solo las filas con
+    esos valores de dimensión, separados por coma (por ejemplo 'Salto' o 'Mujeres,Pobre'). Leer los
+    `avisos`: filas de total mezcladas, mapas que muestran un solo año (`parcial`), y una ficha que no
+    coincide con la tabla."""
+    return h.indicador_social(indicador, filtro)
+
+
 @herramienta("Recursos de un dataset del catálogo de Uruguay", EN_RED)
 def recursos_catalogo(dataset: str) -> h.RecursosCatalogo:
     """Los archivos vigentes (nombre, URL, formato, fecha) de un dataset de catalogodatos.gub.uy, por su
