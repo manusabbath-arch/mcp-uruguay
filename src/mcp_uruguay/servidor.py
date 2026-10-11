@@ -109,6 +109,17 @@ def ventas_combustible(linea: str = "", mercado: str = "", desde: str = "", hast
     return h.ventas_combustible(linea, mercado, desde, hasta)
 
 
+@herramienta("Combustibles: ANCAP contra el precio de paridad de importación", EN_RED)
+def paridad_combustibles(producto: str = "", desde: str = "", hasta: str = "") -> h.ParidadCombustibles:
+    """¿ANCAP vende el combustible por encima o por debajo de lo que costaría importarlo? Compara el precio
+    ex planta de ANCAP con el precio de paridad de importación (PPI) que calcula URSEA, los dos sin
+    impuestos, en $/litro, mes a mes desde 2022. Sin `producto`: el último mes y el promedio de 12 meses de
+    Gasolina Super 95, Gasolina Premium 97, Gasoil 50-S y Gasoil 10-S. Con `producto`: la serie (`desde` y
+    `hasta` en AAAA-MM) y el desglose del último PPI desde el precio internacional (FOB) hasta los
+    impuestos. Leer `metodo`: la comparación es una construcción de este servidor, no una cifra oficial."""
+    return h.paridad_combustibles(producto, desde, hasta)
+
+
 @herramienta("Clima en Salto Grande (INIA)", EN_RED)
 def clima(desde: str = "", hasta: str = "") -> h.Clima:
     """Clima de la estacion INIA Salto Grande, la misma serie desde 1970.

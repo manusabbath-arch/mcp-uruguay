@@ -212,6 +212,21 @@ Los años con pocas lecturas se excluyen y se listan. La primera consulta puede 
 | `dias` | `integer` | no |
 | `hasta` | `string` | no |
 
+## `paridad_combustibles` — Combustibles: ANCAP contra el precio de paridad de importación
+
+¿ANCAP vende el combustible por encima o por debajo de lo que costaría importarlo? Compara el precio
+ex planta de ANCAP con el precio de paridad de importación (PPI) que calcula URSEA, los dos sin
+impuestos, en $/litro, mes a mes desde 2022. Sin `producto`: el último mes y el promedio de 12 meses de
+Gasolina Super 95, Gasolina Premium 97, Gasoil 50-S y Gasoil 10-S. Con `producto`: la serie (`desde` y
+`hasta` en AAAA-MM) y el desglose del último PPI desde el precio internacional (FOB) hasta los
+impuestos. Leer `metodo`: la comparación es una construcción de este servidor, no una cifra oficial.
+
+| parametro | tipo | obligatorio |
+|---|---|---|
+| `producto` | `string` | no |
+| `desde` | `string` | no |
+| `hasta` | `string` | no |
+
 ## `pesos_constantes` — Pesos constantes con la Unidad Indexada
 
 Lleva montos en pesos corrientes de distintos meses a pesos de un mes base, deflactando con la

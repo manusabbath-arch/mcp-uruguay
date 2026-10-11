@@ -34,6 +34,7 @@ from uydatos import (
     rut,
     salto_grande,
     semanas,
+    ursea,
 )
 
 from mcp_uruguay import cache
@@ -50,6 +51,7 @@ FUENTE_INIA = "INIA, Unidad GRAS, estación Salto Grande (dataset inia-precipita
 FUENTE_IDE = "IDE.uy, API pública de direcciones (direcciones.ide.uy)"
 FUENTE_COMPRAS = "ARCE, compras del Estado en OCDS (dataset arce-datos-historicos-de-compras)"
 FUENTE_OBSERVATORIO = "MIDES, Observatorio Social: página de cada indicador en www.gub.uy/ministerio-desarrollo-social"
+FUENTE_URSEA = "URSEA (PPI y componentes) y ANCAP (precio ex planta), catálogo de datos abiertos"
 FUENTE_PARLAMENTO = "Parlamento del Uruguay, datos abiertos en catalogodatos.gub.uy"
 FUENTE_ELECCIONES = "Corte Electoral, resultados por mesa publicados en catalogodatos.gub.uy"
 FUENTE_LIMITES = "INE: límites departamentales (vía la IDE) y localidades con población 2023 (vía el MIDES)"
@@ -342,6 +344,41 @@ class IndicadorSocial(TypedDict):
     periodos_disponibles: list[str]
     avisos: list[str]
     url: str
+    fuente: str
+    bajado: str
+
+
+class MesParidad(TypedDict):
+    """Un mes: precio ex planta de ANCAP contra el PPI, los dos sin impuestos, en $/litro."""
+
+    mes: str
+    ancap_ex_planta: float
+    ppi: float
+    diferencia: float
+    diferencia_pct: float
+
+
+class ResumenParidad(TypedDict):
+    producto: str
+    ultimo: MesParidad
+    promedio_pct_12_meses: float
+    meses: int
+
+
+class ParidadCombustibles(TypedDict, total=False):
+    """La respuesta de `paridad_combustibles()`, en sus dos caminos.
+
+    Sin `producto` trae `resumen` (los cuatro comparables); con `producto`, `producto`, `serie`,
+    `promedio_pct` y `desglose_ultimo`. `metodo`, `avisos`, `fuente` y `bajado` van siempre.
+    """
+
+    resumen: list[ResumenParidad]
+    producto: str
+    serie: list[MesParidad]
+    promedio_pct: float
+    desglose_ultimo: dict[str, Union[str, float]]
+    metodo: str
+    avisos: list[str]
     fuente: str
     bajado: str
 
@@ -1829,6 +1866,100 @@ def indicador_social(indicador: str, filtro: str = "") -> IndicadorSocial:
         "url": url,
         "fuente": FUENTE_OBSERVATORIO,
         "bajado": cache.sello(ruta),
+    }
+
+
+_METODO_PARIDAD = (
+    "Precio ex planta de ANCAP (el de venta al público menos fletes, márgenes e impuestos) contra el "
+    "precio de paridad de importación de URSEA sin impuestos y con la mezcla de agrocombustibles, en "
+    "$/litro. El PPI de la ventana que cierra el 25 se compara con el mes siguiente, que es cuando rige. "
+    "diferencia_pct positiva = ANCAP por encima de lo que costaría importar. La elección del nivel y del "
+    "mes es de este servidor, no una cifra oficial: a confirmar contra los informes de URSEA."
+)
+# Los nombres de los componentes de URSEA para los productos que se comparan con ANCAP.
+_COMPONENTES_DE = {
+    "Gasolina Super 95": "Gasolina Súper 95",
+    "Gasolina Premium 97": "Gasolina Premium 97",
+    "Gasoil 50-S": "Gas Oil 50S",
+    "Gasoil 10-S": "Gas Oil 10S",
+}
+_DESGLOSE = (
+    "precio_fob_ajustado",
+    "fletes_internacionales",
+    "subtotal_1_precio_cif",
+    "subtotal_2_precio_ex_planta_distribucion",
+    "subtotal_3_precio_ex_planta_con_biocombustible",
+    "imesi",
+    "impuesto_co2",
+    "iva",
+    "total_precio_ex_planta_1",
+    "tipo_cambio_promedio",
+    "total_precio_ex_planta_2",
+)
+
+
+def _archivo_ursea(clave: str, leer):
+    dataset, nombre = ursea.ARCHIVOS[clave]
+
+    def bajar(ruta: Path) -> Path:
+        return ursea.red.bajar(ursea.url_de(catalogo.recursos(dataset), nombre), ruta)
+
+    return cache.archivo(cache.directorio() / "ursea" / nombre, bajar, leer, cache.DIA)
+
+
+def paridad_combustibles(producto: str = "", desde: str = "", hasta: str = "") -> ParidadCombustibles:
+    ppi, ruta = _archivo_ursea("ppi", ursea.leer_ppi)
+    ex, _ = _archivo_ursea("ex_planta", ursea.leer_ex_planta)
+    avisos = [f"ventana del PPI descartada por imposible: {d['inicio']} a {d['fin']}" for d in ppi["descartadas"]]
+    base = {"metodo": _METODO_PARIDAD, "fuente": FUENTE_URSEA, "bajado": cache.sello(ruta)}
+    if not producto:
+        resumen = []
+        for p in ursea.COMPARABLES:
+            serie = ursea.comparar(ppi, ex, p)
+            ultimos = serie[-12:]
+            resumen.append(
+                {
+                    "producto": p,
+                    "ultimo": serie[-1],
+                    "promedio_pct_12_meses": round(sum(s["diferencia_pct"] for s in ultimos) / len(ultimos), 1),
+                    "meses": len(serie),
+                }
+            )
+        return {"resumen": resumen, "avisos": avisos, **base}
+
+    elegido = next((p for p in ursea.COMPARABLES if _sin_tildes(p) == _sin_tildes(producto)), None)
+    if elegido is None:
+        raise ValueError(f"producto {producto!r}: se comparan {list(ursea.COMPARABLES)} (el GLP no: $/l contra $/kg)")
+    d = _mes(desde, "desde") if desde else None
+    h_ = _mes(hasta, "hasta") if hasta else None
+    serie = [
+        s
+        for s in ursea.comparar(ppi, ex, elegido)
+        if (d is None or s["mes"] >= f"{d.year}-{d.month:02d}")
+        and (h_ is None or s["mes"] <= f"{h_.year}-{h_.month:02d}")
+    ]
+    if not serie:
+        raise ValueError(f"no hay meses comparables de {elegido} en ese período")
+    componentes, _ = _archivo_ursea("componentes", ursea.leer_componentes)
+    propias = [c for c in componentes if c["producto"] == _COMPONENTES_DE[elegido]]
+    desglose: dict = {}
+    if propias:
+        ultimo = max(propias, key=lambda c: c["fecha_cierre"])
+        desglose = {"fecha_cierre": ultimo["fecha_cierre"], "vigencia": ultimo["vigencia"]}
+        desglose |= {k: ultimo[k] for k in _DESGLOSE if k in ultimo}
+        desglose["unidad"] = "USD/m3, salvo tipo_cambio_promedio ($/USD) y total_precio_ex_planta_2 ($/litro)"
+        if ultimo["vigencia"] != ultimo["vigencia_publicada"]:
+            avisos.append(
+                f"URSEA publica la vigencia de este cierre como {ultimo['vigencia_publicada']}; "
+                f"por la regla del resto de las filas rige en {ultimo['vigencia']}"
+            )
+    return {
+        "producto": elegido,
+        "serie": serie,
+        "promedio_pct": round(sum(s["diferencia_pct"] for s in serie) / len(serie), 1),
+        "desglose_ultimo": desglose,
+        "avisos": avisos,
+        **base,
     }
 
 

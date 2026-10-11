@@ -238,3 +238,68 @@ class TestIndicadorSocial:
     def test_un_filtro_sin_filas_dice_que_valores_hay(self):
         with pytest.raises(ValueError, match="Salto"):
             h.indicador_social("tasa-empleo-segun-departamento-total-pais", "Rivera")
+
+
+class TestParidadCombustibles:
+    @pytest.fixture(autouse=True)
+    def archivos(self, cache_temporal, monkeypatch):
+        from uydatos import ursea
+
+        d = cache_temporal / "ursea"
+        d.mkdir(parents=True, exist_ok=True)
+        cols = ursea.COLUMNAS_PPI
+
+        def fila(inicio, fin, super_ag, gasoil_ag):
+            v = {c: "1" for c in cols[2:]}
+            v.update({"Super_ExP_AC": str(super_ag), "Gasoil50S_ExP_AC": str(gasoil_ag)})
+            for c in ("Premium_ExP_AC", "Gasoil10S_ExP_AC"):
+                v[c] = "30"
+            return ",".join([inicio, fin] + [v[c] for c in cols[2:]])
+
+        (d / ursea.ARCHIVOS["ppi"][1]).write_text(
+            ",".join(cols)
+            + "\n"
+            + fila("2026-06-26", "2026-07-25", 35.7, 37.05)
+            + "\n"
+            + fila("2026-07-26", "2026-08-25", 37.04, 39.85)
+            + "\n",
+            encoding="utf-8",
+        )
+        ex = "Año-Mes;Producto;Unidad;PrecioExPlantaUYU\n"
+        for p_ in ("Gasolina Super 95", "Gasolina Premium 97", "Gasoil 50-S", "Gasoil 10-S"):
+            ex += f"2026-08;{p_};$/lt;34,92\n2026-09;{p_};$/lt;38\n"
+        (d / ursea.ARCHIVOS["ex_planta"][1]).write_text(ex, encoding="utf-8")
+        (d / ursea.ARCHIVOS["componentes"][1]).write_text(
+            "producto,fecha_cierre,fecha_vigencia,precio_fob_ajustado,subtotal_3_precio_ex_planta_con_biocombustible,"
+            "total_precio_ex_planta_1,tipo_cambio_promedio,total_precio_ex_planta_2\n"
+            "Gas Oil 50S,2026-08-25,2026-08-01,1010.24,1131.35,1475.74,40.25,59.39\n",
+            encoding="utf-8",
+        )
+
+    def test_sin_producto_resume_los_cuatro(self):
+        r = h.paridad_combustibles()
+        assert [x["producto"] for x in r["resumen"]] == [
+            "Gasolina Super 95",
+            "Gasolina Premium 97",
+            "Gasoil 50-S",
+            "Gasoil 10-S",
+        ]
+        gasoil = r["resumen"][2]
+        assert gasoil["ultimo"] == {
+            "mes": "2026-09",
+            "ancap_ex_planta": 38.0,
+            "ppi": 39.85,
+            "diferencia": -1.85,
+            "diferencia_pct": -4.6,
+        }
+        assert gasoil["meses"] == 2 and "sin impuestos" in r["metodo"]
+
+    def test_con_producto_la_serie_y_el_desglose(self):
+        r = h.paridad_combustibles("gasoil 50-s", desde="2026-08", hasta="2026-08")
+        assert r["producto"] == "Gasoil 50-S" and [s["mes"] for s in r["serie"]] == ["2026-08"]
+        assert r["desglose_ultimo"]["precio_fob_ajustado"] == 1010.24
+        assert any("publica la vigencia" in a for a in r["avisos"])
+
+    def test_el_glp_no_se_compara(self):
+        with pytest.raises(ValueError, match="GLP no"):
+            h.paridad_combustibles("GLP")

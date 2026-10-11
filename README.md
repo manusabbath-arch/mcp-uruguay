@@ -32,6 +32,7 @@ decirlo; uno que recibe un número plausible pero falso lo repite.
 | `ipc_argentina` | IPC nacional, base dic-2016 = 100 | INDEC |
 | `ipca_brasil` | IPCA número-índice, base dic-1993 = 100 | IBGE |
 | `combustible_ancap` | Precio máximo al público de cada combustible, por mes | ANCAP |
+| `paridad_combustibles` | ¿ANCAP vende por encima o por debajo de lo que costaría importar? Ex planta contra el precio de paridad de importación, sin impuestos, mes a mes, con el desglose desde el FOB | URSEA, ANCAP |
 | `ventas_combustible` | Cuánto vendió ANCAP de cada combustible por mes y mercado, con los meses que la fuente no publicó | ANCAP |
 | `clima` | Lluvia y temperaturas diarias en Salto desde 1970 con su anomalía, o la tendencia por década | INIA |
 | `nivel_rio` | Altura del río en una estación de la cuenca del río Uruguay, por día, y cuánto subió o bajó | CTM Salto Grande |

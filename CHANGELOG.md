@@ -1,5 +1,16 @@
 # Cambios
 
+## 0.10.0 — 2026-10-11
+
+- **Nueva: `paridad_combustibles`**, sobre `uydatos.ursea`: el precio ex planta de ANCAP contra el
+  precio de paridad de importación de URSEA, **los dos sin impuestos**, mes a mes desde 2022, para
+  la Súper 95, la Premium 97 y los gasoils 50-S y 10-S. Sin producto, el último mes y el promedio de
+  12 meses de cada uno; con producto, la serie y el desglose del último PPI desde el FOB hasta los
+  impuestos. La respuesta declara el `metodo` (qué nivel de precio y qué mes se comparan) porque es
+  una construcción del servidor y no una cifra oficial. El GLP no se compara: un archivo lo da en
+  $/litro y el otro en $/kg.
+- Depende de `uydatos>=0.11,<0.12`.
+
 ## 0.9.0 — 2026-10-11
 
 - **Nuevas: `buscar_indicador_social` e `indicador_social`**, sobre `uydatos.observatorio`: los
