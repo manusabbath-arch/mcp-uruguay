@@ -1,9 +1,11 @@
 # Cambios
 
-## Sin publicar
+## 0.12.0 — 2026-10-14
 
-- **Nueva: `observaciones_inumet`**, sobre `uydatos.inumet` (ya publicado en 0.12.0, sin Release de
-  `uydatos`): las observaciones horarias de INUMET en siete estaciones, agregadas al **día local**
+- **El mínimo de `uydatos` sube a 0.12.1**, que arregla `combustible_ancap` y `ventas_combustible`: ANCAP
+  republicó sus datasets el 12/10/26 y la URL fija daba 404.
+- **Nueva: `observaciones_inumet`**, sobre `uydatos.inumet` (publicado desde `uydatos`
+  0.12.0): las observaciones horarias de INUMET en siete estaciones, agregadas al **día local**
   (la fuente publica en UTC; Uruguay es UTC-3). Sin estación, la cobertura de cada una; con estación,
   fechas y agregación, el valor de cada día. La agregación es obligatoria, un día al que le falta
   alguna observación devuelve `null` en vez de un total parcial, y el viento se mide contra sus 12
