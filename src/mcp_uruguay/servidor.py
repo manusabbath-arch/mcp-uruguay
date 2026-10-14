@@ -9,7 +9,7 @@ from mcp.server.mcpserver import MCPServer
 from mcp.server.mcpserver.exceptions import ToolError
 from mcp.types import ToolAnnotations
 
-from mcp_uruguay import __version__
+from mcp_uruguay import __version__, guias
 from mcp_uruguay import herramientas as h
 
 INSTRUCCIONES = """\
@@ -327,6 +327,19 @@ def diagnostico() -> h.Diagnostico:
     usando, y cuanto pesa. Sirve para saber si un numero viejo viene de una copia vieja.
     No sale a la red."""
     return h.diagnostico()
+
+
+for _nombre, (_funcion, _titulo) in guias.PROMPTS.items():
+    servidor.prompt(name=_nombre, title=_titulo, description=(_funcion.__doc__ or "").strip())(_funcion)
+
+for _uri, (_funcion, _titulo, _descripcion) in guias.RECURSOS.items():
+    servidor.resource(
+        _uri,
+        name=_uri.removeprefix("uru://").replace("/", "-"),
+        title=_titulo,
+        description=_descripcion,
+        mime_type="text/markdown",
+    )(_funcion)
 
 
 def main() -> None:

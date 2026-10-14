@@ -26,7 +26,9 @@ def test_la_tabla_del_readme_lista_las_mismas_herramientas():
     from mcp_uruguay.servidor import servidor
 
     readme = (Path(__file__).resolve().parents[1] / "README.md").read_text(encoding="utf-8")
-    en_tabla = set(re.findall(r"^\| `([a-z_]+)` \|", readme, flags=re.M))
+    # Solo la seccion de herramientas: los prompts y los recursos tienen sus propias tablas.
+    seccion = readme.split("## Herramientas", 1)[1].split("\n## ", 1)[0]
+    en_tabla = set(re.findall(r"^\| `([a-z_]+)` \|", seccion, flags=re.M))
 
     async def registradas():
         async with Client(servidor) as c:

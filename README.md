@@ -74,6 +74,29 @@ Cada respuesta trae dos campos para citar el dato:
 }
 ```
 
+## Flujos y referencias
+
+Además de las herramientas, el servidor publica cinco **prompts** (recetas que el usuario elige, con el orden
+de las herramientas y lo que hay que desconfiar de cada paso) y cuatro **recursos** (páginas de referencia que
+el cliente lee cuando las necesita).
+
+| Prompt | Qué arma |
+|---|---|
+| `combustible_en_pesos_constantes` | un combustible en pesos de un mismo mes, contra la paridad de importación y el volumen vendido |
+| `clima_de_salto` | lluvia y temperatura de Salto desde las dos estaciones públicas, sin promediarlas |
+| `el_rio_en_salto` | el río contra la misma época de otros años, con las advertencias de la unidad y de la cota |
+| `compras_del_estado` | lo que el Estado adjudicó de un producto, sin dejar que un solo ítem engañe |
+| `real_o_nominal` | si un monto subió o bajó descontando la inflación |
+
+| Recurso | Qué trae |
+|---|---|
+| `uru://trampas` | la trampa que declara cada herramienta |
+| `uru://fuentes` | quién publica cada dato, como lo cita el campo `fuente` |
+| `uru://inumet/estaciones` | las siete estaciones de `observaciones_inumet` |
+| `uru://bcu/monedas` | qué es cada moneda que acepta `cotizacion` |
+
+Un test falla si un prompt nombra una herramienta que ya no existe, o si una herramienta queda sin su trampa.
+
 ## Instalación
 
 Requiere [uv](https://docs.astral.sh/uv/). No hace falta clonar nada.
@@ -130,8 +153,16 @@ uv run --with pytest --with-editable . pytest            # sin red
 uv run --with pytest --with-editable . pytest -m red     # contra las fuentes reales
 ```
 
-Los tests del servidor conectan un cliente MCP real en el mismo proceso. Verifican que las 13
-herramientas existan, que todas sean de solo lectura y que un error vuelva con su motivo.
+Los tests del servidor conectan un cliente MCP real en el mismo proceso. Verifican que las herramientas
+existan, que todas sean de solo lectura, que un error vuelva con su motivo y que los prompts y recursos se
+puedan pedir y leer. La cobertura se mide con `pytest-cov` y el CI falla si baja del 88%.
+
+## Proyectos relacionados
+
+[`uruguay-mcp`](https://github.com/Ellweb3/uruguay-mcp) (otro proyecto, no es este) cubre otras fuentes: normas
+del IMPO, BPS, DGI, transporte de Montevideo y salud, con una capa de descubrimiento de herramientas.
+`mcp-uruguay` apunta a otra cosa: menos fuentes, cada una con sus trampas declaradas y un dato que rechaza
+en vez de arreglar. Los nombres se parecen: son paquetes distintos en PyPI.
 
 ## Licencia
 
