@@ -28,6 +28,7 @@ from uydatos import (
     ideuy,
     indec,
     inia,
+    inumet,
     limites,
     observatorio,
     parlamento,
@@ -48,6 +49,7 @@ FUENTE_IBGE = "IBGE, API SIDRA, tabla 1737, variable 2266 (IPCA número-índice)
 FUENTE_ANCAP = "ANCAP, dataset ancap-precio-combustible-pe de catalogodatos.gub.uy"
 FUENTE_ANCAP_VENTAS = "ANCAP, dataset ancap-cantidad-ventas-combustibles de catalogodatos.gub.uy"
 FUENTE_INIA = "INIA, Unidad GRAS, estación Salto Grande (dataset inia-precipitacion-temps-extremas-sg)"
+FUENTE_INUMET = "INUMET, observaciones meteorologicas de siete estaciones, catalogodatos.gub.uy"
 FUENTE_IDE = "IDE.uy, API pública de direcciones (direcciones.ide.uy)"
 FUENTE_COMPRAS = "ARCE, compras del Estado en OCDS (dataset arce-datos-historicos-de-compras)"
 FUENTE_OBSERVATORIO = "MIDES, Observatorio Social: página de cada indicador en www.gub.uy/ministerio-desarrollo-social"
@@ -248,6 +250,55 @@ class Clima(TypedDict, total=False):
     ultimo_dato: str
     periodo: str
     tendencia_c_por_decada: dict[str, TendenciaTemperatura]
+    nota: str
+    fuente: str
+    bajado: str
+
+
+class EstacionInumet(TypedDict):
+    """La cobertura de una estacion de INUMET para una variable. Un dia es completo si trae todas las
+    observaciones que esa variable publica por dia."""
+
+    estacion: str
+    primera: str
+    ultima: str
+    filas: int
+    dias: int
+    dias_completos: int
+    nulos: dict[str, int]
+    extremos: dict[str, dict[str, Optional[float]]]
+
+
+class DiaInumet(TypedDict):
+    """Un dia local de una estacion. `valor` en None = el dia no esta completo (o tiene un nulo): una
+    agregacion sobre horas sueltas es un piso, no el total del dia."""
+
+    fecha: str
+    valor: Optional[float]
+    observaciones: int
+    nulos: int
+
+
+class SerieInumet(TypedDict):
+    """La serie diaria de una columna de la variable pedida."""
+
+    columna: str
+    agregacion: str
+    dias: list[DiaInumet]
+
+
+class ObservacionesInumet(TypedDict, total=False):
+    """La respuesta de `observaciones_inumet()`, en sus dos caminos.
+
+    Sin `estacion`: `estaciones` trae la cobertura de cada una. Con `estacion`, `desde`, `hasta` y
+    `agregacion`: `series` trae un dia por fila. `nota`, `fuente` y `bajado` van siempre.
+    """
+
+    variable: str
+    estaciones: list[EstacionInumet]
+    estacion: str
+    series: list[SerieInumet]
+    lineas_sin_dato: int
     nota: str
     fuente: str
     bajado: str
@@ -730,6 +781,113 @@ def clima(desde: str = "", hasta: str = "") -> Clima:
     if desde:
         return clima_salto(desde, hasta)
     return clima_tendencia()
+
+
+# --- INUMET --------------------------------------------------------------------------------------
+
+_serie_inumet: dict[tuple[str, float], list[dict]] = {}
+INUMET_VARIABLES = tuple(n for n, (_, _, horaria) in inumet.DATASETS.items() if horaria)
+
+
+def _inumet(variable: str) -> tuple[list[dict], Path, int]:
+    if variable not in INUMET_VARIABLES:
+        raise ValueError(f"variable {variable!r} desconocida; las horarias son {', '.join(INUMET_VARIABLES)}")
+    ruta = cache.directorio() / "inumet" / f"inumet_{variable}.csv"
+    _, ruta = cache.archivo(
+        ruta,
+        lambda destino: inumet.descargar(variable, destino),
+        lambda r: inumet.valor_por_estacion(r, variable),
+        cache.DIA,
+    )
+    clave = (variable, ruta.stat().st_mtime)
+    if clave not in _serie_inumet:
+        for vieja in [k for k in _serie_inumet if k[0] == variable]:
+            del _serie_inumet[vieja]
+        _serie_inumet[clave] = inumet.valor_por_estacion(ruta, variable)
+    return _serie_inumet[clave], ruta, inumet.filas_sin_dato(ruta)
+
+
+def observaciones_inumet(
+    variable: str, estacion: str = "", desde: str = "", hasta: str = "", agregacion: str = ""
+) -> ObservacionesInumet:
+    """Observaciones horarias de INUMET agregadas al dia local. **Sale a la red.**
+
+    Sin `estacion`: la cobertura de las estaciones (filas, dias completos, nulos y extremos). Con
+    `estacion` (el nombre, o una parte: "salto" resuelve "Salto G3"), `desde`, `hasta` y `agregacion`:
+    una fila por dia local. La agregacion no tiene valor por defecto: para la temperatura el dia es
+    el `max` o el `min`, para la lluvia la `suma`, y elegir por quien llama es lo que esto no hace.
+    """
+    serie, ruta, sin_dato = _inumet(variable)
+    base: ObservacionesInumet = {
+        "variable": variable,
+        "lineas_sin_dato": sin_dato,
+        "nota": (
+            "La fuente publica la hora en UTC; los dias se cuentan en hora local de Uruguay (UTC-3). "
+            "Un dia al que le falta alguna observacion devuelve valor null, no cero. "
+            "El viento se publica cada dos horas (12 por dia)."
+        ),
+        "fuente": FUENTE_INUMET,
+        "bajado": cache.sello(ruta),
+    }
+    if not estacion:
+        if desde or hasta or agregacion:
+            raise ValueError("observaciones_inumet: `desde`, `hasta` y `agregacion` piden tambien `estacion`.")
+        r = inumet.resumen(serie)
+        return {
+            **base,
+            "estaciones": [
+                {
+                    "estacion": nombre,
+                    "primera": d["primera"].isoformat(),
+                    "ultima": d["ultima"].isoformat(),
+                    "filas": d["filas"],
+                    "dias": d["dias"],
+                    "dias_completos": d["dias_completos"],
+                    "nulos": d["nulos"],
+                    "extremos": d["extremos"],
+                }
+                for nombre, d in r["estaciones"].items()
+            ],
+        }
+    if not (desde and hasta and agregacion):
+        raise ValueError(
+            "observaciones_inumet: con `estacion` van tambien `desde`, `hasta` (AAAA-MM-DD) y `agregacion` "
+            f"({', '.join(inumet.AGREGACIONES)}): no se adivina ninguna."
+        )
+    if agregacion not in inumet.AGREGACIONES:
+        raise ValueError(f"agregacion {agregacion!r} desconocida; las declaradas son {', '.join(inumet.AGREGACIONES)}")
+    ini, fin = _fecha(desde, "desde"), _fecha(hasta, "hasta")
+    if fin < ini:
+        raise ValueError("hasta es anterior a desde")
+    if (fin - ini).days >= MAX_DIAS:
+        raise ValueError(f"rango demasiado largo: hasta {MAX_DIAS} dias por consulta")
+    buscado = _sin_tildes(estacion)
+    candidatas = [e for e in inumet.ESTACIONES if buscado in _sin_tildes(e)]
+    if len(candidatas) != 1:
+        raise ValueError(
+            f"estacion {estacion!r}: {len(candidatas)} coincidencias. Las siete son {', '.join(inumet.ESTACIONES)}."
+        )
+    nombre = candidatas[0]
+    series: list[SerieInumet] = []
+    for columna in inumet.DATASETS[variable][1]:
+        dias = inumet.serie_diaria(serie, nombre, columna, agregacion)
+        series.append(
+            {
+                "columna": columna,
+                "agregacion": agregacion,
+                "dias": [
+                    {
+                        "fecha": d["fecha"].isoformat(),
+                        "valor": d["valor"],
+                        "observaciones": d["horas"],
+                        "nulos": d["nulos"],
+                    }
+                    for d in dias
+                    if ini <= d["fecha"] <= fin
+                ],
+            }
+        )
+    return {**base, "estacion": nombre, "series": series}
 
 
 # --- Salto Grande --------------------------------------------------------------------------------

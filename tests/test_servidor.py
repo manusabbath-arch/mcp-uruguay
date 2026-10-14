@@ -19,6 +19,7 @@ ESPERADAS = {
     "ventas_combustible",
     "paridad_combustibles",
     "clima",
+    "observaciones_inumet",
     "estaciones_cercanas",
     "nivel_rio",
     "nivel_rio_comparado",

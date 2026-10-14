@@ -131,6 +131,24 @@ def clima(desde: str = "", hasta: str = "") -> h.Clima:
     return h.clima(desde, hasta)
 
 
+@herramienta("Observaciones horarias de INUMET, por día local", EN_RED)
+def observaciones_inumet(
+    variable: Literal["temperatura", "precipitacion", "humedad", "viento", "presion"],
+    estacion: str = "",
+    desde: str = "",
+    hasta: str = "",
+    agregacion: Literal["", "promedio", "max", "min", "suma"] = "",
+) -> h.ObservacionesInumet:
+    """Observaciones meteorológicas de INUMET en siete estaciones del país (Salto, Artigas, Colonia,
+    Mercedes, Paso de los Toros, Rocha y Aeropuerto Melilla).
+
+    Solo con `variable`: la cobertura de cada estación (filas, días completos, nulos, extremos). Con
+    `estacion`, `desde`, `hasta` (AAAA-MM-DD, hasta 400 días) y `agregacion`: el valor de cada día local.
+    La fuente publica en UTC y acá el día es el de Uruguay (UTC-3). Un día incompleto devuelve null,
+    nunca un total parcial. La agregación es obligatoria: temperatura se pide con max o min, lluvia con suma."""
+    return h.observaciones_inumet(variable, estacion, desde, hasta, agregacion)
+
+
 @herramienta("Estaciones hidrometeorológicas cercanas (Salto Grande)", EN_RED)
 def estaciones_cercanas(lat: float, lon: float, cantidad: int = 5) -> h.EstacionesCercanas:
     """Estaciones de la red de la Comisión Técnica Mixta de Salto Grande (cuenca del río Uruguay, las dos

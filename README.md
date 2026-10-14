@@ -35,6 +35,7 @@ decirlo; uno que recibe un número plausible pero falso lo repite.
 | `paridad_combustibles` | ¿ANCAP vende por encima o por debajo de lo que costaría importar? Ex planta contra el precio de paridad de importación, sin impuestos, mes a mes, con el desglose desde el FOB | URSEA, ANCAP |
 | `ventas_combustible` | Cuánto vendió ANCAP de cada combustible por mes y mercado, con los meses que la fuente no publicó | ANCAP |
 | `clima` | Lluvia y temperaturas diarias en Salto desde 1970 con su anomalía, o la tendencia por década | INIA |
+| `observaciones_inumet` | Temperatura, lluvia, humedad, viento o presión de siete estaciones del país, agregada al día local (UTC-3); un día incompleto devuelve null | INUMET |
 | `nivel_rio` | Altura del río en una estación de la cuenca del río Uruguay, por día, y cuánto subió o bajó | CTM Salto Grande |
 | `nivel_rio_comparado` | ¿El río está alto o bajo para la época? Contra los mismos días de cada año desde 2017 | CTM Salto Grande |
 | `estaciones_cercanas` | Estaciones hidrometeorológicas de la cuenca del río Uruguay cerca de un punto | CTM Salto Grande |

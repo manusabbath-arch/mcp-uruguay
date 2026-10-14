@@ -212,6 +212,24 @@ Los años con pocas lecturas se excluyen y se listan. La primera consulta puede 
 | `dias` | `integer` | no |
 | `hasta` | `string` | no |
 
+## `observaciones_inumet` — Observaciones horarias de INUMET, por día local
+
+Observaciones meteorológicas de INUMET en siete estaciones del país (Salto, Artigas, Colonia,
+Mercedes, Paso de los Toros, Rocha y Aeropuerto Melilla).
+
+Solo con `variable`: la cobertura de cada estación (filas, días completos, nulos, extremos). Con
+`estacion`, `desde`, `hasta` (AAAA-MM-DD, hasta 400 días) y `agregacion`: el valor de cada día local.
+La fuente publica en UTC y acá el día es el de Uruguay (UTC-3). Un día incompleto devuelve null,
+nunca un total parcial. La agregación es obligatoria: temperatura se pide con max o min, lluvia con suma.
+
+| parametro | tipo | obligatorio |
+|---|---|---|
+| `variable` | `string` | si |
+| `estacion` | `string` | no |
+| `desde` | `string` | no |
+| `hasta` | `string` | no |
+| `agregacion` | `string` | no |
+
 ## `paridad_combustibles` — Combustibles: ANCAP contra el precio de paridad de importación
 
 ¿ANCAP vende el combustible por encima o por debajo de lo que costaría importarlo? Compara el precio

@@ -33,6 +33,7 @@ LLAMADAS = [
     ("ventas_combustible", {"linea": "GAS OIL", "mercado": "INTERNO", "desde": "2026-01"}),
     ("paridad_combustibles", {}),
     ("clima", {}),
+    ("observaciones_inumet", {"variable": "temperatura"}),
     ("nivel_rio", {}),
     ("nivel_rio_comparado", {}),
     ("estaciones_cercanas", {"lat": -31.39, "lon": -57.96}),

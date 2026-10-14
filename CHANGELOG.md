@@ -1,5 +1,15 @@
 # Cambios
 
+## Sin publicar
+
+- **Nueva: `observaciones_inumet`**, sobre `uydatos.inumet` (ya publicado en 0.12.0, sin Release de
+  `uydatos`): las observaciones horarias de INUMET en siete estaciones, agregadas al **día local**
+  (la fuente publica en UTC; Uruguay es UTC-3). Sin estación, la cobertura de cada una; con estación,
+  fechas y agregación, el valor de cada día. La agregación es obligatoria, un día al que le falta
+  alguna observación devuelve `null` en vez de un total parcial, y el viento se mide contra sus 12
+  observaciones diarias, no contra 24. La insolación (diaria, con valores imposibles declarados en
+  `uydatos`) no se expone.
+
 ## 0.11.0 — 2026-10-11
 
 - **Nueva: `pedidos_de_informes`**, sobre `uydatos.parlamento` 0.12: los pedidos de informes de
