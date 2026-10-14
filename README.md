@@ -157,13 +157,6 @@ Los tests del servidor conectan un cliente MCP real en el mismo proceso. Verific
 existan, que todas sean de solo lectura, que un error vuelva con su motivo y que los prompts y recursos se
 puedan pedir y leer. La cobertura se mide con `pytest-cov` y el CI falla si baja del 88%.
 
-## Proyectos relacionados
-
-[`uruguay-mcp`](https://github.com/Ellweb3/uruguay-mcp) (otro proyecto, no es este) cubre otras fuentes: normas
-del IMPO, BPS, DGI, transporte de Montevideo y salud, con una capa de descubrimiento de herramientas.
-`mcp-uruguay` apunta a otra cosa: menos fuentes, cada una con sus trampas declaradas y un dato que rechaza
-en vez de arreglar. Los nombres se parecen: son paquetes distintos en PyPI.
-
 ## Licencia
 
 MIT. Usalo, adaptalo y compartilo; solo mantené el aviso de autoría.

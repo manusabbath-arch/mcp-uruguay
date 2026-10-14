@@ -1,12 +1,11 @@
 # Cambios
 
-## Sin publicar
+## 0.13.0 — 2026-10-14
 
-- **Cinco prompts y cuatro recursos**, aprendidos de mirar cómo otro servidor de Uruguay (`uruguay-mcp`) arma sus guías.
+- **Cinco prompts y cuatro recursos**.
   Los prompts son recetas con el orden de las herramientas y sus trampas (combustible en pesos constantes, clima de
   Salto, el río, compras del Estado, real o nominal); los recursos son `uru://trampas`, `uru://fuentes`,
-  `uru://inumet/estaciones` y `uru://bcu/monedas`. A diferencia de los de ese proyecto, los prompts no se limitan a
-  decir qué herramienta llamar: dicen qué desconfiar. Un test falla si un prompt nombra una herramienta que no existe o
+  `uru://inumet/estaciones` y `uru://bcu/monedas`. Los prompts no se limitan a decir qué herramienta llamar: dicen qué desconfiar. Un test falla si un prompt nombra una herramienta que no existe o
   si una herramienta queda sin su trampa.
 - **La cobertura se mide en el CI** (`pytest-cov`, hoy 91%) y falla si baja del 88%.
 
