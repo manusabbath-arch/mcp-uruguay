@@ -1,5 +1,14 @@
 # Cambios
 
+## 0.13.1 — 2026-10-19
+
+- **El mínimo de `uydatos` sube a 0.14** (`>=0.14,<0.15`): esa versión trae `verificar` (el contrato
+  de forma de las fuentes), `revisiones.revisadas` (el pasado reescrito), `errores.DatosInvalidos`
+  —base de los diecinueve rechazos— y la guarda de PII que sacó un RUT real del paquete.
+  **Ninguna herramienta de este servidor cambia**: los 128 tests pasan contra 0.14.0 resuelto de
+  PyPI, no contra un árbol local, y el `except bcu.BcuInvalido` de `cache.py` sigue funcionando
+  porque `DatosInvalidos` hereda de `ValueError`.
+
 ## 0.13.0 — 2026-10-14
 
 - **Cinco prompts y cuatro recursos**.
