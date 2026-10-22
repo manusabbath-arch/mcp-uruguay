@@ -384,7 +384,7 @@ wheels = [
 
 [[package]]
 name = "mcp-uruguay"
-version = "0.13.1"
+version = "0.13.2"
 source = { editable = "." }
 dependencies = [
     { name = "mcp" },
@@ -402,7 +402,7 @@ requires-dist = [
     { name = "mcp", specifier = ">=2.3,<3" },
     { name = "pytest", marker = "extra == 'test'", specifier = ">=8" },
     { name = "typing-extensions", specifier = ">=4.7" },
-    { name = "uydatos", specifier = ">=0.14,<0.15" },
+    { name = "uydatos", specifier = ">=0.15.1,<0.16" },
 ]
 provides-extras = ["test"]
 
@@ -1109,9 +1109,9 @@ wheels = [
 
 [[package]]
 name = "uydatos"
-version = "0.14.0"
+version = "0.15.1"
 source = { registry = "https://pypi.org/simple" }
-sdist = { url = "https://files.pythonhosted.org/packages/77/93/838644415c6c5dc66cd4fd24ad1fac0e6b3c492c6550174e5db2c70bfbd4/uydatos-0.14.0.tar.gz", hash = "sha256:2d43b98947d65ecdaf6dc6bb7b715d2700edc5f2ab728e9251a2d1399f923808", size = 205655, upload-time = "2026-10-19T11:51:20.213Z" }
+sdist = { url = "https://files.pythonhosted.org/packages/ad/e2/f0d50e66f980f6fde5d84b245976b89d06c4c90eee5d562bd5e493186634/uydatos-0.15.1.tar.gz", hash = "sha256:8003ed7ffa1251d1b2f05b20df0274637db13a27d9bf0d5b31db3d606dbdf719", size = 213472, upload-time = "2026-10-19T12:51:51.496Z" }
 wheels = [
-    { url = "https://files.pythonhosted.org/packages/51/1f/ecf0ce3343511d367464db3f8ddf1238b76803c6b35d75f9285401beae63/uydatos-0.14.0-py3-none-any.whl", hash = "sha256:4691167d5a59ca1cafd2dc9645a4e5c7075a63eaa223a41e7dd00bb66fa8d163", size = 121933, upload-time = "2026-10-19T11:51:19.032Z" },
+    { url = "https://files.pythonhosted.org/packages/68/5e/68e2ffc3bf03b958272674c211f7ebe9ffe63c6526c8d3d5157a6a5f7ede/uydatos-0.15.1-py3-none-any.whl", hash = "sha256:b68f23081dcebaf93aaf55f6c92caf81d8aec93ca9c5b329f4be326a759c89c5", size = 123217, upload-time = "2026-10-19T12:51:50.411Z" },
 ]

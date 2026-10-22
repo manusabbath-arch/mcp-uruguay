@@ -1,5 +1,12 @@
 # Cambios
 
+## 0.13.2 — 2026-10-22
+
+- **El mínimo de `uydatos` sube a 0.15.1** (`>=0.15.1,<0.16`): 0.15 compara el informe de las fuentes
+  contra una línea de base versionada y 0.15.1 deja de contar como sanas a las fuentes que no se
+  midieron. **Ninguna herramienta de este servidor cambia**: no usa `revisiones` ni `verificar`, y los
+  128 tests y los 16 de red pasan contra 0.15.1.
+
 ## 0.13.1 — 2026-10-19
 
 - **El mínimo de `uydatos` sube a 0.14** (`>=0.14,<0.15`): esa versión trae `verificar` (el contrato
