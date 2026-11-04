@@ -120,7 +120,11 @@ coincide con la que publica el organismo, vale la del organismo, y acá hay un e
 
 ## Instalación
 
-Requiere [uv](https://docs.astral.sh/uv/). No hace falta clonar nada.
+**Claude Desktop, sin instalar nada más**: bajá `mcp-uruguay.mcpb` de la
+[última Release](https://github.com/manusabbath-arch/mcp-uruguay/releases/latest) y abrilo con doble clic
+(o arrastralo a *Configuración → Extensiones*). Claude Desktop instala Python y las dependencias por su cuenta.
+
+Para Claude Code y otros clientes hace falta [uv](https://docs.astral.sh/uv/). No hace falta clonar nada.
 
 **Claude Code**
 
@@ -128,7 +132,7 @@ Requiere [uv](https://docs.astral.sh/uv/). No hace falta clonar nada.
 claude mcp add uruguay -- uvx mcp-uruguay
 ```
 
-**Claude Desktop y otros clientes** (`claude_desktop_config.json` o el equivalente de tu cliente)
+**Otros clientes, o Claude Desktop a mano** (`claude_desktop_config.json` o el equivalente de tu cliente)
 
 ```json
 {
@@ -152,6 +156,8 @@ Después, preguntale al agente cosas como:
 - *"¿Cuánto gastó el Estado en ambulancias en 2025?"*
 - *"¿Qué leyes sobre riego se aprobaron desde 2020?"*
 - *"¿Cuál es la estación meteorológica más cercana a 18 de Julio y Ejido, en Montevideo?"*
+- *"¿Cómo dio la turbidez del agua de OSE en Paysandú en 2025?"*
+- *"¿El río en Concordia está cerca del nivel de alerta?"*
 
 ## Caché
 

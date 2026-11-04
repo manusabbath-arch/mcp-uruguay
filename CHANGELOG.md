@@ -18,6 +18,11 @@
   altura con la de la CTM.
 - **El mínimo de `uydatos` sube a 0.17** (`>=0.17,<0.18`), que trae `ose` (0.16) e `ina` (0.17).
 - README: «Por qué estas cifras se pueden citar» y «No es oficial».
+- **Extensión de Claude Desktop (`.mcpb`), adjunta a cada Release**: se instala con doble clic y
+  Claude Desktop resuelve Python y las dependencias (tipo `uv` de MCPB 0.4): quien la usa no necesita
+  ni Python ni uv. `manifest.json` se genera desde el servidor (`python -m mcp_uruguay.manifiesto`) y
+  un test falla si quedó viejo. Probado: empaquetado con `@anthropic-ai/mcpb` 2.1.2, descomprimido y
+  corrido como lo corre Claude Desktop, con un cliente MCP por stdio (31 herramientas, una llamada real).
 - **`scripts/publicar.sh`**: crea la Release con las notas del CHANGELOG, después de ruff, los tests y
   de comprobar que `server.json` dice la misma versión. Sin `--de-verdad` solo simula. El trabajo
   `sin-publicar` del CI avisa cuando la versión de `main` no está en PyPI; no publica.
