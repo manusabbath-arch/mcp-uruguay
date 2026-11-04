@@ -66,7 +66,8 @@ class OseFalso:
     def bajar(self, url, destino):
         area = url.rsplit("/", 1)[-1].removesuffix(".csv")
         self.bajadas.append(area)
-        Path(destino).write_text(self.csv[area], encoding="utf-8")
+        # Bytes, como `red.bajar`: con `write_text`, Windows escribe \r\n y el tamaño deja de ser el declarado.
+        Path(destino).write_bytes(self.csv[area].encode("utf-8"))
         return Path(destino)
 
 
@@ -192,7 +193,7 @@ class InaFalso:
         desde = date.fromisoformat(q["timestart"][0][:10])
         hasta = min(date.fromisoformat(q["timeend"][0][:10]), self.ultimo)
         self.pedidos.append((serie, desde, hasta))
-        Path(destino).write_text(csv_ina(serie, desde, hasta, self.valor), encoding="utf-8")
+        Path(destino).write_bytes(csv_ina(serie, desde, hasta, self.valor).encode("utf-8"))
         return Path(destino)
 
     def metadata(self, serie):
