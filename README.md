@@ -9,13 +9,13 @@
 > **In English:** an MCP server that gives AI agents Uruguayan and regional public data straight
 > from the primary sources: Central Bank of Uruguay exchange rates and inflation-adjusted pesos,
 > Argentina's CPI, Brazil's IPCA, ANCAP fuel prices, INIA weather in Salto, Uruguay River stations,
-> IDE.uy geocoding and RUT/ID validation. Read-only, and every answer carries its source and
+> IDE.uy geocoding, OSE drinking-water quality and RUT/ID validation. Read-only, and every answer carries its source and
 > retrieval time.
 
 Servidor [MCP](https://modelcontextprotocol.io) con **datos públicos de Uruguay y la región**,
 leídos de la fuente primaria. Le da a cualquier agente de IA (Claude, o cualquier cliente MCP)
 cotizaciones del BCU, pesos constantes, IPC de Argentina y Brasil, combustibles de ANCAP, clima
-de Salto, estaciones del río Uruguay y validación de RUT y cédula.
+de Salto, el río Uruguay, la calidad del agua de OSE y validación de RUT y cédula.
 
 Está construido sobre [uydatos](https://github.com/manusabbath-arch/uy-datos-abiertos), así que
 hereda su regla: **rechazar en vez de arreglar**. Un agente que recibe un error con motivo puede
@@ -38,10 +38,12 @@ decirlo; uno que recibe un número plausible pero falso lo repite.
 | `observaciones_inumet` | Temperatura, lluvia, humedad, viento o presión de siete estaciones del país, agregada al día local (UTC-3); un día incompleto devuelve null | INUMET |
 | `nivel_rio` | Altura del río en una estación de la cuenca del río Uruguay, por día, y cuánto subió o bajó | CTM Salto Grande |
 | `nivel_rio_comparado` | ¿El río está alto o bajo para la época? Contra los mismos días de cada año desde 2017 | CTM Salto Grande |
+| `nivel_rio_ina` | Altura o caudal del río Uruguay en las escalas de Prefectura (Concordia desde 1931, Salto Grande Arriba y Abajo), con los niveles de alerta y cuántos días de atraso trae el dato | INA (Argentina) |
 | `estaciones_cercanas` | Estaciones hidrometeorológicas de la cuenca del río Uruguay cerca de un punto | CTM Salto Grande |
 | `geocodificar_direccion` | Coordenadas de una dirección o esquina, con su calidad; descarta otra calle o el centro de la localidad | IDE.uy |
 | `ubicar_punto` | En qué departamento y localidad cae un punto, con la población 2023 de la localidad | INE, IDE.uy |
 | `localidad` | Población y viviendas 2023 de una localidad, o las de un departamento ordenadas | INE |
+| `calidad_agua` | Análisis del agua potable de OSE por localidad y trimestre desde 2017 (coliformes, E. coli, pH, turbidez, color, olor), con los límites de detección aparte de las mediciones | OSE |
 | `resultados_electorales` | Nacionales 2024, balotaje 2024 y departamentales 2025: participación y votos por partido o candidato, del país o un departamento | Corte Electoral |
 | `compras_estado` | Cuánto adjudicó el Estado en un año, en pesos, por organismo o por texto, con los mayores ítems y un aviso si uno domina el total | ARCE (OCDS) |
 | `asistencia_parlamentaria` | Asistencia a sesiones del Senado o Diputados por legislatura, con un mínimo de citaciones y aviso de homónimos | Parlamento |
@@ -97,9 +99,34 @@ el cliente lee cuando las necesita).
 
 Un test falla si un prompt nombra una herramienta que ya no existe, o si una herramienta queda sin su trampa.
 
+## Por qué estas cifras se pueden citar
+
+Al hacer el balance del MCP oficial de data.gouv.fr, la DINUM reconoció (según Next y Alliancy) que «es muy
+difícil auditar los resultados de un servidor MCP». Este servidor está hecho para que sí se pueda:
+
+- **Rechaza en vez de arreglar.** Cada lector de `uydatos` conoce las trampas de su fuente: columnas
+  invertidas, separadores decimales que cambian por localidad, una serie con meses de atraso, un id que lee
+  otra red. Ante algo que no cumple, devuelve el motivo y no un número.
+- **Cada respuesta dice de dónde y de cuándo** (`fuente` y `bajado`), y `diagnostico` muestra qué copia de
+  cada fuente se usó.
+- **La exactitud se mide**: `evals/` tiene preguntas con respuesta oficial y trampas donde lo correcto es
+  avisar, y las corre con y sin el servidor (ver [evals/README.md](evals/README.md)).
+- **Las fuentes se miden cada semana** contra una línea de base versionada en `uydatos`: si una cambia de
+  forma, se sabe antes de que una respuesta salga mal.
+
+## No es oficial
+
+`mcp-uruguay` es un proyecto independiente: **no es de Agesic ni de ningún organismo**. Si una cifra no
+coincide con la que publica el organismo, vale la del organismo, y acá hay un error para
+[reportar](https://github.com/manusabbath-arch/mcp-uruguay/issues/new).
+
 ## Instalación
 
-Requiere [uv](https://docs.astral.sh/uv/). No hace falta clonar nada.
+**Claude Desktop, sin instalar nada más**: bajá `mcp-uruguay.mcpb` de la
+[última Release](https://github.com/manusabbath-arch/mcp-uruguay/releases/latest) y abrilo con doble clic
+(o arrastralo a *Configuración → Extensiones*). Claude Desktop instala Python y las dependencias por su cuenta.
+
+Para Claude Code y otros clientes hace falta [uv](https://docs.astral.sh/uv/). No hace falta clonar nada.
 
 **Claude Code**
 
@@ -107,7 +134,7 @@ Requiere [uv](https://docs.astral.sh/uv/). No hace falta clonar nada.
 claude mcp add uruguay -- uvx mcp-uruguay
 ```
 
-**Claude Desktop y otros clientes** (`claude_desktop_config.json` o el equivalente de tu cliente)
+**Otros clientes, o Claude Desktop a mano** (`claude_desktop_config.json` o el equivalente de tu cliente)
 
 ```json
 {
@@ -131,6 +158,8 @@ Después, preguntale al agente cosas como:
 - *"¿Cuánto gastó el Estado en ambulancias en 2025?"*
 - *"¿Qué leyes sobre riego se aprobaron desde 2020?"*
 - *"¿Cuál es la estación meteorológica más cercana a 18 de Julio y Ejido, en Montevideo?"*
+- *"¿Cómo dio la turbidez del agua de OSE en Paysandú en 2025?"*
+- *"¿El río en Concordia está cerca del nivel de alerta?"*
 
 ## Caché
 

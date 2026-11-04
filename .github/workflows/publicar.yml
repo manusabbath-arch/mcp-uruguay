@@ -10,7 +10,7 @@ jobs:
   publicar:
     runs-on: ubuntu-latest
     permissions:
-      contents: read
+      contents: write  # adjuntar el .mcpb a la Release
       id-token: write
     steps:
       - uses: actions/checkout@v7
@@ -40,3 +40,13 @@ jobs:
           for i in 1 2 3 4 5 6; do curl -sf "https://pypi.org/pypi/mcp-uruguay/${GITHUB_REF_NAME#v}/json" >/dev/null && break; sleep 20; done
           ./mcp-publisher login github-oidc
           ./mcp-publisher publish
+      - name: Extensión de Claude Desktop (.mcpb), adjunta a la Release
+        # El tipo `uv` de MCPB deja que Claude Desktop instale Python y las dependencias: quien la
+        # usa no necesita ni Python ni uv. El manifiesto lo genera `python -m mcp_uruguay.manifiesto`
+        # y un test falla si quedó viejo; `pack` lo vuelve a validar contra el esquema.
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          test "$(jq -r .version manifest.json)" = "${GITHUB_REF_NAME#v}" || { echo "manifest.json no dice ${GITHUB_REF_NAME#v}"; exit 1; }
+          npx -y @anthropic-ai/mcpb@2.1.2 pack . mcp-uruguay.mcpb
+          gh release upload "$GITHUB_REF_NAME" mcp-uruguay.mcpb --clobber

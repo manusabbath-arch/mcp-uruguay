@@ -38,6 +38,14 @@ TRAMPAS: dict[str, str] = {
     "nivel_rio_comparado": (
         "la unidad de la altura la publica el servicio sin declararla y la cifra es viva: cambia entre dos corridas"
     ),
+    "nivel_rio_ina": (
+        "el id es de serie y no de estación (hay una 'Concordia' de Brasil); el caudal de Concordia trae meses "
+        "de atraso y el dato del día se carga por la tarde: mirar `dias_de_atraso`"
+    ),
+    "calidad_agua": (
+        "un `<5` es un límite de detección, no una medición, y no se promedia; el separador decimal cambia por "
+        "localidad; una muestra puede tener varios laboratorios"
+    ),
     "estaciones_cercanas": "buscar por el nombre del campo del servicio da lista vacía sin error",
     "geocodificar_direccion": (
         "ante lo que no encuentra devuelve el centro de la localidad, una puerta vecina u "
@@ -161,9 +169,12 @@ def el_rio_en_salto(dias: int = 7) -> str:
         f"¿Cómo está el río en Salto en los últimos {dias} días respecto a la misma época de otros años?\n\n"
         f"1. `nivel_rio_comparado` con estación `Salto` y dias `{dias}`: compara la media de la ventana contra las "
         "mismas fechas de cada año. Los años sin la ventana completa se excluyen y se declaran.\n"
-        "2. `nivel_rio` para el detalle por día si hace falta, con su cobertura.\n\n"
-        "Dos advertencias: la unidad de la altura la publica el servicio sin declararla, y la cifra es viva (la "
-        "media del día en curso cambia entre dos corridas). Para decir si es mucho o poco, comparala contra las "
+        "2. `nivel_rio` para el detalle por día si hace falta, con su cobertura.\n"
+        "3. `nivel_rio_ina` con escala `Concordia` (la escala de Prefectura frente a Salto): trae los niveles de "
+        "alerta y evacuación de esa escala. Es otra estación y otra altura: no la mezcles con la de la CTM, y "
+        "mirá `dias_de_atraso` antes de decir que es el dato de hoy.\n\n"
+        "Dos advertencias: la unidad de la altura de la CTM la publica el servicio sin declararla, y la cifra es viva "
+        "(la media del día en curso cambia entre dos corridas). Para decir si es mucho o poco, comparala contra las "
         "cotas oficiales del puerto que publica el organismo de emergencias, y no afirmes que el agua llega a un "
         "lugar sin conocer la cota del terreno de ese lugar."
     )

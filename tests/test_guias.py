@@ -28,7 +28,7 @@ FLUJOS = {
         {"combustible_ancap", "pesos_constantes", "variacion_real", "paridad_combustibles", "ventas_combustible"},
     ),
     "clima_de_salto": ({"desde": "2026-01-01", "hasta": "2026-01-31"}, {"clima", "observaciones_inumet"}),
-    "el_rio_en_salto": ({}, {"nivel_rio_comparado", "nivel_rio"}),
+    "el_rio_en_salto": ({}, {"nivel_rio_comparado", "nivel_rio", "nivel_rio_ina"}),
     "compras_del_estado": ({"anio": 2025, "producto": "yerba"}, {"compras_estado"}),
     "real_o_nominal": (
         {"monto_inicial": 100.0, "mes_inicial": "2025-01", "monto_final": 110.0, "mes_final": "2026-01"},

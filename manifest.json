@@ -1,0 +1,180 @@
+{
+  "manifest_version": "0.4",
+  "name": "mcp-uruguay",
+  "display_name": "Uruguay: datos públicos",
+  "version": "0.14.0",
+  "description": "Datos públicos de Uruguay y la región, de la fuente primaria y con la fecha de la copia: BCU, ANCAP, INIA, INUMET, el río Uruguay, OSE, Corte Electoral, Parlamento, compras del Estado.",
+  "long_description": "Servidor MCP construido sobre [uydatos](https://github.com/manusabbath-arch/uy-datos-abiertos), lectores estrictos que **rechazan en vez de arreglar**: ante un dato que no cumple, devuelven el motivo y no un número plausible pero falso. Cada respuesta trae `fuente` y `bajado` para citar el dato. Es de solo lectura y no es un servicio oficial: si una cifra no coincide con la del organismo, vale la del organismo.",
+  "author": {
+    "name": "Manu Martinez",
+    "url": "https://github.com/manusabbath-arch"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/manusabbath-arch/mcp-uruguay.git"
+  },
+  "homepage": "https://github.com/manusabbath-arch/mcp-uruguay",
+  "documentation": "https://github.com/manusabbath-arch/mcp-uruguay/blob/main/docs/herramientas.md",
+  "support": "https://github.com/manusabbath-arch/mcp-uruguay/issues",
+  "server": {
+    "type": "uv",
+    "entry_point": "src/mcp_uruguay/__main__.py",
+    "mcp_config": {
+      "command": "uv",
+      "args": [
+        "run",
+        "--directory",
+        "${__dirname}",
+        "mcp-uruguay"
+      ]
+    }
+  },
+  "tools": [
+    {
+      "name": "cotizacion",
+      "description": "Cotización del BCU de un día"
+    },
+    {
+      "name": "cotizacion_mensual",
+      "description": "Promedio mensual de una cotización del BCU"
+    },
+    {
+      "name": "pesos_constantes",
+      "description": "Pesos constantes con la Unidad Indexada"
+    },
+    {
+      "name": "ipc_argentina",
+      "description": "IPC de Argentina (INDEC)"
+    },
+    {
+      "name": "ipca_brasil",
+      "description": "IPCA de Brasil (IBGE)"
+    },
+    {
+      "name": "combustible_ancap",
+      "description": "Precios de combustibles de ANCAP"
+    },
+    {
+      "name": "ventas_combustible",
+      "description": "Ventas de combustibles de ANCAP"
+    },
+    {
+      "name": "paridad_combustibles",
+      "description": "Combustibles: ANCAP contra el precio de paridad de importación"
+    },
+    {
+      "name": "clima",
+      "description": "Clima en Salto Grande (INIA)"
+    },
+    {
+      "name": "observaciones_inumet",
+      "description": "Observaciones horarias de INUMET, por día local"
+    },
+    {
+      "name": "estaciones_cercanas",
+      "description": "Estaciones hidrometeorológicas cercanas (Salto Grande)"
+    },
+    {
+      "name": "nivel_rio",
+      "description": "Nivel del río en una estación de Salto Grande"
+    },
+    {
+      "name": "nivel_rio_comparado",
+      "description": "Nivel del río comparado con años anteriores"
+    },
+    {
+      "name": "nivel_rio_ina",
+      "description": "Nivel y caudal del río Uruguay en las escalas de Prefectura (INA)"
+    },
+    {
+      "name": "calidad_agua",
+      "description": "Calidad del agua potable de OSE por localidad"
+    },
+    {
+      "name": "variacion_real",
+      "description": "Variación real descontando la inflación"
+    },
+    {
+      "name": "ubicar_punto",
+      "description": "En qué departamento y localidad cae un punto"
+    },
+    {
+      "name": "localidad",
+      "description": "Población y viviendas de una localidad (INE)"
+    },
+    {
+      "name": "resultados_electorales",
+      "description": "Resultados electorales (Corte Electoral)"
+    },
+    {
+      "name": "compras_estado",
+      "description": "Compras del Estado (ARCE)"
+    },
+    {
+      "name": "asistencia_parlamentaria",
+      "description": "Asistencia de legisladores (Parlamento)"
+    },
+    {
+      "name": "pedidos_de_informes",
+      "description": "Pedidos de informes de Diputados y si se contestaron"
+    },
+    {
+      "name": "leyes",
+      "description": "Leyes promulgadas (Parlamento)"
+    },
+    {
+      "name": "proyectos_parlamento",
+      "description": "Proyectos entrados al Parlamento"
+    },
+    {
+      "name": "validar_documento",
+      "description": "Validar RUT o cédula uruguaya"
+    },
+    {
+      "name": "semana",
+      "description": "Semana ISO de una fecha"
+    },
+    {
+      "name": "geocodificar_direccion",
+      "description": "Geocodificar una dirección de Uruguay (IDE.uy)"
+    },
+    {
+      "name": "buscar_indicador_social",
+      "description": "Buscar indicadores sociales del MIDES"
+    },
+    {
+      "name": "indicador_social",
+      "description": "Un indicador social del MIDES, con su ficha"
+    },
+    {
+      "name": "recursos_catalogo",
+      "description": "Recursos de un dataset del catálogo de Uruguay"
+    },
+    {
+      "name": "diagnostico",
+      "description": "Que copia de cada fuente se esta usando"
+    }
+  ],
+  "prompts_generated": true,
+  "keywords": [
+    "uruguay",
+    "datos-abiertos",
+    "open-data",
+    "bcu",
+    "ancap",
+    "ose",
+    "elecciones",
+    "clima"
+  ],
+  "license": "MIT",
+  "compatibility": {
+    "platforms": [
+      "darwin",
+      "win32",
+      "linux"
+    ],
+    "runtimes": {
+      "python": ">=3.10"
+    }
+  }
+}
