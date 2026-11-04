@@ -85,3 +85,25 @@ def test_parlamento_senado_actual_y_leyes():
     r = h.asistencia_parlamentaria("senado", 50)
     assert r["personas"] > 31 and r["menor_asistencia"]
     assert h.leyes(numero=20531)["total"] == 1
+
+
+def test_calidad_agua_de_salto_trae_los_36_trimestres():
+    """Medido el 2026-10-25 en uydatos: 2017-T1 a 2025-T4 completos, sin un hueco."""
+    r = h.calidad_agua("Salto")
+    trimestres = [t["trimestre"] for t in r["trimestres"]]
+    assert trimestres[0] == "2017-T1" and "2025-T4" in trimestres and len(trimestres) >= 36
+    color = [p for t in r["trimestres"] for p in t["numericos"] if p["parametro"] == "COLOR VERDADERO"]
+    assert sum(p["menor_que"] for p in color) > sum(p["exactos"] for p in color)  # 93,7% censurado en el país
+
+
+def test_nivel_rio_ina_concordia_altura_reciente_y_niveles():
+    r = h.nivel_rio_ina("Concordia", "H")
+    assert r["puntos"] and -10 < r["puntos"][-1]["media"] < 25
+    assert r["niveles"]["alerta"] is not None
+
+
+def test_nivel_rio_ina_caudal_de_concordia_avisa_el_atraso():
+    """Medido el 2026-10-27: la última fila del caudal de Concordia (serie 928) era del 15/07/2026."""
+    r = h.nivel_rio_ina("Concordia", "Q", desde="2026-01-01")
+    if r["dias_de_atraso"] > h.ATRASO_AVISO_INA:
+        assert "ATENCIÓN" in r["nota"]

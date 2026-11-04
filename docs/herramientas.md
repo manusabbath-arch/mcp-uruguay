@@ -30,6 +30,25 @@ incluir la palabra 'departamento' (por ejemplo 'pobreza departamento').
 | `texto` | `string` | si |
 | `cantidad` | `integer` | no |
 
+## `calidad_agua` — Calidad del agua potable de OSE por localidad
+
+Los análisis de laboratorio con que OSE controla el agua potable, por localidad y trimestre,
+desde 2017: coliformes totales y Escherichia coli (presencia o ausencia), pH, turbidez (NTU), color
+verdadero (UC) y olor.
+
+Sin `localidad`, la lista de localidades con su departamento. Con `localidad`, cada trimestre con la
+cantidad de muestras y, por parámetro, cuántos análisis fueron mediciones y cuántos límites de
+detección (`<5`), con el mínimo y el máximo de las mediciones. `parametro` filtra uno (por ejemplo
+`turbidez`); `desde`/`hasta` son AAAA o AAAA-Tn (por ejemplo 2024-T3). No dice si el agua cumple la
+norma: informa lo que OSE publicó. La primera consulta baja unos 122 MB y tarda.
+
+| parametro | tipo | obligatorio |
+|---|---|---|
+| `localidad` | `string` | no |
+| `parametro` | `string` | no |
+| `desde` | `string` | no |
+| `hasta` | `string` | no |
+
 ## `clima` — Clima en Salto Grande (INIA)
 
 Clima de la estacion INIA Salto Grande, la misma serie desde 1970.
@@ -210,6 +229,25 @@ Los años con pocas lecturas se excluyen y se listan. La primera consulta puede 
 |---|---|---|
 | `estacion` | `string` | no |
 | `dias` | `integer` | no |
+| `hasta` | `string` | no |
+
+## `nivel_rio_ina` — Nivel y caudal del río Uruguay en las escalas de Prefectura (INA)
+
+Altura (H, en metros) o caudal (Q, en m³/s) del río Uruguay en las escalas de Prefectura Naval
+Argentina que publica el sistema de alerta del INA: Concordia (frente a Salto, desde 1931) y Salto
+Grande Arriba y Abajo (la represa). Con los niveles de alerta, evacuación y aguas bajas de la escala.
+
+`desde`/`hasta` AAAA-MM-DD, por defecto los últimos 30 días. Hasta 400 días devuelve un punto por
+día; más largo, uno por mes (la serie entera cabe en un pedido). Leer `dias_de_atraso` antes de
+decir "hoy": el caudal de Concordia viene con meses de atraso en la fuente, y el dato del día se
+carga por la tarde. Para la estación Salto de la CTM y el río comparado con otros años, usar
+nivel_rio y nivel_rio_comparado.
+
+| parametro | tipo | obligatorio |
+|---|---|---|
+| `escala` | `string` | no |
+| `variable` | `string` | no |
+| `desde` | `string` | no |
 | `hasta` | `string` | no |
 
 ## `observaciones_inumet` — Observaciones horarias de INUMET, por día local

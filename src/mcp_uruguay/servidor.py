@@ -173,6 +173,39 @@ def nivel_rio_comparado(estacion: str = "Salto", dias: int = 7, hasta: str = "")
     return h.nivel_rio_comparado(estacion, dias, hasta)
 
 
+@herramienta("Nivel y caudal del río Uruguay en las escalas de Prefectura (INA)", EN_RED)
+def nivel_rio_ina(
+    escala: Literal["Concordia", "Salto Grande Arriba", "Salto Grande Abajo"] = "Concordia",
+    variable: Literal["H", "Q"] = "H",
+    desde: str = "",
+    hasta: str = "",
+) -> h.NivelRioIna:
+    """Altura (H, en metros) o caudal (Q, en m³/s) del río Uruguay en las escalas de Prefectura Naval
+    Argentina que publica el sistema de alerta del INA: Concordia (frente a Salto, desde 1931) y Salto
+    Grande Arriba y Abajo (la represa). Con los niveles de alerta, evacuación y aguas bajas de la escala.
+
+    `desde`/`hasta` AAAA-MM-DD, por defecto los últimos 30 días. Hasta 400 días devuelve un punto por
+    día; más largo, uno por mes (la serie entera cabe en un pedido). Leer `dias_de_atraso` antes de
+    decir "hoy": el caudal de Concordia viene con meses de atraso en la fuente, y el dato del día se
+    carga por la tarde. Para la estación Salto de la CTM y el río comparado con otros años, usar
+    nivel_rio y nivel_rio_comparado."""
+    return h.nivel_rio_ina(escala, variable, desde, hasta)
+
+
+@herramienta("Calidad del agua potable de OSE por localidad", EN_RED)
+def calidad_agua(localidad: str = "", parametro: str = "", desde: str = "", hasta: str = "") -> h.CalidadAgua:
+    """Los análisis de laboratorio con que OSE controla el agua potable, por localidad y trimestre,
+    desde 2017: coliformes totales y Escherichia coli (presencia o ausencia), pH, turbidez (NTU), color
+    verdadero (UC) y olor.
+
+    Sin `localidad`, la lista de localidades con su departamento. Con `localidad`, cada trimestre con la
+    cantidad de muestras y, por parámetro, cuántos análisis fueron mediciones y cuántos límites de
+    detección (`<5`), con el mínimo y el máximo de las mediciones. `parametro` filtra uno (por ejemplo
+    `turbidez`); `desde`/`hasta` son AAAA o AAAA-Tn (por ejemplo 2024-T3). No dice si el agua cumple la
+    norma: informa lo que OSE publicó. La primera consulta baja unos 122 MB y tarda."""
+    return h.calidad_agua(localidad, parametro, desde, hasta)
+
+
 @herramienta("Variación real descontando la inflación", EN_RED)
 def variacion_real(
     monto_inicial: float,
