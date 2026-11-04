@@ -16,7 +16,7 @@ servidor y sin él.
 
 ## Qué mide
 
-`preguntas.json` tiene tres tipos de pregunta:
+`preguntas.json` tiene 30 preguntas de tres tipos, que cubren 13 herramientas (19 de desarrollo y 11 reservadas):
 
 | tipo | qué se espera | cómo se verifica |
 |---|---|---|
@@ -37,9 +37,17 @@ mira** al ajustar: es el número que se publica.
 ## Antes de publicar un resultado
 
 1. **Confirmar cada respuesta en la fuente.** Las cifras se buscaron el 2026-11-04 desde una máquina sin
-   acceso a los sitios del Estado. Por eso todas dicen `confirmada_en_fuente: false`, salvo las trampas
-   cuya regla está medida en `uydatos`. Hay que abrir cada `url`, comprobar el número y pasar el campo a
-   `true`.
+   acceso a los sitios del Estado. Por eso las que vienen de una página dicen `confirmada_en_fuente:
+   false`. Las que salen de un cálculo (semana ISO, dígito verificador) o de una regla medida en `uydatos`
+   ya están confirmadas. `confirmar.py` baja cada fuente (HTML o PDF) y busca la cifra escrita en
+   cualquiera de sus formas (`49,84`, `1.101.296`, `09/07/2020`):
+
+   ```sh
+   uv run --with pypdf python evals/confirmar.py            # informa, no toca nada
+   uv run --with pypdf python evals/confirmar.py --marcar   # marca las que encontró, con fecha y URL
+   ```
+
+   Lo que no encuentra queda para revisar a mano: el script no adivina.
 2. **Revisar las preguntas que caducan.** `trampa-caudal-concordia-hoy` depende de que la fuente siga
    atrasada.
 3. **Correr el conjunto reservado al menos tres veces** (`--repeticiones 3`). Una corrida sola tiene ruido.
@@ -77,7 +85,7 @@ el script activa:
 - **con el servidor**: unos 4 turnos de unos 11.000 tokens de entrada y unos 3.000 de salida, alrededor
   de **US$ 0,25 por pregunta**;
 - **sin el servidor**: alrededor de **US$ 0,05 por pregunta**;
-- **las 14 preguntas, en los dos modos**: alrededor de **US$ 4**.
+- **las 30 preguntas, en los dos modos**: alrededor de **US$ 9**.
 
 La caché debería bajarlo, porque las herramientas se repiten idénticas. Lo que vale es medirlo: correr
 una pregunta con `--id` y mirar los tokens del detalle.

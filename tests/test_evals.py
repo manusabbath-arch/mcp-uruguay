@@ -178,3 +178,76 @@ async def test_la_corrida_marca_el_refusal_como_fallo():
     (fila,) = await evaluar.correr(cliente, [p], ["sin"])
     assert (fila["correcta"], fila["motivo_fin"]) == (False, "refusal")
     assert "| sin | **todas** | 0/1 (0%)" in evaluar.resumen([fila])
+
+
+# --- La confirmación contra la fuente ----------------------------------------------------------------
+
+import confirmar  # noqa: E402
+
+
+def _pregunta(id_):
+    return next(q for q in evaluar.cargar() if q["id"] == id_)
+
+
+@pytest.mark.parametrize(
+    "id_,esperadas",
+    [
+        ("balotaje-2024-delgado-votos", {"1.101.296", "1,101,296", "1101296"}),
+        ("balotaje-2024-orsi-pct", {"49,84", "49.84"}),
+        ("ipc-argentina-2024", {"117,8", "117.8"}),
+        ("ui-2025-01-01", {"6,1697", "6.1697"}),
+        ("ley-19889-promulgacion", {"09/07/2020", "9/7/2020"}),
+    ],
+)
+def test_las_formas_en_que_se_escribe_la_cifra(id_, esperadas):
+    assert esperadas <= set(confirmar.formas(_pregunta(id_)))
+
+
+def test_una_cifra_no_se_encuentra_dentro_de_otra():
+    assert confirmar.aparece("4,83", "acumula 4,83 em 2024")
+    assert not confirmar.aparece("4,83", "acumula 14,83 em 2024")
+    assert not confirmar.aparece("4,83", "acumula 4,831")
+    assert confirmar.aparece("4,83", "fecha o ano em 4,83.")  # el punto final de la oración no es un decimal
+
+
+def test_confirma_en_html_y_si_no_esta_no_marca():
+    p = _pregunta("ipca-brasil-2024")
+    pagina = b"<html><script>var x=4.83</script><p>IPCA em dezembro vai a 0,52% e acumula 4,83% em 2024</p></html>"
+    r = confirmar.confirmar(p, lambda url: pagina)
+    assert (r["estado"], r["forma"]) == ("confirmada", "4,83")
+    otra = b"<p>IPCA acumula 4,62% em 2023</p>"
+    assert confirmar.confirmar(p, lambda url: otra)["estado"] == "no_aparece"
+
+
+def test_prueba_las_otras_fuentes_si_la_primera_no_baja():
+    p = _pregunta("nafta-super95-2025-01")
+
+    def bajador(url):
+        if "impo" in url:
+            raise OSError("getaddrinfo ENOTFOUND")
+        return "<p>pasó de $75,052 a $78,54 por litro</p>".encode()
+
+    r = confirmar.confirmar(p, bajador)
+    assert r["estado"] == "confirmada" and "elobservador" in r["url"]
+
+
+def test_sin_red_no_confirma_nada():
+    def caida(url):
+        raise OSError("getaddrinfo ENOTFOUND")
+
+    assert confirmar.confirmar(_pregunta("censo-2023-total"), caida)["estado"] == "no_se_pudo_bajar"
+
+
+def test_las_de_calculo_y_las_trampas_no_se_buscan():
+    assert confirmar.confirmar(_pregunta("cedula-valida"), None)["estado"] == "no_aplica"
+    assert confirmar.confirmar(_pregunta("trampa-turbidez-promedio"), None)["estado"] == "no_aplica"
+
+
+def test_las_respuestas_de_calculo_se_recalculan():
+    """Las que dicen `via: cálculo` se comprueban acá, sin el servidor: si no, serían circulares."""
+    from datetime import date
+
+    assert date(2027, 1, 1).isocalendar()[:2] == (2026, 53)
+    pesos = [2, 9, 8, 7, 6, 3, 4]
+    suma = sum(int(c) * w for c, w in zip("1234567", pesos))
+    assert (10 - suma % 10) % 10 == 2  # 1.234.567-2 es válida; -3 no
