@@ -23,6 +23,12 @@
   ni Python ni uv. `manifest.json` se genera desde el servidor (`python -m mcp_uruguay.manifiesto`) y
   un test falla si quedó viejo. Probado: empaquetado con `@anthropic-ai/mcpb` 2.1.2, descomprimido y
   corrido como lo corre Claude Desktop, con un cliente MCP por stdio (31 herramientas, una llamada real).
+- **La evaluación de exactitud** (`evals/`): 14 preguntas con respuesta oficial (elecciones, censo,
+  inflación de Argentina y Brasil, la UI, una ley) y 4 trampas donde lo correcto es avisar y no dar un
+  número (un domingo sin cotización, un `<0,2` que no se promedia, un caudal atrasado, dos metodologías de
+  pobreza). Se corren con y sin el servidor, con un conjunto `reservado` que no se mira al ajustar, y se
+  mide acierto, llamadas, errores de herramienta y tokens. La respuesta esperada sale siempre de la fuente
+  oficial, nunca de este servidor. Necesita una clave de la API de Claude: ver `evals/README.md`.
 - **`scripts/publicar.sh`**: crea la Release con las notas del CHANGELOG, después de ruff, los tests y
   de comprobar que `server.json` dice la misma versión. Sin `--de-verdad` solo simula. El trabajo
   `sin-publicar` del CI avisa cuando la versión de `main` no está en PyPI; no publica.

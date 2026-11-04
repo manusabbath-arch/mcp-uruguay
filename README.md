@@ -109,6 +109,8 @@ difícil auditar los resultados de un servidor MCP». Este servidor está hecho 
   otra red. Ante algo que no cumple, devuelve el motivo y no un número.
 - **Cada respuesta dice de dónde y de cuándo** (`fuente` y `bajado`), y `diagnostico` muestra qué copia de
   cada fuente se usó.
+- **La exactitud se mide**: `evals/` tiene preguntas con respuesta oficial y trampas donde lo correcto es
+  avisar, y las corre con y sin el servidor (ver [evals/README.md](evals/README.md)).
 - **Las fuentes se miden cada semana** contra una línea de base versionada en `uydatos`: si una cambia de
   forma, se sabe antes de que una respuesta salga mal.
 

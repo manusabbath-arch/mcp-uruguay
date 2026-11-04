@@ -10,3 +10,4 @@ build/
 .privacidad-local
 .coverage
 *.mcpb
+evals/resultados/
