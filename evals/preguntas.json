@@ -1,0 +1,587 @@
+{
+  "version": 1,
+  "nota": "Cada respuesta esperada sale de la publicación oficial (o de prensa que la cita, marcado en `via`), nunca de las herramientas de este servidor: medir contra lo que devuelve el propio servidor sería circular. Consultado el 2026-11-04 por búsqueda web; las fuentes primarias no resolvían desde la máquina de la medición, y por eso `confirmada_en_fuente` es false donde la cifra viene de prensa. Antes de publicar un resultado, abrir cada `url` y pasar `confirmada_en_fuente` a true.",
+  "preguntas": [
+    {
+      "id": "balotaje-2024-orsi-pct",
+      "conjunto": "desarrollo",
+      "pregunta": "En el balotaje del 24 de noviembre de 2024 en Uruguay, ¿qué porcentaje de los votos emitidos obtuvo Yamandú Orsi?",
+      "tipo": "numero",
+      "esperado": 49.84,
+      "tolerancia": 0.05,
+      "unidad": "%",
+      "herramientas_esperadas": [
+        "resultados_electorales"
+      ],
+      "fuente": {
+        "organismo": "Corte Electoral (cifras al 100% escrutado, citadas por la prensa)",
+        "url": "https://www.ambito.com/uruguay/yamandu-orsi-le-gano-alvaro-delgado-mas-95000-votos-segun-los-datos-oficiales-n6085556",
+        "cita": "Orsi acumuló 1.196.798 votos (49,84%), contra 1.101.296 (45,87%) de Delgado",
+        "via": "prensa",
+        "confirmada_en_fuente": false
+      }
+    },
+    {
+      "id": "balotaje-2024-delgado-votos",
+      "conjunto": "reservado",
+      "pregunta": "¿Cuántos votos obtuvo Álvaro Delgado en el balotaje de noviembre de 2024 en Uruguay?",
+      "tipo": "numero",
+      "esperado": 1101296,
+      "tolerancia": 0,
+      "unidad": "votos",
+      "herramientas_esperadas": [
+        "resultados_electorales"
+      ],
+      "fuente": {
+        "organismo": "Corte Electoral (citada por la prensa)",
+        "url": "https://www.ambito.com/uruguay/yamandu-orsi-le-gano-alvaro-delgado-mas-95000-votos-segun-los-datos-oficiales-n6085556",
+        "cita": "contra 1.101.296 (45,87%) de Delgado",
+        "via": "prensa",
+        "confirmada_en_fuente": false
+      }
+    },
+    {
+      "id": "nacionales-2024-fa-pct",
+      "conjunto": "desarrollo",
+      "pregunta": "En las elecciones nacionales del 27 de octubre de 2024 en Uruguay, ¿qué porcentaje de los votos emitidos obtuvo el Frente Amplio?",
+      "tipo": "numero",
+      "esperado": 43.9,
+      "tolerancia": 0.1,
+      "unidad": "%",
+      "herramientas_esperadas": [
+        "resultados_electorales"
+      ],
+      "fuente": {
+        "organismo": "Corte Electoral: 43,85% en el escrutinio final y 43,94% en el primario (la tolerancia cubre los dos)",
+        "url": "https://www.telenoche.com.uy/escrutinio-a14787",
+        "cita": "un 43,85% para el Frente Amplio y un 26,81% para el Partido Nacional",
+        "via": "prensa",
+        "confirmada_en_fuente": false
+      }
+    },
+    {
+      "id": "censo-2023-total",
+      "conjunto": "desarrollo",
+      "pregunta": "¿Cuál es la población total de Uruguay según los resultados finales del Censo 2023?",
+      "tipo": "numero",
+      "esperado": 3499451,
+      "tolerancia": 0,
+      "unidad": "personas",
+      "herramientas_esperadas": [
+        "localidad"
+      ],
+      "fuente": {
+        "organismo": "INE, vía Presidencia",
+        "url": "https://www.gub.uy/presidencia/comunicacion/noticias/censo-nacional-2023-contabilizo-3499451-habitantes-uruguay",
+        "cita": "El INE fijó la población de Uruguay en 3.499.451 personas al 31 de mayo de 2023 (reemplazó a la preliminar de 3.444.263)",
+        "via": "organismo",
+        "confirmada_en_fuente": false
+      }
+    },
+    {
+      "id": "censo-2023-ciudad-salto",
+      "conjunto": "desarrollo",
+      "pregunta": "¿Cuántos habitantes tiene la ciudad de Salto según el Censo 2023?",
+      "tipo": "numero",
+      "esperado": 112527,
+      "tolerancia": 0,
+      "unidad": "personas",
+      "herramientas_esperadas": [
+        "localidad"
+      ],
+      "fuente": {
+        "organismo": "INE, infografía departamental del Censo 2023",
+        "url": "https://www5.ine.gub.uy/documents/CENSO%202023/Infografias/Salto.pdf",
+        "cita": "la ciudad de Salto tiene 112.527 habitantes",
+        "via": "organismo",
+        "confirmada_en_fuente": false
+      }
+    },
+    {
+      "id": "censo-2023-departamento-salto",
+      "conjunto": "reservado",
+      "pregunta": "¿Cuántos habitantes tiene el departamento de Salto según el Censo 2023?",
+      "tipo": "numero",
+      "esperado": 136195,
+      "tolerancia": 0,
+      "unidad": "personas",
+      "herramientas_esperadas": [
+        "localidad"
+      ],
+      "fuente": {
+        "organismo": "INE, infografía departamental del Censo 2023",
+        "url": "https://www5.ine.gub.uy/documents/CENSO%202023/Infografias/Salto.pdf",
+        "cita": "Salto tiene 136.195 habitantes en 2023, frente a 128.803 en 2011",
+        "via": "organismo",
+        "confirmada_en_fuente": false
+      }
+    },
+    {
+      "id": "ipc-argentina-2024",
+      "conjunto": "desarrollo",
+      "pregunta": "¿Cuánto fue la inflación anual de Argentina en 2024 (variación del IPC nacional de diciembre de 2024 contra diciembre de 2023), en porcentaje?",
+      "tipo": "numero",
+      "esperado": 117.8,
+      "tolerancia": 0.15,
+      "unidad": "%",
+      "herramientas_esperadas": [
+        "ipc_argentina"
+      ],
+      "fuente": {
+        "organismo": "INDEC (citado por la prensa)",
+        "url": "https://www.bloomberglinea.com/latinoamerica/argentina/inflacion-de-2024-en-argentina-fue-de-1178/",
+        "cita": "la inflación de diciembre de 2024 fue de 2,7% y el acumulado anual cerró en 117,8%",
+        "via": "prensa",
+        "confirmada_en_fuente": false
+      }
+    },
+    {
+      "id": "ipca-brasil-2024",
+      "conjunto": "reservado",
+      "pregunta": "¿Cuánto fue la inflación de Brasil medida por el IPCA en 2024, en porcentaje?",
+      "tipo": "numero",
+      "esperado": 4.83,
+      "tolerancia": 0.02,
+      "unidad": "%",
+      "herramientas_esperadas": [
+        "ipca_brasil"
+      ],
+      "fuente": {
+        "organismo": "IBGE, Agência de Notícias",
+        "url": "https://agenciadenoticias.ibge.gov.br/agencia-noticias/42416-ipca-em-dezembro-vai-a-0-52-e-acumula-4-83-em-2024.html",
+        "cita": "IPCA em dezembro vai a 0,52% e acumula 4,83% em 2024",
+        "via": "organismo",
+        "confirmada_en_fuente": false
+      }
+    },
+    {
+      "id": "ui-2025-01-01",
+      "conjunto": "desarrollo",
+      "pregunta": "¿Cuál era el valor de la Unidad Indexada (UI) de Uruguay el 1 de enero de 2025, en pesos?",
+      "tipo": "numero",
+      "esperado": 6.1697,
+      "tolerancia": 0.0001,
+      "unidad": "pesos",
+      "herramientas_esperadas": [
+        "cotizacion"
+      ],
+      "fuente": {
+        "organismo": "INE, tabla de la Unidad Indexada de diciembre de 2024 (6/12/2024 al 5/1/2025)",
+        "url": "https://www5.ine.gub.uy/documents/Estadísticaseconómicas/PDF/UI/2024/UI_Diciembre%202024.pdf",
+        "cita": "01/1/2025 6,1697",
+        "via": "organismo",
+        "confirmada_en_fuente": false
+      }
+    },
+    {
+      "id": "ley-19889-promulgacion",
+      "conjunto": "desarrollo",
+      "pregunta": "¿En qué fecha se promulgó la ley 19.889 de Uruguay? Respondé la fecha como AAAA-MM-DD.",
+      "tipo": "texto",
+      "patron": "2020-07-09",
+      "herramientas_esperadas": [
+        "leyes"
+      ],
+      "fuente": {
+        "organismo": "IMPO",
+        "url": "https://impo.com.uy/bases/leyes/19889-2020/83",
+        "cita": "Promulgación: 09/07/2020 Publicación: 14/07/2020",
+        "via": "organismo",
+        "confirmada_en_fuente": false
+      }
+    },
+    {
+      "id": "trampa-dolar-domingo",
+      "conjunto": "desarrollo",
+      "pregunta": "¿Cuál fue la cotización del dólar billete del BCU el domingo 5 de octubre de 2025?",
+      "tipo": "comportamiento",
+      "debe_mencionar": [
+        "domingo|fin de semana|no (hay|hubo|publica|se publica)|h[aá]bil|viernes"
+      ],
+      "herramientas_esperadas": [
+        "cotizacion"
+      ],
+      "fuente": {
+        "organismo": "BCU, web service de cotizaciones (cotizaciones.bcu.gub.uy): no publica los fines de semana; medido en uydatos.bcu",
+        "url": null,
+        "cita": "Lo correcto es decir que ese día no hay cotización, o usar el último día hábil diciéndolo.",
+        "via": "regla de la fuente",
+        "confirmada_en_fuente": true
+      }
+    },
+    {
+      "id": "trampa-pobreza-metodologia",
+      "conjunto": "reservado",
+      "pregunta": "¿Qué porcentaje de las personas estaba bajo la línea de pobreza en Uruguay en 2024?",
+      "tipo": "comportamiento",
+      "debe_mencionar": [
+        "17[,.]3|metodolog"
+      ],
+      "herramientas_esperadas": [
+        "buscar_indicador_social",
+        "indicador_social"
+      ],
+      "fuente": {
+        "organismo": "INE: 17,3% con la metodología nueva; 8,3% con la de 2006, y el INE avisa que no son comparables",
+        "url": "https://www.montevideo.com.uy/Noticias/La-pobreza-fue-de-17-3-en-2024-el-INE-explico-los-cambios-en-su-metodologia-uc923274",
+        "cita": "La pobreza fue de 17,3% en 2024; el INE explicó los cambios en su metodología",
+        "via": "prensa",
+        "confirmada_en_fuente": false
+      }
+    },
+    {
+      "id": "trampa-turbidez-promedio",
+      "conjunto": "desarrollo",
+      "pregunta": "¿Cuál fue la turbidez promedio del agua potable de OSE en Salto en 2024?",
+      "tipo": "comportamiento",
+      "debe_mencionar": [
+        "l[ií]mites? de detecci[oó]n|<\\s?0[,.]2|censurad|menor(es)? que|por debajo del l[ií]mite"
+      ],
+      "herramientas_esperadas": [
+        "calidad_agua"
+      ],
+      "fuente": {
+        "organismo": "OSE, dataset calidad-de-agua: parte de los valores de turbidez son límites de detección (<0,2), no mediciones",
+        "url": "https://datos.ose.com.uy/api/3/action/package_show?id=calidad-de-agua",
+        "cita": "Un promedio que trate <0,2 como 0,2 o como 0 cambia el resultado; lo correcto es decirlo.",
+        "via": "regla de la fuente (medida en uydatos 0.16)",
+        "confirmada_en_fuente": true
+      }
+    },
+    {
+      "id": "trampa-caudal-concordia-hoy",
+      "conjunto": "reservado",
+      "pregunta": "¿Cuál es hoy el caudal del río Uruguay en Concordia?",
+      "tipo": "comportamiento",
+      "debe_mencionar": [
+        "atras|no (hay|est[aá]|tengo) (un )?(dato|disponible)|[uú]ltim[oa] (dato|lectura|registro|valor)|de hace"
+      ],
+      "herramientas_esperadas": [
+        "nivel_rio_ina"
+      ],
+      "fuente": {
+        "organismo": "INA: el caudal de Concordia (serie 928) venía con 3,5 meses de atraso el 2026-10-27",
+        "url": "https://alerta.ina.gob.ar/a5/obs/puntual/series/928",
+        "cita": "Lo correcto es dar la última lectura con su fecha y decir que no es la de hoy. Revisar si la fuente se pone al día: la pregunta caduca.",
+        "via": "medición en uydatos 0.17",
+        "confirmada_en_fuente": true
+      }
+    },
+    {
+      "id": "nafta-super95-2025-01",
+      "conjunto": "desarrollo",
+      "pregunta": "¿Cuál fue el precio máximo de venta al público de la nafta Súper 95 en Uruguay en enero de 2025, en pesos por litro?",
+      "tipo": "numero",
+      "esperado": 78.54,
+      "tolerancia": 0.01,
+      "unidad": "$/litro",
+      "herramientas_esperadas": [
+        "combustible_ancap"
+      ],
+      "fuente": {
+        "organismo": "Poder Ejecutivo, Decreto 355/2024 (IMPO); confirmado por la prensa",
+        "url": "https://www.impo.com.uy/bases/decretos/355-2024",
+        "cita": "pasó de $75,052 a $78,54 por litro, desde el 1 de enero de 2025",
+        "via": "organismo",
+        "confirmada_en_fuente": false,
+        "otras_fuentes": [
+          "https://www.elobservador.com.uy/economia-y-empresas/combustibles-el-gobierno-definio-los-precios-nafta-gasoil-y-supergas-enero-2025-n5977260"
+        ]
+      }
+    },
+    {
+      "id": "gasoil-50s-2025-01",
+      "conjunto": "reservado",
+      "pregunta": "¿Cuál fue el precio máximo de venta al público del gasoil 50-S en Uruguay en enero de 2025, en pesos por litro?",
+      "tipo": "numero",
+      "esperado": 49.92,
+      "tolerancia": 0.01,
+      "unidad": "$/litro",
+      "herramientas_esperadas": [
+        "combustible_ancap"
+      ],
+      "fuente": {
+        "organismo": "Poder Ejecutivo, Decreto 355/2024 (IMPO), citado por la prensa",
+        "url": "https://www.elobservador.com.uy/economia-y-empresas/combustibles-el-gobierno-definio-los-precios-nafta-gasoil-y-supergas-enero-2025-n5977260",
+        "cita": "El gasoil 50S se mantuvo en $49,92 por litro",
+        "via": "prensa",
+        "confirmada_en_fuente": false,
+        "otras_fuentes": [
+          "https://www.impo.com.uy/bases/decretos/355-2024"
+        ]
+      }
+    },
+    {
+      "id": "balotaje-2024-delgado-pct",
+      "conjunto": "reservado",
+      "pregunta": "En el balotaje del 24 de noviembre de 2024 en Uruguay, ¿qué porcentaje de los votos emitidos obtuvo Álvaro Delgado?",
+      "tipo": "numero",
+      "esperado": 45.87,
+      "tolerancia": 0.05,
+      "unidad": "%",
+      "herramientas_esperadas": [
+        "resultados_electorales"
+      ],
+      "fuente": {
+        "organismo": "Corte Electoral (citada por la prensa)",
+        "url": "https://www.ambito.com/uruguay/yamandu-orsi-le-gano-alvaro-delgado-mas-95000-votos-segun-los-datos-oficiales-n6085556",
+        "cita": "contra 1.101.296 (45,87%) de Delgado",
+        "via": "prensa",
+        "confirmada_en_fuente": false,
+        "otras_fuentes": [
+          "https://chequeado.com/?p=88355"
+        ]
+      }
+    },
+    {
+      "id": "nacionales-2024-pn-pct",
+      "conjunto": "desarrollo",
+      "pregunta": "En las elecciones nacionales del 27 de octubre de 2024 en Uruguay, ¿qué porcentaje de los votos emitidos obtuvo el Partido Nacional?",
+      "tipo": "numero",
+      "esperado": 26.81,
+      "tolerancia": 0.1,
+      "unidad": "%",
+      "herramientas_esperadas": [
+        "resultados_electorales"
+      ],
+      "fuente": {
+        "organismo": "Corte Electoral, escrutinio final (citada por la prensa)",
+        "url": "https://www.telenoche.com.uy/escrutinio-a14787",
+        "cita": "un 43,85% para el Frente Amplio y un 26,81% para el Partido Nacional",
+        "via": "prensa",
+        "confirmada_en_fuente": false
+      }
+    },
+    {
+      "id": "censo-2023-departamento-paysandu",
+      "conjunto": "desarrollo",
+      "pregunta": "¿Cuántos habitantes tiene el departamento de Paysandú según el Censo 2023?",
+      "tipo": "numero",
+      "esperado": 121843,
+      "tolerancia": 0,
+      "unidad": "personas",
+      "herramientas_esperadas": [
+        "localidad"
+      ],
+      "fuente": {
+        "organismo": "INE, infografía departamental del Censo 2023 (el INE las actualizó en mayo de 2026: confirmar contra la versión vigente)",
+        "url": "https://www5.ine.gub.uy/documents/CENSO%202023/Infografias/Paysandu.pdf",
+        "cita": "la población total pasó de 117.023 habitantes en 2011 a 121.843 en 2023",
+        "via": "organismo",
+        "confirmada_en_fuente": false
+      }
+    },
+    {
+      "id": "ipca-brasil-2023",
+      "conjunto": "desarrollo",
+      "pregunta": "¿Cuánto fue la inflación de Brasil medida por el IPCA en 2023, en porcentaje?",
+      "tipo": "numero",
+      "esperado": 4.62,
+      "tolerancia": 0.02,
+      "unidad": "%",
+      "herramientas_esperadas": [
+        "ipca_brasil"
+      ],
+      "fuente": {
+        "organismo": "IBGE (citado por la prensa)",
+        "url": "https://investnews.com.br/economia/ipca-sobe-em-056-em-dezembro-e-acumula-alta-de-462-diz-ibge/amp/",
+        "cita": "IPCA sobe 0,56% em dezembro e acumula alta de 4,62%, diz IBGE",
+        "via": "prensa",
+        "confirmada_en_fuente": false,
+        "otras_fuentes": [
+          "https://www.thestar.com.my/news/world/2024/01/12/brazil-sees-three-year-low-inflation-of-462-pct-in-2023"
+        ]
+      }
+    },
+    {
+      "id": "ipca-brasil-2024-12-mensual",
+      "conjunto": "desarrollo",
+      "pregunta": "¿Cuánto varió el IPCA de Brasil en el mes de diciembre de 2024, en porcentaje?",
+      "tipo": "numero",
+      "esperado": 0.52,
+      "tolerancia": 0.02,
+      "unidad": "%",
+      "herramientas_esperadas": [
+        "ipca_brasil"
+      ],
+      "fuente": {
+        "organismo": "IBGE, Agência de Notícias",
+        "url": "https://agenciadenoticias.ibge.gov.br/agencia-noticias/42416-ipca-em-dezembro-vai-a-0-52-e-acumula-4-83-em-2024.html",
+        "cita": "IPCA em dezembro vai a 0,52%",
+        "via": "organismo",
+        "confirmada_en_fuente": false
+      }
+    },
+    {
+      "id": "ipc-argentina-2023",
+      "conjunto": "reservado",
+      "pregunta": "¿Cuánto fue la inflación anual de Argentina en 2023 (IPC nacional de diciembre de 2023 contra diciembre de 2022), en porcentaje?",
+      "tipo": "numero",
+      "esperado": 211.4,
+      "tolerancia": 0.2,
+      "unidad": "%",
+      "herramientas_esperadas": [
+        "ipc_argentina"
+      ],
+      "fuente": {
+        "organismo": "INDEC (citado por la prensa)",
+        "url": "https://www.cronista.com/economia-politica/la-inflacion-en-diciembre-fue-del-255-y-durante-todo-2023-alcanzo-el-2114",
+        "cita": "La inflación en diciembre fue del 25,5% y durante todo 2023 alcanzó el 211,4%",
+        "via": "prensa",
+        "confirmada_en_fuente": false,
+        "otras_fuentes": [
+          "https://en.mercopress.com/2024/01/12/cpi-goes-up-25.5-in-december-in-argentina"
+        ]
+      }
+    },
+    {
+      "id": "ipc-argentina-2024-12-mensual",
+      "conjunto": "desarrollo",
+      "pregunta": "¿Cuánto varió el IPC nacional de Argentina en el mes de diciembre de 2024, en porcentaje?",
+      "tipo": "numero",
+      "esperado": 2.7,
+      "tolerancia": 0.06,
+      "unidad": "%",
+      "herramientas_esperadas": [
+        "ipc_argentina"
+      ],
+      "fuente": {
+        "organismo": "INDEC (citado por la prensa)",
+        "url": "https://www.bloomberglinea.com/latinoamerica/argentina/inflacion-de-2024-en-argentina-fue-de-1178/",
+        "cita": "la inflación de diciembre de 2024 fue de 2,7%",
+        "via": "prensa",
+        "confirmada_en_fuente": false,
+        "otras_fuentes": [
+          "https://www.cronista.com/economia-politica/la-inflacion-de-diciembre-fue-del-2-7-y-cerro-el-ano-con-una-variacion-del-117-8"
+        ]
+      }
+    },
+    {
+      "id": "ley-19172-promulgacion",
+      "conjunto": "reservado",
+      "pregunta": "¿En qué fecha se promulgó la ley 19.172 de regulación y control del cannabis? Respondé la fecha como AAAA-MM-DD.",
+      "tipo": "texto",
+      "patron": "2013-12-20",
+      "herramientas_esperadas": [
+        "leyes"
+      ],
+      "fuente": {
+        "organismo": "IMPO",
+        "url": "https://impo.com.uy/bases/leyes/19172-2013/43",
+        "cita": "Promulgación: 20/12/2013, Publicación: 07/01/2014",
+        "via": "organismo",
+        "confirmada_en_fuente": false
+      }
+    },
+    {
+      "id": "departamentales-2025-salto",
+      "conjunto": "desarrollo",
+      "pregunta": "¿Qué partido ganó la Intendencia de Salto en las elecciones departamentales de mayo de 2025?",
+      "tipo": "texto",
+      "patron": "coalicion republicana",
+      "herramientas_esperadas": [
+        "resultados_electorales"
+      ],
+      "fuente": {
+        "organismo": "Corte Electoral (citada por la prensa)",
+        "url": "https://www.elobservador.com.uy/nacional/la-coalicion-republicana-dio-el-golpe-y-se-quedo-la-intendencia-salto-n5998916",
+        "cita": "La Coalición Republicana dio el golpe y se quedó con la Intendencia de Salto",
+        "via": "prensa",
+        "confirmada_en_fuente": false,
+        "otras_fuentes": [
+          "https://www.as-coa.org/articles/uruguays-2025-departmental-and-municipal-elections-results"
+        ]
+      }
+    },
+    {
+      "id": "departamentales-2025-montevideo",
+      "conjunto": "reservado",
+      "pregunta": "¿Qué partido ganó la Intendencia de Montevideo en las elecciones departamentales de mayo de 2025?",
+      "tipo": "texto",
+      "patron": "frente amplio",
+      "herramientas_esperadas": [
+        "resultados_electorales"
+      ],
+      "fuente": {
+        "organismo": "Corte Electoral (citada por la prensa)",
+        "url": "https://www.elobservador.com.uy/nacional/montevideo-inexpugnable-el-frente-lo-hizo-nuevo-y-bergara-completara-40-anos-gestion-n5998914/amp",
+        "cita": "Montevideo inexpugnable: el Frente lo hizo de nuevo y Bergara completará 40 años de gestión",
+        "via": "prensa",
+        "confirmada_en_fuente": false,
+        "otras_fuentes": [
+          "https://www.forbesargentina.com/today/elecciones-departamentales-frente-amplio-gana-sorpresas-montevideo-canelones-partido-nacional-pisa-fuerte-maldonado-n72064"
+        ]
+      }
+    },
+    {
+      "id": "semana-iso-2027-01-01",
+      "conjunto": "desarrollo",
+      "pregunta": "¿A qué semana ISO 8601 pertenece el 1 de enero de 2027? Respondé como AAAA-Wnn.",
+      "tipo": "texto",
+      "patron": "2026-w53",
+      "herramientas_esperadas": [
+        "semana"
+      ],
+      "fuente": {
+        "organismo": "ISO 8601 (cálculo, verificable)",
+        "url": null,
+        "cita": "date(2027, 1, 1).isocalendar() da año 2026, semana 53: el cálculo de la biblioteca estándar de Python, independiente de este servidor",
+        "via": "cálculo",
+        "confirmada_en_fuente": true
+      }
+    },
+    {
+      "id": "cedula-valida",
+      "conjunto": "desarrollo",
+      "pregunta": "¿Es válida la cédula de identidad uruguaya 1.234.567-2? Respondé sí o no.",
+      "tipo": "texto",
+      "patron": "^(si|valida)\\b",
+      "herramientas_esperadas": [
+        "validar_documento"
+      ],
+      "fuente": {
+        "organismo": "Dígito verificador de la cédula (cálculo, verificable)",
+        "url": null,
+        "cita": "pesos 2-9-8-7-6-3-4 sobre 1234567: 2+18+24+28+30+18+28 = 148; (10 - 148 mod 10) mod 10 = 2. El dígito es 2: válida",
+        "via": "cálculo",
+        "confirmada_en_fuente": true
+      }
+    },
+    {
+      "id": "cedula-invalida",
+      "conjunto": "reservado",
+      "pregunta": "¿Es válida la cédula de identidad uruguaya 1.234.567-3? Respondé sí o no.",
+      "tipo": "texto",
+      "patron": "^(no|invalida)\\b",
+      "herramientas_esperadas": [
+        "validar_documento"
+      ],
+      "fuente": {
+        "organismo": "Dígito verificador de la cédula (cálculo, verificable)",
+        "url": null,
+        "cita": "el dígito que corresponde a 1234567 es 2 (ver cedula-valida), así que con 3 no es válida",
+        "via": "cálculo",
+        "confirmada_en_fuente": true
+      }
+    },
+    {
+      "id": "trampa-compras-item-dominante",
+      "conjunto": "desarrollo",
+      "pregunta": "¿Cuánto adjudicó en total el Estado uruguayo en pesos en 2024, según los datos abiertos de compras?",
+      "tipo": "comportamiento",
+      "debe_mencionar": [
+        "[ií]tem|domin|concentr|imposible|at[ií]pic|registro|un solo"
+      ],
+      "herramientas_esperadas": [
+        "compras_estado"
+      ],
+      "fuente": {
+        "organismo": "ARCE (OCDS): un solo ítem es el 77% de lo adjudicado en pesos en 2024, con cantidad × precio imposible",
+        "url": "https://github.com/manusabbath-arch/uy-datos-abiertos/blob/main/docs/2026-10-10-datos-civicos.md",
+        "cita": "Lo correcto es dar el total avisando que un ítem lo domina, o darlo con y sin ese ítem.",
+        "via": "medición en uydatos (compras)",
+        "confirmada_en_fuente": true
+      }
+    }
+  ]
+}

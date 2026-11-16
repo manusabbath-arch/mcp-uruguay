@@ -23,11 +23,13 @@ ESPERADAS = {
     "estaciones_cercanas",
     "nivel_rio",
     "nivel_rio_comparado",
+    "nivel_rio_ina",
     "variacion_real",
     "validar_documento",
     "geocodificar_direccion",
     "ubicar_punto",
     "localidad",
+    "calidad_agua",
     "resultados_electorales",
     "compras_estado",
     "asistencia_parlamentaria",
@@ -194,6 +196,19 @@ async def test_clima_con_una_sola_fecha_lo_dice():
         r = await c.call_tool("clima", {"desde": "2026-01-01"})
     assert r.is_error
     assert "no se adivina" in r.content[0].text.lower()
+
+
+def test_el_servidor_valida_tls_con_el_almacen_del_sistema(monkeypatch):
+    """En Windows, Python no ve las raíces que el sistema baja a demanda (pasó con OSE el 16/11/2026)."""
+    import truststore
+
+    from mcp_uruguay import servidor as modulo
+
+    orden = []
+    monkeypatch.setattr(truststore, "inject_into_ssl", lambda: orden.append("truststore"))
+    monkeypatch.setattr(modulo.servidor, "run", lambda: orden.append("run"))
+    modulo.main()
+    assert orden == ["truststore", "run"]
 
 
 async def test_una_copia_vencida_servida_lo_dice_en_la_respuesta(monkeypatch, cache_temporal):

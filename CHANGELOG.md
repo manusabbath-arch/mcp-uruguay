@@ -1,5 +1,63 @@
 # Cambios
 
+## Sin publicar (será la 0.14.0)
+
+- **`calidad_agua`: la calidad del agua potable de OSE**, por localidad y trimestre desde 2017
+  (coliformes totales, E. coli, pH, turbidez, color verdadero y olor), sobre `uydatos.ose`. Un `<5`
+  es un límite de detección y va contado aparte: nunca entra al mínimo ni al máximo de las
+  mediciones, y no se promedia. Los valores con el signo al revés (`>0,2`) se cuentan, no se
+  corrigen. `muestras` cuenta muestras y `analisis` cuenta filas, porque una muestra puede pasar por
+  más de un laboratorio. Los 122 MB se bajan una vez y se validan enteros; vencida la copia (30
+  días), solo se vuelven a bajar si CKAN declara otro tamaño.
+- **`nivel_rio_ina`: el río Uruguay en las escalas de Prefectura**, del sistema de alerta del INA
+  (`uydatos.ina`): altura o caudal de Concordia (desde 1931) y de Salto Grande Arriba y Abajo, con
+  los niveles de alerta, evacuación y aguas bajas de la escala. Hasta 400 días da un punto por día;
+  más largo, uno por mes. **`dias_de_atraso` y un aviso en la nota** cuando la última lectura tiene
+  más de una semana: el caudal de Concordia viene con meses de atraso en la fuente.
+- El prompt `el_rio_en_salto` suma la escala de Concordia y sus niveles de alerta, sin mezclar su
+  altura con la de la CTM.
+- **TLS con el almacén de certificados del sistema** (`truststore`, solo en el proceso del servidor):
+  en Windows, la primera llamada a `datos.ose.com.uy` falló con `CERTIFICATE_VERIFY_FAILED` porque
+  Python no ve las raíces que el sistema baja a demanda (probado el 16/11/2026 en una máquina con red).
+  Es el mismo arreglo que usa pip, y le importa sobre todo a quien instala la extensión `.mcpb`.
+- **El mínimo de `uydatos` sube a 0.17** (`>=0.17,<0.18`), que trae `ose` (0.16) e `ina` (0.17).
+- README: «Por qué estas cifras se pueden citar» y «No es oficial».
+- **Extensión de Claude Desktop (`.mcpb`), adjunta a cada Release**: se instala con doble clic y
+  Claude Desktop resuelve Python y las dependencias (tipo `uv` de MCPB 0.4): quien la usa no necesita
+  ni Python ni uv. `manifest.json` se genera desde el servidor (`python -m mcp_uruguay.manifiesto`) y
+  un test falla si quedó viejo. Probado: empaquetado con `@anthropic-ai/mcpb` 2.1.2, descomprimido y
+  corrido como lo corre Claude Desktop, con un cliente MCP por stdio (31 herramientas, una llamada real).
+- **La evaluación de exactitud** (`evals/`): 30 preguntas sobre 13 herramientas, con respuesta oficial
+  (elecciones nacionales y departamentales, censo, inflación de Argentina y Brasil, la UI, combustibles,
+  leyes) o calculable (semana ISO, dígito de la cédula), y 5 trampas donde lo correcto es avisar y no dar
+  un número (un domingo sin cotización, un `<0,2` que no se promedia, un caudal atrasado, dos metodologías
+  de pobreza, un ítem que domina las compras del Estado). `evals/confirmar.py` baja cada fuente y marca
+  como confirmada solo la cifra que encuentra escrita. Se corren con y sin el servidor, con un conjunto `reservado` que no se mira al ajustar, y se
+  mide acierto, llamadas, errores de herramienta y tokens. La respuesta esperada sale siempre de la fuente
+  oficial, nunca de este servidor. Necesita una clave de la API de Claude: ver `evals/README.md`.
+- **`scripts/publicar.sh`**: crea la Release con las notas del CHANGELOG, después de ruff, los tests y
+  de comprobar que `server.json` dice la misma versión. Sin `--de-verdad` solo simula. El trabajo
+  `sin-publicar` del CI avisa cuando la versión de `main` no está en PyPI; no publica.
+- **`leyes`, `asistencia_parlamentaria` y `proyectos_parlamento` no responden**: `parlamento.gub.uy`
+  devuelve `403` a los clientes automáticos desde fines de octubre de 2026
+  ([issue #2](https://github.com/manusabbath-arch/mcp-uruguay/issues/2)). El arreglo no está en este
+  servidor; lo que cambia es que ahora lo dice:
+  - **Cambio visible para clientes: el texto del error.** Un rechazo de la fuente (4xx) ya no termina
+    en «Probar de nuevo más tarde», que mandaba al agente a reintentar en vano: dice «La fuente
+    rechazó el pedido: … No se arregla reintentando». Los cortes y los 5xx siguen como antes.
+  - Las fuentes que se saben caídas están en `guias.CAIDAS`: su estado va en el error de la
+    herramienta y en una sección nueva de `uru://trampas`.
+- **Arreglo: una descarga cortada volvía como «Error executing tool», sin motivo.** `IncompleteRead`
+  no es un `OSError` y se escapaba del manejo de errores de red. Lo encontró el aviso nuevo en su
+  primera corrida: `compras_estado` se cortó a los 200 segundos con 25 de 27 MB bajados
+  ([issue #5](https://github.com/manusabbath-arch/mcp-uruguay/issues/5)). Ahora dice que no se pudo
+  consultar la fuente y que se puede reintentar; la copia cortada no queda en la caché.
+- **La corrida semanal abre un issue cuando falla** (trabajo `avisar` de `tests.yml`), o comenta el
+  que ya esté abierto. Falló tres lunes seguidos, del 26/10 al 09/11, sin que nadie lo viera.
+- **Una caída conocida no pone la corrida en rojo**: `scripts/humo.py` la informa como `CAIDA` y el
+  test de red del Parlamento es un `xfail` estricto. El día que la fuente vuelva, la corrida falla
+  con `VOLVIO` para que se saque de la lista.
+
 ## 0.13.5 — 2026-11-16
 
 - **La primera llamada con la caché fría ya no es un silencio de uno a minuto y medio.** Con la caché
@@ -40,6 +98,42 @@
   aparecen cuando pasa.
 ## 0.13.3 — 2026-11-16
 
+- **`calidad_agua`: la calidad del agua potable de OSE**, por localidad y trimestre desde 2017
+  (coliformes totales, E. coli, pH, turbidez, color verdadero y olor), sobre `uydatos.ose`. Un `<5`
+  es un límite de detección y va contado aparte: nunca entra al mínimo ni al máximo de las
+  mediciones, y no se promedia. Los valores con el signo al revés (`>0,2`) se cuentan, no se
+  corrigen. `muestras` cuenta muestras y `analisis` cuenta filas, porque una muestra puede pasar por
+  más de un laboratorio. Los 122 MB se bajan una vez y se validan enteros; vencida la copia (30
+  días), solo se vuelven a bajar si CKAN declara otro tamaño.
+- **`nivel_rio_ina`: el río Uruguay en las escalas de Prefectura**, del sistema de alerta del INA
+  (`uydatos.ina`): altura o caudal de Concordia (desde 1931) y de Salto Grande Arriba y Abajo, con
+  los niveles de alerta, evacuación y aguas bajas de la escala. Hasta 400 días da un punto por día;
+  más largo, uno por mes. **`dias_de_atraso` y un aviso en la nota** cuando la última lectura tiene
+  más de una semana: el caudal de Concordia viene con meses de atraso en la fuente.
+- El prompt `el_rio_en_salto` suma la escala de Concordia y sus niveles de alerta, sin mezclar su
+  altura con la de la CTM.
+- **TLS con el almacén de certificados del sistema** (`truststore`, solo en el proceso del servidor):
+  en Windows, la primera llamada a `datos.ose.com.uy` falló con `CERTIFICATE_VERIFY_FAILED` porque
+  Python no ve las raíces que el sistema baja a demanda (probado el 16/11/2026 en una máquina con red).
+  Es el mismo arreglo que usa pip, y le importa sobre todo a quien instala la extensión `.mcpb`.
+- **El mínimo de `uydatos` sube a 0.17** (`>=0.17,<0.18`), que trae `ose` (0.16) e `ina` (0.17).
+- README: «Por qué estas cifras se pueden citar» y «No es oficial».
+- **Extensión de Claude Desktop (`.mcpb`), adjunta a cada Release**: se instala con doble clic y
+  Claude Desktop resuelve Python y las dependencias (tipo `uv` de MCPB 0.4): quien la usa no necesita
+  ni Python ni uv. `manifest.json` se genera desde el servidor (`python -m mcp_uruguay.manifiesto`) y
+  un test falla si quedó viejo. Probado: empaquetado con `@anthropic-ai/mcpb` 2.1.2, descomprimido y
+  corrido como lo corre Claude Desktop, con un cliente MCP por stdio (31 herramientas, una llamada real).
+- **La evaluación de exactitud** (`evals/`): 30 preguntas sobre 13 herramientas, con respuesta oficial
+  (elecciones nacionales y departamentales, censo, inflación de Argentina y Brasil, la UI, combustibles,
+  leyes) o calculable (semana ISO, dígito de la cédula), y 5 trampas donde lo correcto es avisar y no dar
+  un número (un domingo sin cotización, un `<0,2` que no se promedia, un caudal atrasado, dos metodologías
+  de pobreza, un ítem que domina las compras del Estado). `evals/confirmar.py` baja cada fuente y marca
+  como confirmada solo la cifra que encuentra escrita. Se corren con y sin el servidor, con un conjunto `reservado` que no se mira al ajustar, y se
+  mide acierto, llamadas, errores de herramienta y tokens. La respuesta esperada sale siempre de la fuente
+  oficial, nunca de este servidor. Necesita una clave de la API de Claude: ver `evals/README.md`.
+- **`scripts/publicar.sh`**: crea la Release con las notas del CHANGELOG, después de ruff, los tests y
+  de comprobar que `server.json` dice la misma versión. Sin `--de-verdad` solo simula. El trabajo
+  `sin-publicar` del CI avisa cuando la versión de `main` no está en PyPI; no publica.
 - **`leyes`, `asistencia_parlamentaria` y `proyectos_parlamento` no responden**: `parlamento.gub.uy`
   devuelve `403` a los clientes automáticos desde fines de octubre de 2026
   ([issue #2](https://github.com/manusabbath-arch/mcp-uruguay/issues/2)). El arreglo no está en este

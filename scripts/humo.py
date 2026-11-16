@@ -41,10 +41,12 @@ LLAMADAS = [
     ("observaciones_inumet", {"variable": "temperatura"}),
     ("nivel_rio", {}),
     ("nivel_rio_comparado", {}),
+    ("nivel_rio_ina", {}),
     ("estaciones_cercanas", {"lat": -31.39, "lon": -57.96}),
     ("geocodificar_direccion", {"direccion": "Uruguay 1000", "localidad": "Salto", "departamento": "Salto"}),
     ("ubicar_punto", {"lat": -31.39, "lon": -57.96}),
     ("localidad", {"nombre": "Salto"}),
+    ("calidad_agua", {"localidad": "Salto", "parametro": "turbidez", "desde": "2025"}),
     ("resultados_electorales", {"eleccion": "nacionales-2024"}),
     ("compras_estado", {"anio": 2025}),
     ("asistencia_parlamentaria", {"camara": "senado"}),
@@ -73,8 +75,26 @@ def clasificar(nombre: str, ok: bool) -> str:
     return "OK" if ok else "ERROR"
 
 
+def _version_del_repo() -> str:
+    """La versión de `pyproject.toml` de este repo: la que todavía puede no estar en PyPI."""
+    import re
+    from pathlib import Path
+
+    texto = (Path(__file__).resolve().parents[1] / "pyproject.toml").read_text(encoding="utf-8")
+    return re.search(r'^version = "([^"]+)"', texto, re.M).group(1)
+
+
+def _tupla(v: str) -> tuple[int, ...]:
+    return tuple(int(x) for x in v.split(".") if x.isdigit())
+
+
 async def main():
     instalada = version("mcp-uruguay")
+    # Una herramienta que el repo ya tiene y PyPI todavía no (la versión del repo es más nueva que la
+    # publicada) no es una falla del paquete: es la próxima versión. Pasó el 2026-11-16 con
+    # `calidad_agua` y `nivel_rio_ina`, de la 0.14.0, contra la 0.13.2 publicada.
+    del_repo = _version_del_repo()
+    sin_publicar_aun = _tupla(del_repo) > _tupla(instalada)
     print("mcp-uruguay", instalada, "anuncia", mcp_uruguay.__version__, "· python", sys.version.split()[0])
     resultados = []
     async with Client(servidor) as c:
@@ -85,7 +105,10 @@ async def main():
             print("SIN PROBAR:", faltan)
         for nombre, args in LLAMADAS:
             if nombre not in herramientas:
-                resultados.append((nombre, "NO EXISTE", 0, ""))
+                if sin_publicar_aun:
+                    resultados.append((nombre, "SIN PUBLICAR", 0, f"está en {del_repo} (repo), no en {instalada}"))
+                else:
+                    resultados.append((nombre, "NO EXISTE", 0, ""))
                 continue
             esquema = herramientas[nombre].input_schema.get("properties", {})
             malos = set(args) - set(esquema)
@@ -101,15 +124,17 @@ async def main():
             except Exception as e:  # noqa: BLE001
                 resultados.append((nombre, "EXCEPCION", time.time() - t0, repr(e)[:200]))
     for n, estado, s, txt in resultados:
-        print(f"{estado:9s} {s:6.1f}s  {n:26s} {txt}")
-    bien = sum(r[1] == "OK" for r in resultados)
-    caidas = [r[0] for r in resultados if r[1] == "CAIDA"]
-    print("RESUMEN", bien, "de", len(resultados))
+        print(f"{estado:12s} {s:6.1f}s  {n:26s} {txt}")
+    # Ni una herramienta sin publicar todavía ni una caída conocida son fallas del paquete.
+    probadas = [r for r in resultados if r[1] != "SIN PUBLICAR"]
+    bien = sum(r[1] == "OK" for r in probadas)
+    caidas = [r[0] for r in probadas if r[1] == "CAIDA"]
+    print("RESUMEN", bien, "de", len(probadas), f"(y {len(resultados) - len(probadas)} sin publicar todavía)")
     for n in caidas:
         print(f"CAIDA CONOCIDA {n}: issue #{CAIDAS_CONOCIDAS[n]}")
-    for n in (r[0] for r in resultados if r[1] == "VOLVIO"):
+    for n in (r[0] for r in probadas if r[1] == "VOLVIO"):
         print(f"VOLVIO {n}: sacarla de CAIDAS_CONOCIDAS y de guias.CAIDAS, y cerrar el issue #{CAIDAS_CONOCIDAS[n]}")
-    return bien + len(caidas) == len(resultados) and not faltan and mcp_uruguay.__version__ == instalada
+    return bien + len(caidas) == len(probadas) and not faltan and mcp_uruguay.__version__ == instalada
 
 
 if __name__ == "__main__":

@@ -31,6 +31,8 @@ def _tareas() -> list[tuple[str, Callable[[], object]]]:
         ("ipc_argentina", lambda: h.ipc_argentina(f"{anio}-01", f"{anio}-12")),
         ("ipca_brasil", lambda: h.ipca_brasil(f"{anio}-01", f"{anio}-12")),
         ("localidad", lambda: h.localidad(departamento="Salto", cantidad=1)),
+        ("calidad_agua", lambda: h.calidad_agua("Salto")),
+        ("nivel_rio_ina", lambda: h.nivel_rio_ina("Concordia", "H")),
         ("leyes", lambda: h.leyes(cantidad=1)),
         ("proyectos_parlamento", lambda: h.proyectos_parlamento(cantidad=1)),
         ("asistencia_parlamentaria", lambda: h.asistencia_parlamentaria("senado")),

@@ -1,0 +1,17 @@
+# Lo que no va dentro del .mcpb: Claude Desktop instala las dependencias con uv desde pyproject.toml.
+.venv/
+__pycache__/
+*.pyc
+.pytest_cache/
+.ruff_cache/
+.coverage
+*.egg-info/
+dist/
+build/
+tests/
+docs/
+scripts/
+.github/
+.privacidad-local
+*.mcpb
+evals/

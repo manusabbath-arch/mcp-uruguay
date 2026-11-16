@@ -47,3 +47,29 @@ jobs:
           for i in 1 2 3 4 5 6; do curl -sf "https://pypi.org/pypi/mcp-uruguay/${GITHUB_REF_NAME#v}/json" >/dev/null && break; sleep 20; done
           ./mcp-publisher login github-oidc
           ./mcp-publisher publish
+
+  extension:
+    # La extensión de Claude Desktop (.mcpb), adjunta a la Release. Va en su propio trabajo y no en el que
+    # publica: baja y ejecuta código de npm, y ese trabajo tiene el `id-token` con el que se publica en
+    # PyPI y en el registro. Acá solo hay `contents: write`, que es lo único que hace falta para adjuntar.
+    needs: publicar
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    env:
+      GH_TOKEN: ${{ github.token }}
+      MCPB: "@anthropic-ai/mcpb@2.1.2"
+      # La integridad que npm publica para esa versión, revisada el 16/11/2026. Si cambia, algo
+      # republicó la versión: no se ejecuta. Al subir de versión: `npm view <paquete> dist.integrity`.
+      MCPB_INTEGRIDAD: "sha512-goRbBC8ySo7SWb7tRzr+tL6FxDc4JPTRCdgfD2omba7freofvjq5rom1lBnYHZHo6Mizs1jAHJeN53aZbDoy8A=="
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1  # v7
+      - name: Empaquetar y adjuntar
+        # El tipo `uv` de MCPB deja que Claude Desktop instale Python y las dependencias: quien la
+        # usa no necesita ni Python ni uv. El manifiesto lo genera `python -m mcp_uruguay.manifiesto`
+        # y un test falla si quedó viejo; `pack` lo vuelve a validar contra el esquema.
+        run: |
+          test "$(jq -r .version manifest.json)" = "${GITHUB_REF_NAME#v}" || { echo "manifest.json no dice ${GITHUB_REF_NAME#v}"; exit 1; }
+          test "$(npm view "$MCPB" dist.integrity)" = "$MCPB_INTEGRIDAD" || { echo "la integridad de $MCPB cambió"; exit 1; }
+          npx -y "$MCPB" pack . mcp-uruguay.mcpb
+          gh release upload "$GITHUB_REF_NAME" mcp-uruguay.mcpb --clobber
