@@ -67,7 +67,10 @@ decirlo; uno que recibe un número plausible pero falso lo repite.
 Cada respuesta trae dos campos para citar el dato:
 
 - `fuente`: quién lo publica.
-- `bajado`: cuándo se obtuvo la copia que se usó.
+- `bajado`: cuándo se obtuvo la copia que se usó, en hora de Uruguay con su desplazamiento (`-03:00`).
+
+Si para responder hubo que usar una copia que ya debía refrescarse y la fuente no respondió, la respuesta
+trae además `copia_vencida: true` y un `aviso`: el dato puede estar desactualizado.
 
 ```json
 {
@@ -77,7 +80,7 @@ Cada respuesta trae dos campos para citar el dato:
   "valor_en_pesos": 40.342,
   "nota": "Se usó la cotización del 2026-10-02, último día publicado antes del 2026-10-04. ...",
   "fuente": "Banco Central del Uruguay, web service de cotizaciones (cotizaciones.bcu.gub.uy)",
-  "bajado": "2026-10-09T20:45"
+  "bajado": "2026-10-09T20:45-03:00"
 }
 ```
 

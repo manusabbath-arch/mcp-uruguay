@@ -194,3 +194,41 @@ async def test_clima_con_una_sola_fecha_lo_dice():
         r = await c.call_tool("clima", {"desde": "2026-01-01"})
     assert r.is_error
     assert "no se adivina" in r.content[0].text.lower()
+
+
+async def test_una_copia_vencida_servida_lo_dice_en_la_respuesta(monkeypatch, cache_temporal):
+    """M3: si no se pudo refrescar y se usó la copia vieja, la respuesta lleva `copia_vencida` y `aviso`."""
+    import os
+    from datetime import date, datetime
+
+    from conftest import BcuFalso
+    from uydatos import bcu
+
+    from mcp_uruguay import cache
+
+    monkeypatch.setattr(bcu, "descargar", BcuFalso())
+    cache.bcu_serie(2225, date(2026, 8, 1), date(2026, 8, 31), hoy=date(2026, 10, 9))
+    t = datetime(2026, 8, 15, 12).timestamp()  # bajado a mitad de mes: incompleto, toca refrescar
+    os.utime(cache_temporal / "bcu" / "2225_2026-08.xml", (t, t))
+
+    def cortada(*args, **kwargs):
+        raise OSError("sin red")
+
+    monkeypatch.setattr(bcu, "descargar", cortada)
+    async with Client(servidor) as c:
+        r = await c.call_tool("cotizacion", {"moneda": "USD", "fecha": "2026-08-10"})
+    assert not r.is_error
+    datos = r.structured_content
+    assert datos["copia_vencida"] is True
+    assert "No se pudo refrescar" in datos["aviso"] and "2026-08-15" in datos["aviso"]
+    assert datos["valor_en_pesos"] == 40.0  # el dato sigue llegando
+
+
+async def test_una_respuesta_normal_no_trae_aviso(monkeypatch):
+    from conftest import BcuFalso
+    from uydatos import bcu
+
+    monkeypatch.setattr(bcu, "descargar", BcuFalso())
+    async with Client(servidor) as c:
+        r = await c.call_tool("cotizacion", {"moneda": "USD", "fecha": "2026-08-10"})
+    assert "copia_vencida" not in r.structured_content and "aviso" not in r.structured_content

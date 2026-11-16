@@ -10,7 +10,7 @@ from mcp.server.mcpserver import MCPServer
 from mcp.server.mcpserver.exceptions import ToolError
 from mcp.types import ToolAnnotations
 
-from mcp_uruguay import __version__, guias
+from mcp_uruguay import __version__, cache, guias
 from mcp_uruguay import herramientas as h
 
 INSTRUCCIONES = """\
@@ -53,6 +53,26 @@ def motivo_de_red(nombre: str, error: Exception) -> str:
     return f"{texto} Estado conocido de esta fuente: {conocido}" if conocido else texto
 
 
+def _con_aviso_de_copia(resultado: Any, vencidas: list[str]) -> Any:
+    """Si para responder se usó una copia que ya debía refrescarse y no se pudo, la respuesta lo dice.
+
+    El agente ve un `bajado` viejo, pero nada le dice que se **intentó** refrescar y la fuente no
+    respondió: sin esto lo cita como si fuera la copia de siempre.
+    """
+    if not vencidas or not isinstance(resultado, dict):
+        return resultado
+    mas_vieja = min(vencidas)
+    return {
+        **resultado,
+        "copia_vencida": True,
+        "aviso": (
+            "No se pudo refrescar el dato: la fuente no respondió o devolvió algo ilegible, y se usó la "
+            f"copia que ya estaba guardada (bajada {mas_vieja}). Puede estar desactualizada: citá su "
+            "`bajado` y reintentá más tarde."
+        ),
+    }
+
+
 def herramienta(titulo: str, anotaciones: ToolAnnotations) -> Callable:
     """Registra la función y convierte en `ToolError` (con el motivo visible) los errores esperables.
 
@@ -65,7 +85,9 @@ def herramienta(titulo: str, anotaciones: ToolAnnotations) -> Callable:
         @functools.wraps(funcion)
         def envuelta(*args: Any, **kwargs: Any) -> Any:
             try:
-                return funcion(*args, **kwargs)
+                with cache.vigilar_copias() as vencidas:
+                    resultado = funcion(*args, **kwargs)
+                return _con_aviso_de_copia(resultado, vencidas)
             except ValueError as e:
                 raise ToolError(str(e)) from e
             except (OSError, http.client.HTTPException) as e:

@@ -1,5 +1,23 @@
 # Cambios
 
+## Sin publicar
+
+- **Cambio visible para clientes: `bajado` ahora lleva el desplazamiento horario.** Era la hora local
+  de la máquina, sin zona (`2026-10-09T20:45`); ahora es la de Uruguay en ISO 8601
+  (`2026-10-09T20:45-03:00`). Quien lo compare como texto con el formato viejo tiene que leer la zona.
+- **Arreglo: «hoy» ya no depende de la zona de la máquina.** Con el servidor en UTC, entre las 21:00 y
+  la medianoche de Montevideo «hoy» era mañana: el último día del mes, el mes en curso se trataba como
+  cerrado y se pedía el siguiente. Ahora todo sale de `cache.ahora()` (America/Montevideo; si la
+  máquina no tiene la base de zonas, UTC-3 fijo, que es lo mismo desde 2015).
+- **Arreglo: `bcu_serie` ya no borra la copia buena antes de bajar la nueva.** Si la descarga fallaba,
+  el mes se quedaba sin copia aunque la anterior servía; contradecía la regla del README («una
+  descarga ilegible nunca reemplaza a una copia buena»). Ahora baja aparte y solo la pone en su lugar
+  si se lee. Cada bajada usa su carpeta temporal: dos clientes MCP en la misma caché ya no se pisan, y
+  en Windows el reemplazo reintenta si otro proceso tiene el archivo abierto.
+- **Una copia vencida que no se pudo refrescar ahora avisa.** La respuesta trae `copia_vencida: true` y
+  un `aviso` con la fecha de esa copia. Antes el agente veía un `bajado` viejo y nada que dijera que se
+  intentó refrescar. Aplica a las 25 herramientas que traen `bajado`; los campos son opcionales y solo
+  aparecen cuando pasa.
 ## 0.13.3 — 2026-11-16
 
 - **`leyes`, `asistencia_parlamentaria` y `proyectos_parlamento` no responden**: `parlamento.gub.uy`
