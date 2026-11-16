@@ -1,6 +1,6 @@
 # Cambios
 
-## Sin publicar
+## 0.13.5 — 2026-11-16
 
 - **La primera llamada con la caché fría ya no es un silencio de uno a minuto y medio.** Con la caché
   vacía, `clima` tardó 81 s y `compras_estado` 88 s (medido el 16/11/2026); muchos clientes MCP cortan
