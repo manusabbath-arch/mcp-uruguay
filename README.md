@@ -152,8 +152,27 @@ Lo que se baja queda en `~/.cache/mcp-uruguay`, o en la carpeta que indique la v
   día; el clima a la semana.
 - **Una descarga ilegible nunca reemplaza a una copia buena.**
 
-La primera consulta de clima baja la serie completa de INIA (unos 57 archivos) y tarda alrededor
-de un minuto. Las siguientes son instantáneas.
+### La primera llamada es lenta
+
+Con la caché vacía, la primera consulta de `clima` (la serie completa de INIA, unos 57 archivos), de
+`compras_estado` (un ZIP de decenas de MB) o de las herramientas del Parlamento tarda **de uno a un minuto
+y medio**; medido el 16/11/2026: `clima` 81 s, `compras_estado` 88 s. Muchos clientes MCP cortan cerca de los
+60 s. Las siguientes llamadas salen del disco.
+
+Dos cosas ayudan:
+
+- **Precalentar la caché**, una vez, después de instalar:
+
+  ```
+  uvx mcp-uruguay --precalentar
+  ```
+
+  Baja de una vez lo que tarda y dice qué pasó con cada fuente. Una fuente caída no frena a las demás.
+  Termina con código 0 si todo anduvo o si solo falló lo que ya se declara caído (hoy, parte del
+  Parlamento), y con 1 si alguna otra falló.
+- **Avisos de progreso.** Mientras una herramienta trabaja, el servidor manda cada 10 segundos un aviso de
+  progreso. Sirve si el cliente lo muestra o reinicia su plazo con él; no todos lo hacen, y para esos
+  `--precalentar` sigue siendo la salida.
 
 ## Desarrollo
 

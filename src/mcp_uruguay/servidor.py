@@ -4,9 +4,12 @@ from __future__ import annotations
 
 import functools
 import http.client
+import inspect
+import time
 from typing import Any, Callable, Literal, Optional
 
-from mcp.server.mcpserver import MCPServer
+import anyio
+from mcp.server.mcpserver import Context, MCPServer
 from mcp.server.mcpserver.exceptions import ToolError
 from mcp.types import ToolAnnotations
 
@@ -73,6 +76,32 @@ def _con_aviso_de_copia(resultado: Any, vencidas: list[str]) -> Any:
     }
 
 
+#: Cada cuántos segundos una herramienta lenta avisa que sigue trabajando. Con la caché fría una
+#: primera llamada tarda de 40 a 75 s (`leyes`, `compras_estado`, `clima`) y muchos clientes cortan
+#: cerca de los 60 s: sin ningún aviso en ese rato, no hay forma de distinguirla de una colgada.
+LATIDO_S = 10.0
+
+
+async def _latido(ctx: Context, nombre: str) -> None:
+    """Un aviso de progreso cada `LATIDO_S` mientras la herramienta trabaja.
+
+    Es un no-op si el cliente no pidió progreso. Un fallo al avisar nunca rompe la herramienta.
+    """
+    inicio = time.monotonic()
+    while True:
+        await anyio.sleep(LATIDO_S)
+        segundos = int(time.monotonic() - inicio)
+        try:
+            await ctx.report_progress(
+                segundos,
+                None,
+                f"{nombre}: consultando la fuente, {segundos} s. "
+                "La primera vez tarda; las siguientes salen de la caché.",
+            )
+        except Exception:  # un cliente que cerró o no entiende el aviso no es un error de la herramienta
+            return
+
+
 def herramienta(titulo: str, anotaciones: ToolAnnotations) -> Callable:
     """Registra la función y convierte en `ToolError` (con el motivo visible) los errores esperables.
 
@@ -82,8 +111,8 @@ def herramienta(titulo: str, anotaciones: ToolAnnotations) -> Callable:
     """
 
     def decorar(funcion: Callable) -> Callable:
-        @functools.wraps(funcion)
-        def envuelta(*args: Any, **kwargs: Any) -> Any:
+        def llamar(args: tuple, kwargs: dict) -> Any:
+            """El cuerpo, síncrono: corre en un hilo para que el aviso de progreso salga a tiempo."""
             try:
                 with cache.vigilar_copias() as vencidas:
                     resultado = funcion(*args, **kwargs)
@@ -94,6 +123,37 @@ def herramienta(titulo: str, anotaciones: ToolAnnotations) -> Callable:
                 # `IncompleteRead` (una descarga cortada) no es un `OSError`: sin esto salía como un
                 # error genérico sin motivo. Pasó con `compras_estado` el 16/11/2026, a los 200 s.
                 raise ToolError(motivo_de_red(funcion.__name__, e)) from e
+
+        @functools.wraps(funcion)
+        async def envuelta(*args: Any, ctx: Context, **kwargs: Any) -> Any:
+            resultado: Any = None
+            error: Optional[Exception] = None
+            async with anyio.create_task_group() as grupo:
+                grupo.start_soon(_latido, ctx, funcion.__name__)
+                try:
+                    resultado = await anyio.to_thread.run_sync(lambda: llamar(args, kwargs))
+                except Exception as e:  # se re-lanza abajo, fuera del grupo (que lo envolvería)
+                    error = e
+                finally:
+                    grupo.cancel_scope.cancel()
+            if error is not None:
+                raise error
+            return resultado
+
+        # El SDK inyecta el `Context` según la firma: la función registrada lo declara, y el esquema
+        # de entrada de la herramienta no lo incluye.
+        firma = inspect.signature(funcion, eval_str=True)  # con las anotaciones ya evaluadas
+        envuelta.__signature__ = firma.replace(  # type: ignore[attr-defined]
+            parameters=[
+                *firma.parameters.values(),
+                inspect.Parameter("ctx", inspect.Parameter.KEYWORD_ONLY, annotation=Context),
+            ]
+        )
+        envuelta.__annotations__ = {
+            **{nombre: parametro.annotation for nombre, parametro in firma.parameters.items()},
+            "return": firma.return_annotation,
+            "ctx": Context,
+        }
 
         return servidor.tool(title=titulo, annotations=anotaciones)(envuelta)
 
@@ -394,6 +454,13 @@ for _uri, (_funcion, _titulo, _descripcion) in guias.RECURSOS.items():
 
 
 def main() -> None:
+    """Sin argumentos corre el servidor por stdio. `--precalentar` baja la caché y termina."""
+    import sys
+
+    if "--precalentar" in sys.argv[1:]:
+        from mcp_uruguay.precalentar import precalentar
+
+        raise SystemExit(precalentar())
     servidor.run()
 
 

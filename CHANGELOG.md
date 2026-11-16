@@ -2,6 +2,13 @@
 
 ## Sin publicar
 
+- **La primera llamada con la caché fría ya no es un silencio de uno a minuto y medio.** Con la caché
+  vacía, `clima` tardó 81 s y `compras_estado` 88 s (medido el 16/11/2026); muchos clientes MCP cortan
+  cerca de los 60 s y no había forma de distinguir una llamada lenta de una colgada.
+  - Mientras una herramienta trabaja, el servidor manda un **aviso de progreso cada 10 s** (no hace nada
+    si el cliente no lo pidió). No cambia lo que devuelve ninguna herramienta.
+  - **Comando nuevo, `mcp-uruguay --precalentar`**: baja de una vez las fuentes lentas y dice qué pasó con
+    cada una. Una fuente caída no frena a las demás; lo ya declarado caído no hace fallar el comando.
 - **La cadena de publicación, endurecida** (sin cambios para quien usa el servidor): las actions están
   fijadas por SHA y no por etiqueta; el hash esperado del binario `mcp-publisher` está escrito en
   `publicar.yml` (antes se comparaba contra un `checksums.txt` bajado del mismo release, que solo

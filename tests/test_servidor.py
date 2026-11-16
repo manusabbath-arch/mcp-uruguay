@@ -232,3 +232,93 @@ async def test_una_respuesta_normal_no_trae_aviso(monkeypatch):
     async with Client(servidor) as c:
         r = await c.call_tool("cotizacion", {"moneda": "USD", "fecha": "2026-08-10"})
     assert "copia_vencida" not in r.structured_content and "aviso" not in r.structured_content
+
+
+async def test_el_contexto_no_aparece_en_el_esquema_de_entrada():
+    """El `ctx` del latido lo inyecta el SDK: no es un argumento que el cliente tenga que pasar."""
+    async with Client(servidor) as c:
+        herramientas = (await c.list_tools()).tools
+    assert herramientas
+    for t in herramientas:
+        assert "ctx" not in t.input_schema.get("properties", {}), t.name
+        assert "ctx" not in t.input_schema.get("required", []), t.name
+
+
+def _lenta(monkeypatch, segundos):
+    """`validar_documento` real, pero que tarda: lo que `clima` o `leyes` hacen con la caché fría."""
+    import time
+
+    from mcp_uruguay import herramientas as h
+
+    real = h.validar_documento
+
+    def con_espera(*args, **kwargs):
+        time.sleep(segundos)
+        return real(*args, **kwargs)
+
+    monkeypatch.setattr(h, "validar_documento", con_espera)
+
+
+async def test_una_herramienta_lenta_avisa_que_sigue_trabajando(monkeypatch):
+    """M7: con la caché fría una primera llamada tarda de 40 a 75 s; sin avisos no se distingue de una colgada."""
+    from mcp_uruguay import servidor as modulo
+
+    _lenta(monkeypatch, 0.5)
+    monkeypatch.setattr(modulo, "LATIDO_S", 0.1)
+    avisos = []
+
+    async def al_progreso(progreso, total, mensaje):
+        avisos.append((progreso, mensaje))
+
+    async with Client(servidor) as c:
+        r = await c.call_tool(
+            "validar_documento", {"numero": "1.234.567-2", "tipo": "ci"}, progress_callback=al_progreso
+        )
+    assert not r.is_error
+    assert len(avisos) >= 2
+    assert [a[0] for a in avisos] == sorted(a[0] for a in avisos)  # el progreso solo avanza
+    assert all("validar_documento" in a[1] for a in avisos)
+
+
+async def test_una_herramienta_rapida_no_manda_avisos(monkeypatch):
+    from mcp_uruguay import servidor as modulo
+
+    monkeypatch.setattr(modulo, "LATIDO_S", 5.0)
+    avisos = []
+
+    async def al_progreso(progreso, total, mensaje):
+        avisos.append(progreso)
+
+    async with Client(servidor) as c:
+        r = await c.call_tool(
+            "validar_documento", {"numero": "1.234.567-2", "tipo": "ci"}, progress_callback=al_progreso
+        )
+    assert not r.is_error and avisos == []
+
+
+async def test_sin_pedir_progreso_la_herramienta_lenta_responde_igual(monkeypatch):
+    from mcp_uruguay import servidor as modulo
+
+    _lenta(monkeypatch, 0.3)
+    monkeypatch.setattr(modulo, "LATIDO_S", 0.05)
+    async with Client(servidor) as c:
+        r = await c.call_tool("validar_documento", {"numero": "1.234.567-2", "tipo": "ci"})
+    assert not r.is_error and r.structured_content["valido"] is True
+
+
+async def test_un_error_de_una_herramienta_lenta_sigue_saliendo_con_su_motivo(monkeypatch):
+    """El latido no puede tragarse ni envolver el error: sigue siendo un `ToolError` con el motivo."""
+    import time
+
+    from mcp_uruguay import herramientas as h
+    from mcp_uruguay import servidor as modulo
+
+    def lenta_y_rota(*args, **kwargs):
+        time.sleep(0.3)
+        raise ValueError("producto inexistente")
+
+    monkeypatch.setattr(h, "compras_estado", lenta_y_rota)
+    monkeypatch.setattr(modulo, "LATIDO_S", 0.05)
+    async with Client(servidor) as c:
+        r = await c.call_tool("compras_estado", {"anio": 2025})
+    assert r.is_error and "producto inexistente" in r.content[0].text
