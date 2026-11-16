@@ -7,6 +7,11 @@ quien lo usa. La corre cada semana `tests.yml` (job `instalado-desde-pypi`), y s
 
 Sale con 1 si alguna herramienta falla o falta. Una fuente caída también la hace fallar: es un
 aviso de que esa herramienta, hoy, no le responde a nadie.
+
+La excepción es `CAIDAS_CONOCIDAS`: una fuente que ya se sabe caída, con su issue abierto, se informa
+como `CAIDA` y no pone la corrida en rojo. Un rojo todos los lunes por lo mismo deja de mirarse, y
+tapa la caída siguiente. Si una de esas vuelve a responder, la corrida falla con `VOLVIO`: hay que
+sacarla de la lista y cerrar el issue.
 """
 
 import json
@@ -54,6 +59,21 @@ LLAMADAS = [
     ("diagnostico", {}),
 ]
 
+# herramienta -> número del issue que la sigue. La misma lista que `mcp_uruguay.guias.CAIDAS`: está
+# repetida porque este script corre contra el paquete de PyPI, que puede ser anterior a la lista.
+CAIDAS_CONOCIDAS = {
+    "asistencia_parlamentaria": 2,
+    "leyes": 2,
+    "proyectos_parlamento": 2,
+}
+
+
+def clasificar(nombre: str, ok: bool) -> str:
+    """`OK` o `ERROR`; para una caída conocida, `CAIDA` si sigue caída y `VOLVIO` si ya responde."""
+    if nombre in CAIDAS_CONOCIDAS:
+        return "VOLVIO" if ok else "CAIDA"
+    return "OK" if ok else "ERROR"
+
 
 def _version_del_repo() -> str:
     """La versión de `pyproject.toml` de este repo: la que todavía puede no estar en PyPI."""
@@ -100,15 +120,21 @@ async def main():
                 r = await c.call_tool(nombre, args)
                 ok = not r.is_error and r.structured_content is not None
                 txt = json.dumps(r.structured_content, ensure_ascii=False)[:110] if ok else str(r.content)[:200]
-                resultados.append((nombre, "OK" if ok else "ERROR", time.time() - t0, txt))
+                resultados.append((nombre, clasificar(nombre, ok), time.time() - t0, txt))
             except Exception as e:  # noqa: BLE001
                 resultados.append((nombre, "EXCEPCION", time.time() - t0, repr(e)[:200]))
     for n, estado, s, txt in resultados:
         print(f"{estado:12s} {s:6.1f}s  {n:26s} {txt}")
+    # Ni una herramienta sin publicar todavía ni una caída conocida son fallas del paquete.
     probadas = [r for r in resultados if r[1] != "SIN PUBLICAR"]
     bien = sum(r[1] == "OK" for r in probadas)
+    caidas = [r[0] for r in probadas if r[1] == "CAIDA"]
     print("RESUMEN", bien, "de", len(probadas), f"(y {len(resultados) - len(probadas)} sin publicar todavía)")
-    return bien == len(probadas) and not faltan and mcp_uruguay.__version__ == instalada
+    for n in caidas:
+        print(f"CAIDA CONOCIDA {n}: issue #{CAIDAS_CONOCIDAS[n]}")
+    for n in (r[0] for r in probadas if r[1] == "VOLVIO"):
+        print(f"VOLVIO {n}: sacarla de CAIDAS_CONOCIDAS y de guias.CAIDAS, y cerrar el issue #{CAIDAS_CONOCIDAS[n]}")
+    return bien + len(caidas) == len(probadas) and not faltan and mcp_uruguay.__version__ == instalada
 
 
 if __name__ == "__main__":

@@ -21,6 +21,30 @@ async def test_cada_herramienta_tiene_su_trampa_y_ninguna_sobra():
     assert set(guias.TRAMPAS) == reales
 
 
+async def test_las_caidas_son_herramientas_reales_y_humo_lleva_la_misma_lista():
+    import importlib.util
+    from pathlib import Path
+
+    assert set(guias.CAIDAS) <= await _herramientas()
+    ruta = Path(__file__).resolve().parent.parent / "scripts" / "humo.py"
+    spec = importlib.util.spec_from_file_location("humo", ruta)
+    humo = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(humo)
+    assert set(humo.CAIDAS_CONOCIDAS) == set(guias.CAIDAS)
+    for nombre, issue in humo.CAIDAS_CONOCIDAS.items():
+        assert f"/issues/{issue}" in guias.CAIDAS[nombre]
+    assert humo.clasificar("leyes", ok=False) == "CAIDA" and humo.clasificar("leyes", ok=True) == "VOLVIO"
+    assert humo.clasificar("semana", ok=True) == "OK" and humo.clasificar("semana", ok=False) == "ERROR"
+
+
+async def test_el_recurso_de_trampas_dice_que_fuentes_no_responden():
+    async with Client(servidor) as cliente:
+        texto = (await cliente.read_resource("uru://trampas")).contents[0].text
+    assert "Fuentes que hoy no responden" in texto
+    for nombre in guias.CAIDAS:
+        assert texto.count(f"`{nombre}`") == 2  # su trampa y su estado
+
+
 # Qué herramientas debe nombrar cada flujo (y con qué argumentos se pide).
 FLUJOS = {
     "combustible_en_pesos_constantes": (

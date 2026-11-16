@@ -59,6 +59,13 @@ decirlo; uno que recibe un número plausible pero falso lo repite.
 
 **Todas son de solo lectura**, y así lo declaran al cliente.
 
+> **Estado al 16/11/2026: tres herramientas no responden.** `leyes`, `asistencia_parlamentaria` y
+> `proyectos_parlamento` leen de `parlamento.gub.uy`, que desde fines de octubre de 2026 devuelve
+> `403` a los clientes automáticos. No es una caída y no se arregla reintentando; quien ya tenía la
+> copia en caché la sigue recibiendo. El error de cada herramienta lo dice, y el recurso
+> `uru://trampas` lista las fuentes que hoy no responden. Seguimiento en el
+> [issue #2](https://github.com/manusabbath-arch/mcp-uruguay/issues/2).
+
 Cada respuesta trae dos campos para citar el dato:
 
 - `fuente`: quién lo publica.

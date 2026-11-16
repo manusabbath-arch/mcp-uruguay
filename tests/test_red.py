@@ -81,6 +81,11 @@ def test_compras_2025_con_aviso_de_concentracion():
     assert r["mayores_items"] and r["aviso"]
 
 
+@pytest.mark.xfail(
+    raises=OSError,
+    strict=True,
+    reason="parlamento.gub.uy responde 403 a los clientes automáticos (issue #2); si pasa, sacar esta marca",
+)
 def test_parlamento_senado_actual_y_leyes():
     r = h.asistencia_parlamentaria("senado", 50)
     assert r["personas"] > 31 and r["menor_asistencia"]

@@ -72,6 +72,61 @@ async def test_un_error_vuelve_como_error_con_el_motivo():
     assert "AAAA-MM-DD" in r.content[0].text
 
 
+def _rechazo(codigo: int) -> OSError:
+    """Un error de red como los arma `uydatos.red`: un `OSError` con el `HTTPError` de causa."""
+    import urllib.error
+
+    causa = urllib.error.HTTPError("https://fuente.example/x.csv", codigo, "Forbidden", None, None)
+    error = OSError(f"https://fuente.example/x.csv: el servidor respondio {codigo} Forbidden")
+    error.__cause__ = causa
+    return error
+
+
+def test_un_4xx_no_manda_a_reintentar_y_un_corte_si():
+    from mcp_uruguay.servidor import motivo_de_red
+
+    rechazo = motivo_de_red("clima", _rechazo(403))
+    assert "No se arregla reintentando" in rechazo and "más tarde" not in rechazo
+    assert "Estado conocido" not in rechazo  # clima no está en la lista de caídas
+    corte = motivo_de_red("clima", OSError("timed out"))
+    assert "Probar de nuevo más tarde" in corte
+    assert "Probar de nuevo más tarde" in motivo_de_red("clima", _rechazo(503))
+
+
+async def test_una_descarga_cortada_vuelve_con_su_motivo(monkeypatch):
+    """`IncompleteRead` no es un `OSError`: salía como «Error executing tool», sin motivo."""
+    import http.client
+
+    from mcp_uruguay import herramientas as h
+
+    def cortada(*args, **kwargs):
+        raise http.client.IncompleteRead(b"x" * 10, 5)
+
+    monkeypatch.setattr(h, "compras_estado", cortada)
+    async with Client(servidor) as c:
+        r = await c.call_tool("compras_estado", {"anio": 2025})
+    assert r.is_error
+    texto = r.content[0].text
+    assert "No se pudo consultar la fuente" in texto and "IncompleteRead" in texto
+    assert "Probar de nuevo más tarde" in texto
+
+
+async def test_una_fuente_caida_conocida_lo_dice_en_el_error(monkeypatch):
+    from mcp_uruguay import guias
+    from mcp_uruguay import herramientas as h
+
+    def bloqueada(*args, **kwargs):
+        raise _rechazo(403)
+
+    monkeypatch.setattr(h, "leyes", bloqueada)
+    async with Client(servidor) as c:
+        r = await c.call_tool("leyes", {"buscar": "riego"})
+    assert r.is_error
+    texto = r.content[0].text
+    assert "403" in texto and "No se arregla reintentando" in texto
+    assert guias.CAIDAS["leyes"] in texto
+
+
 async def test_el_esquema_de_salida_declara_los_campos():
     async with Client(servidor) as c:
         herramientas = {t.name: t for t in (await c.list_tools()).tools}
