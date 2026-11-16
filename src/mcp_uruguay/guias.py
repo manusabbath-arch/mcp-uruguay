@@ -69,10 +69,28 @@ TRAMPAS: dict[str, str] = {
     "diagnostico": "es la caché de esta máquina: una fuente que no aparece nunca se pidió",
 }
 
+# --- Fuentes que hoy no responden ------------------------------------------------------------------
+# herramienta -> por qué no responde y desde cuándo, medido. No es una trampa del dato: es el estado de
+# la fuente, y se saca de acá el día que vuelve. `scripts/humo.py` lleva la misma lista y
+# `tests/test_guias.py` falla si se desincronizan.
+_PARLAMENTO_BLOQUEA = (
+    "parlamento.gub.uy responde 403 a los clientes automáticos desde fines de octubre de 2026 (medido el "
+    "16/11/2026). No es una caída y no se arregla reintentando; una copia que ya estaba en la caché se sigue "
+    "sirviendo. Seguimiento: https://github.com/manusabbath-arch/mcp-uruguay/issues/2"
+)
+CAIDAS: dict[str, str] = {
+    "asistencia_parlamentaria": _PARLAMENTO_BLOQUEA,
+    "leyes": _PARLAMENTO_BLOQUEA,
+    "proyectos_parlamento": _PARLAMENTO_BLOQUEA,
+}
+
 
 def trampas() -> str:
     """Una página con la trampa de cada herramienta, en el orden en que las declara el servidor."""
     filas = "\n".join(f"- `{nombre}`: {texto}" for nombre, texto in TRAMPAS.items())
+    if CAIDAS:
+        caidas = "\n".join(f"- `{nombre}`: {texto}" for nombre, texto in CAIDAS.items())
+        filas += f"\n\n## Fuentes que hoy no responden\n\n{caidas}"
     return (
         "# Trampas de cada herramienta\n\n"
         "Lo que cada lector sabe de su fuente y un cliente no ve en el número. Un null es sin dato, nunca cero; "

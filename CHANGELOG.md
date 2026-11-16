@@ -1,5 +1,22 @@
 # Cambios
 
+## Sin publicar
+
+- **`leyes`, `asistencia_parlamentaria` y `proyectos_parlamento` no responden**: `parlamento.gub.uy`
+  devuelve `403` a los clientes automáticos desde fines de octubre de 2026
+  ([issue #2](https://github.com/manusabbath-arch/mcp-uruguay/issues/2)). El arreglo no está en este
+  servidor; lo que cambia es que ahora lo dice:
+  - **Cambio visible para clientes: el texto del error.** Un rechazo de la fuente (4xx) ya no termina
+    en «Probar de nuevo más tarde», que mandaba al agente a reintentar en vano: dice «La fuente
+    rechazó el pedido: … No se arregla reintentando». Los cortes y los 5xx siguen como antes.
+  - Las fuentes que se saben caídas están en `guias.CAIDAS`: su estado va en el error de la
+    herramienta y en una sección nueva de `uru://trampas`.
+- **La corrida semanal abre un issue cuando falla** (trabajo `avisar` de `tests.yml`), o comenta el
+  que ya esté abierto. Falló tres lunes seguidos, del 26/10 al 09/11, sin que nadie lo viera.
+- **Una caída conocida no pone la corrida en rojo**: `scripts/humo.py` la informa como `CAIDA` y el
+  test de red del Parlamento es un `xfail` estricto. El día que la fuente vuelva, la corrida falla
+  con `VOLVIO` para que se saque de la lista.
+
 ## 0.13.2 — 2026-10-22
 
 - **El mínimo de `uydatos` sube a 0.15.1** (`>=0.15.1,<0.16`): 0.15 compara el informe de las fuentes

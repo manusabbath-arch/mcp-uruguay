@@ -8,6 +8,11 @@ on:
     # Una vez por semana contra las fuentes reales: avisa si alguna cambió de forma.
     - cron: "0 9 * * 1"
   workflow_dispatch:
+    inputs:
+      simular_falla:
+        description: "Hace fallar la corrida a propósito, para probar que el trabajo avisar abre el issue"
+        type: boolean
+        default: false
 
 permissions:
   contents: read
@@ -38,6 +43,9 @@ jobs:
     steps:
       - uses: actions/checkout@v7
       - uses: astral-sh/setup-uv@v10.2.0
+      - name: Falla simulada
+        if: inputs.simular_falla
+        run: echo "falla pedida con simular_falla" && exit 1
       - name: Tests contra las fuentes reales
         run: uv run --python 3.13 --with pytest --with-editable . pytest -q -m red
 
@@ -54,3 +62,40 @@ jobs:
       - uses: astral-sh/setup-uv@v10.2.0
       - name: Prueba de humo del paquete publicado
         run: uv run --isolated --no-project --python ${{ matrix.python }} --with mcp-uruguay python scripts/humo.py
+
+  avisar:
+    # Un rojo que nadie mira no es una alarma: del 26/10 al 09/11/2026 la corrida semanal falló tres
+    # lunes seguidos por el bloqueo del Parlamento y nadie se enteró. Si falla, queda un issue.
+    # Las caídas ya conocidas no llegan acá: `humo.py` y `test_red.py` las informan sin fallar.
+    needs: [fuentes-reales, instalado-desde-pypi]
+    if: failure() && (github.event_name == 'schedule' || github.event_name == 'workflow_dispatch')
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      actions: read
+      issues: write
+    env:
+      GH_TOKEN: ${{ github.token }}
+      GH_REPO: ${{ github.repository }}
+      CORRIDA: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+    steps:
+      - name: Abrir o comentar el issue de la corrida semanal
+        run: |
+          gh label create corrida-semanal --color B60205 --description "La corrida contra las fuentes reales falló" 2>/dev/null || true
+          fallaron=$(gh run view "${{ github.run_id }}" --json jobs -q '[.jobs[] | select(.conclusion == "failure") | .name] | join(", ")')
+          {
+            echo "La corrida contra las fuentes reales del $(date -u +%d/%m/%Y) falló."
+            echo
+            echo "- Trabajos en rojo: ${fallaron:-sin determinar}"
+            echo "- Corrida: $CORRIDA"
+            echo
+            echo "Mirar el registro: las líneas \`ERROR\` de \`humo.py\` dicen qué herramienta y con qué motivo."
+            echo "Si es una fuente caída y no el paquete, abrir su issue y sumarla a \`CAIDAS_CONOCIDAS\`"
+            echo "(\`scripts/humo.py\`) y a \`CAIDAS\` (\`src/mcp_uruguay/guias.py\`)."
+          } > cuerpo.md
+          abierto=$(gh issue list --label corrida-semanal --state open --json number -q '.[0].number')
+          if [ -n "$abierto" ]; then
+            gh issue comment "$abierto" --body-file cuerpo.md
+          else
+            gh issue create --title "La corrida semanal contra las fuentes reales falló" --label corrida-semanal --body-file cuerpo.md
+          fi

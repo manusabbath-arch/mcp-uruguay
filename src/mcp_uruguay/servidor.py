@@ -26,6 +26,32 @@ EN_RED = ToolAnnotations(read_only_hint=True, destructive_hint=False, idempotent
 LOCAL = ToolAnnotations(read_only_hint=True, destructive_hint=False, idempotent_hint=True, open_world_hint=False)
 
 
+def _codigo_http(error: BaseException) -> Optional[int]:
+    """El código HTTP detrás de un `OSError` de la red, si lo hay: `uydatos` lo encadena como causa."""
+    visto: Optional[BaseException] = error
+    while visto is not None:
+        codigo = getattr(visto, "code", None)
+        if isinstance(codigo, int):
+            return codigo
+        visto = visto.__cause__
+    return None
+
+
+def motivo_de_red(nombre: str, error: OSError) -> str:
+    """Qué decirle a quien llamó cuando la fuente no respondió.
+
+    Un 4xx es un rechazo: esperar no lo arregla, y decir «probar más tarde» manda al agente a
+    reintentar en vano. Si la herramienta está en `guias.CAIDAS`, el motivo conocido va en el mensaje.
+    """
+    codigo = _codigo_http(error)
+    if codigo is not None and 400 <= codigo < 500:
+        texto = f"La fuente rechazó el pedido: {error}. No se arregla reintentando."
+    else:
+        texto = f"No se pudo consultar la fuente: {error}. Probar de nuevo más tarde."
+    conocido = guias.CAIDAS.get(nombre)
+    return f"{texto} Estado conocido de esta fuente: {conocido}" if conocido else texto
+
+
 def herramienta(titulo: str, anotaciones: ToolAnnotations) -> Callable:
     """Registra la función y convierte en `ToolError` (con el motivo visible) los errores esperables.
 
@@ -42,7 +68,7 @@ def herramienta(titulo: str, anotaciones: ToolAnnotations) -> Callable:
             except ValueError as e:
                 raise ToolError(str(e)) from e
             except OSError as e:
-                raise ToolError(f"No se pudo consultar la fuente: {e}. Probar de nuevo más tarde.") from e
+                raise ToolError(motivo_de_red(funcion.__name__, e)) from e
 
         return servidor.tool(title=titulo, annotations=anotaciones)(envuelta)
 
