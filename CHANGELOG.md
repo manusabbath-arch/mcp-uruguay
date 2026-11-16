@@ -11,6 +11,11 @@
     rechazó el pedido: … No se arregla reintentando». Los cortes y los 5xx siguen como antes.
   - Las fuentes que se saben caídas están en `guias.CAIDAS`: su estado va en el error de la
     herramienta y en una sección nueva de `uru://trampas`.
+- **Arreglo: una descarga cortada volvía como «Error executing tool», sin motivo.** `IncompleteRead`
+  no es un `OSError` y se escapaba del manejo de errores de red. Lo encontró el aviso nuevo en su
+  primera corrida: `compras_estado` se cortó a los 200 segundos con 25 de 27 MB bajados
+  ([issue #5](https://github.com/manusabbath-arch/mcp-uruguay/issues/5)). Ahora dice que no se pudo
+  consultar la fuente y que se puede reintentar; la copia cortada no queda en la caché.
 - **La corrida semanal abre un issue cuando falla** (trabajo `avisar` de `tests.yml`), o comenta el
   que ya esté abierto. Falló tres lunes seguidos, del 26/10 al 09/11, sin que nadie lo viera.
 - **Una caída conocida no pone la corrida en rojo**: `scripts/humo.py` la informa como `CAIDA` y el

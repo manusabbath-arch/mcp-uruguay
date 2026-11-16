@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import functools
+import http.client
 from typing import Any, Callable, Literal, Optional
 
 from mcp.server.mcpserver import MCPServer
@@ -37,7 +38,7 @@ def _codigo_http(error: BaseException) -> Optional[int]:
     return None
 
 
-def motivo_de_red(nombre: str, error: OSError) -> str:
+def motivo_de_red(nombre: str, error: Exception) -> str:
     """Qué decirle a quien llamó cuando la fuente no respondió.
 
     Un 4xx es un rechazo: esperar no lo arregla, y decir «probar más tarde» manda al agente a
@@ -67,7 +68,9 @@ def herramienta(titulo: str, anotaciones: ToolAnnotations) -> Callable:
                 return funcion(*args, **kwargs)
             except ValueError as e:
                 raise ToolError(str(e)) from e
-            except OSError as e:
+            except (OSError, http.client.HTTPException) as e:
+                # `IncompleteRead` (una descarga cortada) no es un `OSError`: sin esto salía como un
+                # error genérico sin motivo. Pasó con `compras_estado` el 16/11/2026, a los 200 s.
                 raise ToolError(motivo_de_red(funcion.__name__, e)) from e
 
         return servidor.tool(title=titulo, annotations=anotaciones)(envuelta)
