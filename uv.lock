@@ -1,10 +1,10 @@
 version = 1
-revision = 3
+revision = 5
 requires-python = ">=3.10"
 resolution-markers = [
     "python_full_version >= '3.14'",
     "python_full_version >= '3.12' and python_full_version < '3.14' and sys_platform == 'emscripten'",
-    "(python_full_version >= '3.11' and python_full_version < '3.14' and sys_platform != 'emscripten') or (python_full_version == '3.11.*' and sys_platform == 'emscripten')",
+    "python_full_version == '3.11.*' or (python_full_version >= '3.12' and python_full_version < '3.14' and sys_platform != 'emscripten')",
     "python_full_version < '3.11'",
 ]
 
@@ -402,7 +402,7 @@ requires-dist = [
     { name = "mcp", specifier = ">=2.3,<3" },
     { name = "pytest", marker = "extra == 'test'", specifier = ">=8" },
     { name = "typing-extensions", specifier = ">=4.7" },
-    { name = "uydatos", specifier = ">=0.15.1,<0.16" },
+    { name = "uydatos", specifier = ">=0.15.1,<0.18" },
 ]
 provides-extras = ["test"]
 
@@ -832,7 +832,7 @@ source = { registry = "https://pypi.org/simple" }
 resolution-markers = [
     "python_full_version >= '3.14'",
     "python_full_version >= '3.12' and python_full_version < '3.14' and sys_platform == 'emscripten'",
-    "(python_full_version >= '3.11' and python_full_version < '3.14' and sys_platform != 'emscripten') or (python_full_version == '3.11.*' and sys_platform == 'emscripten')",
+    "python_full_version == '3.11.*' or (python_full_version >= '3.12' and python_full_version < '3.14' and sys_platform != 'emscripten')",
 ]
 sdist = { url = "https://files.pythonhosted.org/packages/42/68/3bd46b8a5e01d3c2ebdf9c5e9497912e3fe0cde02bac21a7130ca866e403/rpds_py-2026.9.1.tar.gz", hash = "sha256:4793ef7f78268b124b73fa933440f01d258bbae01de9fa53e9080c9ab0425a12", size = 63948, upload-time = "2026-10-04T16:32:36.469Z" }
 wheels = [
@@ -1109,9 +1109,9 @@ wheels = [
 
 [[package]]
 name = "uydatos"
-version = "0.15.1"
+version = "0.17.0"
 source = { registry = "https://pypi.org/simple" }
-sdist = { url = "https://files.pythonhosted.org/packages/ad/e2/f0d50e66f980f6fde5d84b245976b89d06c4c90eee5d562bd5e493186634/uydatos-0.15.1.tar.gz", hash = "sha256:8003ed7ffa1251d1b2f05b20df0274637db13a27d9bf0d5b31db3d606dbdf719", size = 213472, upload-time = "2026-10-19T12:51:51.496Z" }
+sdist = { url = "https://files.pythonhosted.org/packages/39/5d/99c72c7af897a07149a43a3973289e58f14436877067da90d3c28ea53b55/uydatos-0.17.0.tar.gz", hash = "sha256:a037ccaa47721ecf41f4d6ad3eb392485d90f9eb298626dee37b522db4daebf0", size = 246396, upload-time = "2026-11-04T17:49:44.48Z" }
 wheels = [
-    { url = "https://files.pythonhosted.org/packages/68/5e/68e2ffc3bf03b958272674c211f7ebe9ffe63c6526c8d3d5157a6a5f7ede/uydatos-0.15.1-py3-none-any.whl", hash = "sha256:b68f23081dcebaf93aaf55f6c92caf81d8aec93ca9c5b329f4be326a759c89c5", size = 123217, upload-time = "2026-10-19T12:51:50.411Z" },
+    { url = "https://files.pythonhosted.org/packages/2c/c3/7ce4b23356b0e1d1721ab0fc06944cbfb8eb282b0908a5cd9a72c4193bb7/uydatos-0.17.0-py3-none-any.whl", hash = "sha256:420a2318e78c53f661d85b64bc8bd897fc5a1fbbe24655dafdca96d91f977d43", size = 141235, upload-time = "2026-11-04T17:49:42.988Z" },
 ]
