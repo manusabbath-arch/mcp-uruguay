@@ -16,7 +16,7 @@ from typing import Literal, Optional, Union
 
 # En Python < 3.12, pydantic no arma el esquema de un `typing.TypedDict`: el SDK se queda sin
 # esquema de salida y la respuesta sin `structuredContent`. Medido en el CI de 3.10 y 3.11.
-from typing_extensions import TypedDict
+from typing_extensions import NotRequired, TypedDict
 from uydatos import (
     ancap,
     ancap_ventas,
@@ -74,6 +74,8 @@ class Cotizacion(TypedDict):
     nota: str
     fuente: str
     bajado: str
+    copia_vencida: NotRequired[bool]
+    aviso: NotRequired[str]
 
 
 class Validacion(TypedDict):
@@ -115,6 +117,8 @@ class CotizacionMensual(TypedDict):
     nota: str
     fuente: str
     bajado: str
+    copia_vencida: NotRequired[bool]
+    aviso: NotRequired[str]
 
 
 class PesosConstantes(TypedDict):
@@ -126,6 +130,8 @@ class PesosConstantes(TypedDict):
     metodo: str
     fuente: str
     bajado: str
+    copia_vencida: NotRequired[bool]
+    aviso: NotRequired[str]
 
 
 class PuntoIndice(TypedDict):
@@ -143,6 +149,8 @@ class IpcArgentina(TypedDict):
     nota: str
     fuente: str
     bajado: str
+    copia_vencida: NotRequired[bool]
+    aviso: NotRequired[str]
 
 
 class IpcaBrasil(TypedDict):
@@ -153,6 +161,8 @@ class IpcaBrasil(TypedDict):
     nota: str
     fuente: str
     bajado: str
+    copia_vencida: NotRequired[bool]
+    aviso: NotRequired[str]
 
 
 class PrecioCombustible(TypedDict):
@@ -176,6 +186,8 @@ class CombustibleAncap(TypedDict, total=False):
     nota: str
     fuente: str
     bajado: str
+    copia_vencida: NotRequired[bool]
+    aviso: NotRequired[str]
 
 
 class LineaCombustible(TypedDict):
@@ -219,6 +231,8 @@ class VentasCombustible(TypedDict, total=False):
     nota: str
     fuente: str
     bajado: str
+    copia_vencida: NotRequired[bool]
+    aviso: NotRequired[str]
 
 
 class DiaClima(TypedDict):
@@ -256,6 +270,8 @@ class Clima(TypedDict, total=False):
     nota: str
     fuente: str
     bajado: str
+    copia_vencida: NotRequired[bool]
+    aviso: NotRequired[str]
 
 
 class EstacionInumet(TypedDict):
@@ -305,6 +321,8 @@ class ObservacionesInumet(TypedDict, total=False):
     nota: str
     fuente: str
     bajado: str
+    copia_vencida: NotRequired[bool]
+    aviso: NotRequired[str]
 
 
 class EstacionCercana(TypedDict):
@@ -324,6 +342,8 @@ class EstacionesCercanas(TypedDict):
     nota: str
     fuente: str
     bajado: str
+    copia_vencida: NotRequired[bool]
+    aviso: NotRequired[str]
 
 
 class Geocodificacion(TypedDict):
@@ -371,6 +391,8 @@ class IndicadoresEncontrados(TypedDict):
     nota: str
     fuente: str
     bajado: str
+    copia_vencida: NotRequired[bool]
+    aviso: NotRequired[str]
 
 
 class FilaIndicador(TypedDict):
@@ -400,6 +422,8 @@ class IndicadorSocial(TypedDict):
     url: str
     fuente: str
     bajado: str
+    copia_vencida: NotRequired[bool]
+    aviso: NotRequired[str]
 
 
 class MesParidad(TypedDict):
@@ -435,6 +459,8 @@ class ParidadCombustibles(TypedDict, total=False):
     avisos: list[str]
     fuente: str
     bajado: str
+    copia_vencida: NotRequired[bool]
+    aviso: NotRequired[str]
 
 
 class ArchivoCache(TypedDict):
@@ -442,6 +468,8 @@ class ArchivoCache(TypedDict):
 
     archivo: str
     bajado: str
+    copia_vencida: NotRequired[bool]
+    aviso: NotRequired[str]
     bytes: int
 
 
@@ -521,7 +549,7 @@ def cotizacion_mensual(moneda: Moneda, desde: str, hasta: str, hoy: Optional[dat
         raise ValueError(f"rango demasiado largo: hasta {MAX_MESES} meses por consulta")
     codigo = _codigo(moneda)
     serie, bajado = cache.bcu_serie(codigo, ini, fin, hoy=hoy)
-    hoy = hoy or date.today()
+    hoy = hoy or cache.hoy()
     meses = bcu.promedio_mensual(serie)
     for m in meses:
         m["completo"] = m["mes"] != f"{hoy:%Y-%m}"
@@ -962,6 +990,8 @@ class NivelRio(TypedDict):
     nota: str
     fuente: str
     bajado: str
+    copia_vencida: NotRequired[bool]
+    aviso: NotRequired[str]
 
 
 class VentanaActual(TypedDict):
@@ -995,6 +1025,8 @@ class NivelRioComparado(TypedDict):
     nota: str
     fuente: str
     bajado: str
+    copia_vencida: NotRequired[bool]
+    aviso: NotRequired[str]
 
 
 class VariacionReal(TypedDict):
@@ -1009,6 +1041,8 @@ class VariacionReal(TypedDict):
     nota: str
     fuente: str
     bajado: str
+    copia_vencida: NotRequired[bool]
+    aviso: NotRequired[str]
 
 
 ESTACION_SALTO = "A501258E"
@@ -1045,7 +1079,7 @@ def _lecturas(estacion: dict, desde: date, hasta: date, hoy: Optional[date]) -> 
 
 
 def nivel_rio(estacion: str = "Salto", desde: str = "", hasta: str = "", hoy: Optional[date] = None) -> NivelRio:
-    hoy_ = hoy or date.today()
+    hoy_ = hoy or cache.hoy()
     fin = _fecha(hasta, "hasta") if hasta else hoy_
     ini = _fecha(desde, "desde") if desde else fin - timedelta(days=13)
     if ini > fin:
@@ -1096,7 +1130,7 @@ def _misma_ventana(anio: int, desde: date, hasta: date) -> tuple[date, date]:
 def nivel_rio_comparado(
     estacion: str = "Salto", dias: int = 7, hasta: str = "", hoy: Optional[date] = None
 ) -> NivelRioComparado:
-    hoy_ = hoy or date.today()
+    hoy_ = hoy or cache.hoy()
     if not 1 <= dias <= 31:
         raise ValueError("dias: de 1 a 31")
     fin = _fecha(hasta, "hasta") if hasta else hoy_
@@ -1243,6 +1277,8 @@ class Ubicacion(TypedDict):
     nota: str
     fuente: str
     bajado: str
+    copia_vencida: NotRequired[bool]
+    aviso: NotRequired[str]
 
 
 class DatosLocalidad(TypedDict):
@@ -1263,6 +1299,8 @@ class Localidades(TypedDict):
     nota: str
     fuente: str
     bajado: str
+    copia_vencida: NotRequired[bool]
+    aviso: NotRequired[str]
 
 
 _capas: dict[tuple[str, float], list[dict]] = {}
@@ -1427,6 +1465,8 @@ class ResultadoElectoral(TypedDict):
     nota: str
     fuente: str
     bajado: str
+    copia_vencida: NotRequired[bool]
+    aviso: NotRequired[str]
 
 
 _elecciones: dict[tuple[str, float], list[dict]] = {}
@@ -1534,6 +1574,8 @@ class ComprasEstado(TypedDict):
     nota: str
     fuente: str
     bajado: str
+    copia_vencida: NotRequired[bool]
+    aviso: NotRequired[str]
 
 
 PRIMER_ANIO_COMPRAS = 2002
@@ -1554,7 +1596,7 @@ def _compras(anio: int) -> tuple[list[dict], str]:
     """Las adjudicaciones de un año: el ZIP en caché (el año en curso vence a la semana, los cerrados
     al año) y leído una sola vez por proceso. Solo se guarda un año en memoria: pesa."""
     ruta = cache.directorio() / "compras" / f"{anio}.zip"
-    ttl = 7 * cache.DIA if anio >= date.today().year else 365 * cache.DIA
+    ttl = 7 * cache.DIA if anio >= cache.hoy().year else 365 * cache.DIA
     if cache.vencido(ruta, ttl):
         cache.archivo(ruta, lambda p: compras.descargar(anio, p), _es_zip, ttl)
     clave = (anio, ruta.stat().st_mtime)
@@ -1567,7 +1609,7 @@ def _compras(anio: int) -> tuple[list[dict], str]:
 def compras_estado(
     anio: int, organismo: str = "", buscar: str = "", cantidad: int = 10, hoy: Optional[date] = None
 ) -> ComprasEstado:
-    hoy_ = hoy or date.today()
+    hoy_ = hoy or cache.hoy()
     if not PRIMER_ANIO_COMPRAS <= anio <= hoy_.year:
         raise ValueError(f"año {anio}: la ARCE publica de {PRIMER_ANIO_COMPRAS} a {hoy_.year}")
     adjs, bajado = _compras(anio)
@@ -1731,6 +1773,8 @@ class PedidosDeInformes(TypedDict):
     nota: str
     fuente: str
     bajado: str
+    copia_vencida: NotRequired[bool]
+    aviso: NotRequired[str]
 
 
 class AsistenciaParlamentaria(TypedDict):
@@ -1750,6 +1794,8 @@ class AsistenciaParlamentaria(TypedDict):
     nota: str
     fuente: str
     bajado: str
+    copia_vencida: NotRequired[bool]
+    aviso: NotRequired[str]
 
 
 class Ley(TypedDict):
@@ -1772,6 +1818,8 @@ class Leyes(TypedDict):
     nota: str
     fuente: str
     bajado: str
+    copia_vencida: NotRequired[bool]
+    aviso: NotRequired[str]
 
 
 class Proyecto(TypedDict):
@@ -1790,6 +1838,8 @@ class ProyectosParlamento(TypedDict):
     nota: str
     fuente: str
     bajado: str
+    copia_vencida: NotRequired[bool]
+    aviso: NotRequired[str]
 
 
 def _archivo_parlamento(clave: str, legislatura: Optional[int] = None) -> Path:
@@ -1867,7 +1917,7 @@ def pedidos_de_informes(
             if not pedidos:
                 raise ValueError(f"ningún pedido con {tema!r} en el tema")
         hasta = _fecha(presentados_hasta, "presentados_hasta") if presentados_hasta else None
-        r = parlamento.resumen_pedidos(pedidos, date.today(), nomina, organismo, hasta)
+        r = parlamento.resumen_pedidos(pedidos, cache.hoy(), nomina, organismo, hasta)
     except parlamento.ParlamentoInvalido as e:
         raise ValueError(str(e)) from None
     elegidos = pedidos
@@ -2265,6 +2315,8 @@ class CalidadAgua(TypedDict, total=False):
     nota: str
     fuente: str
     bajado: str
+    copia_vencida: NotRequired[bool]
+    aviso: NotRequired[str]
 
 
 FUENTE_OSE = "OSE, dataset calidad-de-agua de su propio CKAN (datos.ose.com.uy), bacteriología y fisicoquímico"
@@ -2484,6 +2536,8 @@ class NivelRioIna(TypedDict):
     nota: str
     fuente: str
     bajado: str
+    copia_vencida: NotRequired[bool]
+    aviso: NotRequired[str]
 
 
 FUENTE_INA = "INA (Argentina), sistema de alerta del INFORM, alerta.ina.gob.ar: escalas de Prefectura Naval"

@@ -9,12 +9,15 @@ on:
 jobs:
   publicar:
     runs-on: ubuntu-latest
+    # Un entorno con revisor requerido: nada llega a PyPI ni al registro sin que una persona lo apruebe
+    # en Actions, aunque alguien consiga disparar una Release. PyPI y el registro siguen confiando por OIDC.
+    environment: pypi
     permissions:
-      contents: write  # adjuntar el .mcpb a la Release
+      contents: read
       id-token: write
     steps:
-      - uses: actions/checkout@v7
-      - uses: astral-sh/setup-uv@v10.2.0
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1  # v7
+      - uses: astral-sh/setup-uv@c18668ad3cf93ea998bef934396af7bb5c839dc7  # v10.2.0
       - name: Etiqueta, pyproject y server.json dicen la misma versión
         run: |
           version=$(grep -m1 '^version = ' pyproject.toml | cut -d'"' -f2)
@@ -34,19 +37,39 @@ jobs:
       - name: Publicar en el registro de MCP
         run: |
           curl -sL -o mcp-publisher.tar.gz https://github.com/modelcontextprotocol/registry/releases/download/v1.8.1/mcp-publisher_linux_amd64.tar.gz
-          echo "$(curl -sL https://github.com/modelcontextprotocol/registry/releases/download/v1.8.1/registry_1.8.1_checksums.txt | grep ' mcp-publisher_linux_amd64.tar.gz$' | cut -d' ' -f1)  mcp-publisher.tar.gz" | sha256sum -c -
+          # El hash esperado está escrito acá, no bajado del mismo release: un checksums.txt del mismo lugar
+          # solo prueba que la descarga no se cortó, no que el binario sea el que se revisó. Al subir de
+          # versión: bajar el .tar.gz, calcular `sha256sum`, comparar con el checksums.txt del release y
+          # cambiar este valor en el mismo commit que la versión.
+          echo "a06c9096dcb9727c13555b6be26c7effa707b01f06a4c561ba7a3635443cf2cc  mcp-publisher.tar.gz" | sha256sum -c -
           tar xzf mcp-publisher.tar.gz mcp-publisher
           # PyPI tarda un poco en exponer una versión recién subida; el registro la verifica ahí.
           for i in 1 2 3 4 5 6; do curl -sf "https://pypi.org/pypi/mcp-uruguay/${GITHUB_REF_NAME#v}/json" >/dev/null && break; sleep 20; done
           ./mcp-publisher login github-oidc
           ./mcp-publisher publish
-      - name: Extensión de Claude Desktop (.mcpb), adjunta a la Release
+
+  extension:
+    # La extensión de Claude Desktop (.mcpb), adjunta a la Release. Va en su propio trabajo y no en el que
+    # publica: baja y ejecuta código de npm, y ese trabajo tiene el `id-token` con el que se publica en
+    # PyPI y en el registro. Acá solo hay `contents: write`, que es lo único que hace falta para adjuntar.
+    needs: publicar
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    env:
+      GH_TOKEN: ${{ github.token }}
+      MCPB: "@anthropic-ai/mcpb@2.1.2"
+      # La integridad que npm publica para esa versión, revisada el 16/11/2026. Si cambia, algo
+      # republicó la versión: no se ejecuta. Al subir de versión: `npm view <paquete> dist.integrity`.
+      MCPB_INTEGRIDAD: "sha512-goRbBC8ySo7SWb7tRzr+tL6FxDc4JPTRCdgfD2omba7freofvjq5rom1lBnYHZHo6Mizs1jAHJeN53aZbDoy8A=="
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1  # v7
+      - name: Empaquetar y adjuntar
         # El tipo `uv` de MCPB deja que Claude Desktop instale Python y las dependencias: quien la
         # usa no necesita ni Python ni uv. El manifiesto lo genera `python -m mcp_uruguay.manifiesto`
         # y un test falla si quedó viejo; `pack` lo vuelve a validar contra el esquema.
-        env:
-          GH_TOKEN: ${{ github.token }}
         run: |
           test "$(jq -r .version manifest.json)" = "${GITHUB_REF_NAME#v}" || { echo "manifest.json no dice ${GITHUB_REF_NAME#v}"; exit 1; }
-          npx -y @anthropic-ai/mcpb@2.1.2 pack . mcp-uruguay.mcpb
+          test "$(npm view "$MCPB" dist.integrity)" = "$MCPB_INTEGRIDAD" || { echo "la integridad de $MCPB cambió"; exit 1; }
+          npx -y "$MCPB" pack . mcp-uruguay.mcpb
           gh release upload "$GITHUB_REF_NAME" mcp-uruguay.mcpb --clobber

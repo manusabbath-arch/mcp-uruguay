@@ -115,7 +115,9 @@ def fuentes() -> str:
     filas = "\n".join(f"- {valor}" for _, valor in constantes)
     return (
         "# Fuentes\n\n"
-        "Cada respuesta trae `fuente` (quién publica) y `bajado` (cuándo se obtuvo la copia usada). "
+        "Cada respuesta trae `fuente` (quién publica) y `bajado` (cuándo se obtuvo la copia usada, en hora de "
+        "Uruguay, `-03:00`). Si se usó una copia vencida porque la fuente no respondió, trae también "
+        "`copia_vencida: true` y un `aviso`. "
         "Citá las dos junto con el número.\n\n"
         f"{filas}\n"
     )

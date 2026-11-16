@@ -13,6 +13,10 @@ on:
         description: "Hace fallar la corrida a propósito, para probar que el trabajo avisar abre el issue"
         type: boolean
         default: false
+      simular_inactividad:
+        description: "Simula 40 días sin commits, para probar que el trabajo inactividad abre el issue"
+        type: boolean
+        default: false
 
 permissions:
   contents: read
@@ -30,8 +34,8 @@ jobs:
           - os: windows-latest
             python: "3.13"
     steps:
-      - uses: actions/checkout@v7
-      - uses: astral-sh/setup-uv@v10.2.0
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1  # v7
+      - uses: astral-sh/setup-uv@c18668ad3cf93ea998bef934396af7bb5c839dc7  # v10.2.0
       - name: Lint
         run: uvx ruff check scripts src tests && uvx ruff format --check scripts src tests
       - name: Tests sin red
@@ -43,7 +47,7 @@ jobs:
     if: github.event_name == 'push' && github.ref == 'refs/heads/main'
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v7
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1  # v7
       - name: La versión de main ya está en PyPI
         run: |
           version=$(grep -m1 '^version = ' pyproject.toml | cut -d'"' -f2)
@@ -61,8 +65,8 @@ jobs:
     if: github.event_name == 'schedule' || github.event_name == 'workflow_dispatch'
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v7
-      - uses: astral-sh/setup-uv@v10.2.0
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1  # v7
+      - uses: astral-sh/setup-uv@c18668ad3cf93ea998bef934396af7bb5c839dc7  # v10.2.0
       - name: Falla simulada
         if: inputs.simular_falla
         run: echo "falla pedida con simular_falla" && exit 1
@@ -78,10 +82,48 @@ jobs:
       matrix:
         python: ["3.10", "3.13"]
     steps:
-      - uses: actions/checkout@v7
-      - uses: astral-sh/setup-uv@v10.2.0
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1  # v7
+      - uses: astral-sh/setup-uv@c18668ad3cf93ea998bef934396af7bb5c839dc7  # v10.2.0
       - name: Prueba de humo del paquete publicado
         run: uv run --isolated --no-project --python ${{ matrix.python }} --with mcp-uruguay python scripts/humo.py
+
+  inactividad:
+    # GitHub desactiva los workflows programados de un repo público a los 60 días sin actividad, y
+    # lo hace sin que ningún trabajo pueda avisar que dejó de correr. La alarma tiene que sonar antes,
+    # mientras el cron todavía está vivo: si el último commit tiene 40 días o más, queda un issue.
+    if: github.event_name == 'schedule' || github.event_name == 'workflow_dispatch'
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      issues: write
+    env:
+      GH_TOKEN: ${{ github.token }}
+      GH_REPO: ${{ github.repository }}
+      SIMULAR: ${{ inputs.simular_inactividad && 'si' || '' }}
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1  # v7
+      - name: Avisar si el repo se acerca a los 60 días sin actividad
+        run: |
+          dias=$(( ( $(date +%s) - $(git log -1 --format=%ct) ) / 86400 ))
+          umbral=40
+          if [ -n "$SIMULAR" ]; then dias=45; fi
+          echo "último commit hace $dias días (se avisa desde los $umbral)"
+          [ "$dias" -ge "$umbral" ] || exit 0
+          gh label create inactividad --color FBCA04 --description "El repo se acerca a los 60 días sin actividad" 2>/dev/null || true
+          {
+            echo "El último commit de este repo tiene $dias días. A los 60 días sin actividad GitHub **desactiva"
+            echo "los workflows programados** (la corrida semanal contra las fuentes reales y la prueba del"
+            echo "paquete publicado) y no avisa en ninguna parte."
+            echo
+            echo "Para evitarlo: hacer un commit en \`main\`, o publicar la versión que esté pendiente."
+            echo "Si ya se desactivaron: Actions → tests → «Enable workflow»."
+          } > cuerpo.md
+          abierto=$(gh issue list --label inactividad --state open --json number -q '.[0].number')
+          if [ -n "$abierto" ]; then
+            gh issue comment "$abierto" --body-file cuerpo.md
+          else
+            gh issue create --title "El repo se acerca a los 60 días sin actividad: GitHub apagará la corrida semanal" --label inactividad --body-file cuerpo.md
+          fi
 
   avisar:
     # Un rojo que nadie mira no es una alarma: del 26/10 al 09/11/2026 la corrida semanal falló tres
