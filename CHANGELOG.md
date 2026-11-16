@@ -1,6 +1,6 @@
 # Cambios
 
-## Sin publicar
+## 0.13.3 — 2026-11-16
 
 - **`leyes`, `asistencia_parlamentaria` y `proyectos_parlamento` no responden**: `parlamento.gub.uy`
   devuelve `403` a los clientes automáticos desde fines de octubre de 2026
