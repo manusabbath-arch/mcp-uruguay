@@ -208,7 +208,7 @@ async def test_una_copia_vencida_servida_lo_dice_en_la_respuesta(monkeypatch, ca
 
     monkeypatch.setattr(bcu, "descargar", BcuFalso())
     cache.bcu_serie(2225, date(2026, 8, 1), date(2026, 8, 31), hoy=date(2026, 10, 9))
-    t = datetime(2026, 8, 15, 12).timestamp()  # bajado a mitad de mes: incompleto, toca refrescar
+    t = datetime(2026, 8, 15, 12, tzinfo=cache._zona()).timestamp()  # bajado a mitad de mes: incompleto, toca refrescar
     os.utime(cache_temporal / "bcu" / "2225_2026-08.xml", (t, t))
 
     def cortada(*args, **kwargs):

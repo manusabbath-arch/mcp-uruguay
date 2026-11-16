@@ -102,7 +102,7 @@ class TestMesBajadoEnCurso:
         monkeypatch.setattr(bcu, "descargar", falso)
         cache.bcu_serie(2225, date(2026, 9, 1), date(2026, 9, 30), hoy=date(2026, 10, 9))
         ruta = cache_temporal / "bcu" / "2225_2026-09.xml"
-        t = datetime(2026, 9, 15, 12).timestamp()
+        t = datetime(2026, 9, 15, 12, tzinfo=cache._zona()).timestamp()
         os.utime(ruta, (t, t))
         cache.bcu_serie(2225, date(2026, 9, 1), date(2026, 9, 30), hoy=date(2026, 10, 9))
         assert falso.bajadas == ["2026-09", "2026-09"]
@@ -122,7 +122,7 @@ def _mes_viejo_y_vencido(monkeypatch, cache_temporal):
     monkeypatch.setattr(bcu, "descargar", BcuFalso())
     cache.bcu_serie(2225, date(2026, 8, 1), date(2026, 8, 31), hoy=date(2026, 10, 9))
     ruta = cache_temporal / "bcu" / "2225_2026-08.xml"
-    t = datetime(2026, 8, 15, 12).timestamp()
+    t = datetime(2026, 8, 15, 12, tzinfo=cache._zona()).timestamp()
     os.utime(ruta, (t, t))
     return ruta
 
