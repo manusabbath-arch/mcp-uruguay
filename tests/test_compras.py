@@ -10,6 +10,7 @@ from conftest import BcuFalso
 from uydatos import bcu
 
 from mcp_uruguay import herramientas as h
+from mcp_uruguay.herramientas import estado
 
 
 def _item(descripcion, cantidad, precio, moneda="UYU"):
@@ -71,7 +72,7 @@ class TestComprasEstado:
         assert r["sin_moneda"] == 77.0 and r["sin_convertir"] == {}
 
     def test_el_registro_imposible_se_ve_y_se_avisa(self, compras_2025, monkeypatch):
-        monkeypatch.setattr(h, "MINIMO_ITEMS_AVISO", 3)
+        monkeypatch.setattr(estado, "MINIMO_ITEMS_AVISO", 3)  # la constante se lee en el módulo donde vive
         r = h.compras_estado(2025)
         assert r["mayores_items"][0]["descripcion"] == "ALAMBRADO"
         assert r["mayores_items"][0]["pct_del_total"] > 99

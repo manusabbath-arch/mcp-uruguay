@@ -1,4 +1,4 @@
-"""El servidor MCP: registra las herramientas de `herramientas.py` y corre por stdio."""
+"""El servidor MCP: registra las herramientas de `herramientas/` y corre por stdio."""
 
 from __future__ import annotations
 
