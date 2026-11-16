@@ -1,6 +1,6 @@
 # Cambios
 
-## Sin publicar (será la 0.14.0)
+## 0.14.0 — 2026-11-16
 
 - **`calidad_agua`: la calidad del agua potable de OSE**, por localidad y trimestre desde 2017
   (coliformes totales, E. coli, pH, turbidez, color verdadero y olor), sobre `uydatos.ose`. Un `<5`
