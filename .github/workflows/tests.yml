@@ -34,8 +34,8 @@ jobs:
           - os: windows-latest
             python: "3.13"
     steps:
-      - uses: actions/checkout@v7
-      - uses: astral-sh/setup-uv@v10.2.0
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1  # v7
+      - uses: astral-sh/setup-uv@c18668ad3cf93ea998bef934396af7bb5c839dc7  # v10.2.0
       - name: Lint
         run: uvx ruff check scripts src tests && uvx ruff format --check scripts src tests
       - name: Tests sin red
@@ -45,8 +45,8 @@ jobs:
     if: github.event_name == 'schedule' || github.event_name == 'workflow_dispatch'
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v7
-      - uses: astral-sh/setup-uv@v10.2.0
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1  # v7
+      - uses: astral-sh/setup-uv@c18668ad3cf93ea998bef934396af7bb5c839dc7  # v10.2.0
       - name: Falla simulada
         if: inputs.simular_falla
         run: echo "falla pedida con simular_falla" && exit 1
@@ -62,8 +62,8 @@ jobs:
       matrix:
         python: ["3.10", "3.13"]
     steps:
-      - uses: actions/checkout@v7
-      - uses: astral-sh/setup-uv@v10.2.0
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1  # v7
+      - uses: astral-sh/setup-uv@c18668ad3cf93ea998bef934396af7bb5c839dc7  # v10.2.0
       - name: Prueba de humo del paquete publicado
         run: uv run --isolated --no-project --python ${{ matrix.python }} --with mcp-uruguay python scripts/humo.py
 
@@ -81,7 +81,7 @@ jobs:
       GH_REPO: ${{ github.repository }}
       SIMULAR: ${{ inputs.simular_inactividad && 'si' || '' }}
     steps:
-      - uses: actions/checkout@v7
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1  # v7
       - name: Avisar si el repo se acerca a los 60 días sin actividad
         run: |
           dias=$(( ( $(date +%s) - $(git log -1 --format=%ct) ) / 86400 ))

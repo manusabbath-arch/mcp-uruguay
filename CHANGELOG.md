@@ -2,6 +2,12 @@
 
 ## Sin publicar
 
+- **La cadena de publicación, endurecida** (sin cambios para quien usa el servidor): las actions están
+  fijadas por SHA y no por etiqueta; el hash esperado del binario `mcp-publisher` está escrito en
+  `publicar.yml` (antes se comparaba contra un `checksums.txt` bajado del mismo release, que solo
+  prueba que la descarga no se cortó); la publicación corre en el entorno `pypi`, con revisor
+  requerido y limitado a etiquetas `v*`; y Dependabot propone cada semana las actions y `uv.lock`.
+  **Una Release nueva queda esperando la aprobación en Actions antes de subir a PyPI.**
 - **La corrida semanal avisa antes de que GitHub la apague.** A los 60 días sin actividad GitHub
   desactiva los workflows programados de un repo público y ningún trabajo puede avisar que dejó de
   correr. El trabajo `inactividad` de `tests.yml` abre un issue (etiqueta `inactividad`) cuando el

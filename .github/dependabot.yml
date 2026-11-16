@@ -1,0 +1,12 @@
+version: 2
+updates:
+  # Las actions están fijadas por SHA: Dependabot propone el SHA nuevo con la versión en el comentario.
+  - package-ecosystem: github-actions
+    directory: /
+    schedule:
+      interval: weekly
+  # uv.lock: las dependencias del servidor, incluido uydatos.
+  - package-ecosystem: uv
+    directory: /
+    schedule:
+      interval: weekly
