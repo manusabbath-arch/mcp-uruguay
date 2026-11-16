@@ -376,6 +376,14 @@ for _uri, (_funcion, _titulo, _descripcion) in guias.RECURSOS.items():
 
 
 def main() -> None:
+    # Validar TLS con el almacén de certificados del sistema, no con el que trae Python. En Windows
+    # el almacén baja las raíces a demanda y Python solo ve las que ya están: la primera llamada a
+    # datos.ose.com.uy (raíz Certum) falló con CERTIFICATE_VERIFY_FAILED en una máquina con red, y
+    # pasó después de abrir el sitio una vez con curl (16/11/2026, comentario en el PR #1). Es lo
+    # que hace pip. Solo en el proceso del servidor: importar el paquete no cambia nada global.
+    import truststore
+
+    truststore.inject_into_ssl()
     servidor.run()
 
 

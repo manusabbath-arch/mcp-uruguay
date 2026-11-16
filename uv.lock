@@ -388,6 +388,7 @@ version = "0.14.0"
 source = { editable = "." }
 dependencies = [
     { name = "mcp" },
+    { name = "truststore" },
     { name = "typing-extensions" },
     { name = "uydatos" },
 ]
@@ -401,6 +402,7 @@ test = [
 requires-dist = [
     { name = "mcp", specifier = ">=2.3,<3" },
     { name = "pytest", marker = "extra == 'test'", specifier = ">=8" },
+    { name = "truststore", specifier = ">=0.10" },
     { name = "typing-extensions", specifier = ">=4.7" },
     { name = "uydatos", specifier = ">=0.17,<0.18" },
 ]

@@ -141,3 +141,16 @@ async def test_clima_con_una_sola_fecha_lo_dice():
         r = await c.call_tool("clima", {"desde": "2026-01-01"})
     assert r.is_error
     assert "no se adivina" in r.content[0].text.lower()
+
+
+def test_el_servidor_valida_tls_con_el_almacen_del_sistema(monkeypatch):
+    """En Windows, Python no ve las raíces que el sistema baja a demanda (pasó con OSE el 16/11/2026)."""
+    import truststore
+
+    from mcp_uruguay import servidor as modulo
+
+    orden = []
+    monkeypatch.setattr(truststore, "inject_into_ssl", lambda: orden.append("truststore"))
+    monkeypatch.setattr(modulo.servidor, "run", lambda: orden.append("run"))
+    modulo.main()
+    assert orden == ["truststore", "run"]

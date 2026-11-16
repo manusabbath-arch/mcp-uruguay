@@ -17,6 +17,7 @@ classifiers = [
 ]
 dependencies = [
     "mcp>=2.3,<3",
+    "truststore>=0.10",
     "typing_extensions>=4.7",
     "uydatos>=0.17,<0.18",
 ]

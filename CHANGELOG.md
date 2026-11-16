@@ -16,6 +16,10 @@
   más de una semana: el caudal de Concordia viene con meses de atraso en la fuente.
 - El prompt `el_rio_en_salto` suma la escala de Concordia y sus niveles de alerta, sin mezclar su
   altura con la de la CTM.
+- **TLS con el almacén de certificados del sistema** (`truststore`, solo en el proceso del servidor):
+  en Windows, la primera llamada a `datos.ose.com.uy` falló con `CERTIFICATE_VERIFY_FAILED` porque
+  Python no ve las raíces que el sistema baja a demanda (probado el 16/11/2026 en una máquina con red).
+  Es el mismo arreglo que usa pip, y le importa sobre todo a quien instala la extensión `.mcpb`.
 - **El mínimo de `uydatos` sube a 0.17** (`>=0.17,<0.18`), que trae `ose` (0.16) e `ina` (0.17).
 - README: «Por qué estas cifras se pueden citar» y «No es oficial».
 - **Extensión de Claude Desktop (`.mcpb`), adjunta a cada Release**: se instala con doble clic y
