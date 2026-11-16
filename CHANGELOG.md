@@ -1,5 +1,12 @@
 # Cambios
 
+## Sin publicar
+
+- **La corrida semanal avisa antes de que GitHub la apague.** A los 60 días sin actividad GitHub
+  desactiva los workflows programados de un repo público y ningún trabajo puede avisar que dejó de
+  correr. El trabajo `inactividad` de `tests.yml` abre un issue (etiqueta `inactividad`) cuando el
+  último commit tiene 40 días o más; `simular_inactividad` lo prueba con `workflow_dispatch`.
+
 ## 0.13.4 — 2026-11-16
 
 - **Cambio visible para clientes: `bajado` ahora lleva el desplazamiento horario.** Era la hora local
