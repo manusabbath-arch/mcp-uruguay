@@ -91,6 +91,24 @@ def test_un_4xx_no_manda_a_reintentar_y_un_corte_si():
     assert "Probar de nuevo más tarde" in motivo_de_red("clima", _rechazo(503))
 
 
+async def test_una_descarga_cortada_vuelve_con_su_motivo(monkeypatch):
+    """`IncompleteRead` no es un `OSError`: salía como «Error executing tool», sin motivo."""
+    import http.client
+
+    from mcp_uruguay import herramientas as h
+
+    def cortada(*args, **kwargs):
+        raise http.client.IncompleteRead(b"x" * 10, 5)
+
+    monkeypatch.setattr(h, "compras_estado", cortada)
+    async with Client(servidor) as c:
+        r = await c.call_tool("compras_estado", {"anio": 2025})
+    assert r.is_error
+    texto = r.content[0].text
+    assert "No se pudo consultar la fuente" in texto and "IncompleteRead" in texto
+    assert "Probar de nuevo más tarde" in texto
+
+
 async def test_una_fuente_caida_conocida_lo_dice_en_el_error(monkeypatch):
     from mcp_uruguay import guias
     from mcp_uruguay import herramientas as h
