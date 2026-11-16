@@ -1,5 +1,13 @@
 # Cambios
 
+## Sin publicar
+
+- **`herramientas.py` (2.680 líneas) pasa a ser un paquete con un módulo por dominio** (`monedas`,
+  `combustibles`, `rio_y_clima`, `territorio`, `estado`, `agua`, `sinred` y `comun`; el más grande tiene 717
+  líneas). **Sin cambios para quien usa el servidor ni para quien importa `herramientas`**: el paquete
+  reexporta las mismas funciones, tipos y constantes. El código se movió textualmente con un script, y se
+  verificó que los esquemas de entrada y salida de las 31 herramientas, `docs/herramientas.md` y
+  `manifest.json` quedaron idénticos.
 ## 0.14.0 — 2026-11-16
 
 - **`calidad_agua`: la calidad del agua potable de OSE**, por localidad y trimestre desde 2017

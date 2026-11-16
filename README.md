@@ -211,6 +211,12 @@ uv run --with pytest --with-editable . pytest            # sin red
 uv run --with pytest --with-editable . pytest -m red     # contra las fuentes reales
 ```
 
+Cómo está organizado: `servidor.py` registra las herramientas y cada dominio vive en su módulo de
+`src/mcp_uruguay/herramientas/` (`monedas`, `combustibles`, `rio_y_clima`, `territorio`, `estado`, `agua`,
+`sinred`, y `comun` con lo que comparten). El paquete reexporta todo, así que `herramientas.cotizacion`
+sigue siendo la misma función; **un test que parchee una constante interna tiene que hacerlo en el módulo
+donde vive**, no en `herramientas`.
+
 Los tests del servidor conectan un cliente MCP real en el mismo proceso. Verifican que las herramientas
 existan, que todas sean de solo lectura, que un error vuelva con su motivo y que los prompts y recursos se
 puedan pedir y leer. La cobertura se mide con `pytest-cov` y el CI falla si baja del 88%.

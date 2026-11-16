@@ -87,7 +87,7 @@ tabla es un informe que **hoy no existe** y que se arma con dos o tres llamadas.
 # desde la raíz del repo de mcp-uruguay, con los dos repos clonados uno al lado del otro
 for m in $(ls ../uy-datos-abiertos/src/uydatos/*.py | xargs -n1 basename | sed 's/\.py$//' \
           | grep -v -E "^(red|procedencia|__init__|__main__|hojas|py)$"); do
-  grep -q "\b$m\b" src/mcp_uruguay/herramientas.py || echo "SIN HERRAMIENTA: $m"
+  grep -rq "\b$m\b" src/mcp_uruguay/herramientas/ || echo "SIN HERRAMIENTA: $m"
 done
 ```
 
