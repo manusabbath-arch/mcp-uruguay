@@ -1,6 +1,6 @@
 # Cambios
 
-## Sin publicar
+## 0.13.4 — 2026-11-16
 
 - **Cambio visible para clientes: `bajado` ahora lleva el desplazamiento horario.** Era la hora local
   de la máquina, sin zona (`2026-10-09T20:45`); ahora es la de Uruguay en ISO 8601
@@ -13,7 +13,7 @@
   el mes se quedaba sin copia aunque la anterior servía; contradecía la regla del README («una
   descarga ilegible nunca reemplaza a una copia buena»). Ahora baja aparte y solo la pone en su lugar
   si se lee. Cada bajada usa su carpeta temporal: dos clientes MCP en la misma caché ya no se pisan, y
-  en Windows el reemplazo reintenta si otro proceso tiene el archivo abierto.
+  en Windows el reemplazo y la lectura reintentan si otro proceso tiene el archivo abierto.
 - **Una copia vencida que no se pudo refrescar ahora avisa.** La respuesta trae `copia_vencida: true` y
   un `aviso` con la fecha de esa copia. Antes el agente veía un `bajado` viejo y nada que dijera que se
   intentó refrescar. Aplica a las 25 herramientas que traen `bajado`; los campos son opcionales y solo

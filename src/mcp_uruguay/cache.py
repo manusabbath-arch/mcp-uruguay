@@ -91,6 +91,19 @@ def _servida_vencida(ruta: Path) -> None:
         lista.append(sello(ruta))
 
 
+def _reintentando(accion: Callable[[], T]) -> T:
+    """Corre `accion` y, si Windows dice `PermissionError` (otro hilo o proceso está reemplazando el
+    archivo justo ahora), reintenta unas veces antes de dejar subir el error."""
+    for intento in range(6):
+        try:
+            return accion()
+        except PermissionError:
+            if intento == 5:
+                raise
+            time.sleep(0.05 * (intento + 1))
+    raise AssertionError("inalcanzable")
+
+
 def _poner_en_su_lugar(nueva: Path, ruta: Path) -> None:
     """`os.replace` con reintentos: en Windows falla con `PermissionError` si otro hilo o proceso
     tiene abierta la copia justo ahora (dos clientes MCP comparten la caché). Si no se logra y ya hay
@@ -127,11 +140,11 @@ def archivo(ruta: Path, bajar: Callable[[Path], object], leer: Callable[[Path], 
             nueva.unlink(missing_ok=True)
             if ruta.exists():
                 _servida_vencida(ruta)
-                return leer(ruta), ruta
+                return _reintentando(lambda: leer(ruta)), ruta
             raise
         _poner_en_su_lugar(nueva, ruta)
         return dato, ruta
-    return leer(ruta), ruta
+    return _reintentando(lambda: leer(ruta)), ruta
 
 
 def _meses(desde: date, hasta: date) -> list[date]:
@@ -212,7 +225,7 @@ def bcu_serie(moneda: int, desde: date, hasta: date, hoy: date | None = None) ->
         if not _vigente(ruta, mes, hoy, 3 * HORA):
             _refrescar_mes_bcu(moneda, mes, ruta, tolera_sin_datos=en_curso)
         try:
-            serie.update(bcu.leer_crudo(ruta, moneda))
+            serie.update(_reintentando(lambda: bcu.leer_crudo(ruta, moneda)))
         except bcu.BcuInvalido as e:
             if en_curso and "sin datos" in str(e):
                 sellos.append(sello(ruta))
@@ -248,7 +261,7 @@ def sg_lecturas(estacion: str, desde: date, hasta: date, hoy: date | None = None
                 nueva.unlink(missing_ok=True)
                 raise
             _poner_en_su_lugar(nueva, ruta)
-        lecturas += salto_grande.leer_datos(ruta)
+        lecturas += _reintentando(lambda: salto_grande.leer_datos(ruta))
         sellos.append(sello(ruta))
     ini = datetime.combine(desde, datetime.min.time())
     fin = datetime.combine(hasta + timedelta(days=1), datetime.min.time())
