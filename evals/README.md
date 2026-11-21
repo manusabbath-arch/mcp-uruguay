@@ -51,6 +51,12 @@ mira** al ajustar: es el número que se publica.
 2. **Revisar las preguntas que caducan.** `trampa-caudal-concordia-hoy` depende de que la fuente siga
    atrasada.
 3. **Correr el conjunto reservado al menos tres veces** (`--repeticiones 3`). Una corrida sola tiene ruido.
+   Con más de una repetición, debajo de la tabla sale `inestables`: las preguntas que aciertan en unas
+   repeticiones y fallan en otras.
+
+La tabla separa dos cosas que el porcentaje mezcla: `usó la esperada` (si el agente llamó a alguna de
+las `herramientas_esperadas` de la pregunta: un fallo con `0/1` es de elección, no de dato) y
+`no corrió` (intentos en que el motor falló o no devolvió resultado; no entran en el porcentaje).
 
 ## Cómo correrla
 

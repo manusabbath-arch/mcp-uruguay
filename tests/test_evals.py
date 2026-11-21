@@ -510,3 +510,41 @@ def test_cli_el_presupuesto_cuenta_la_cache():
         [(1.0, {"type": "assistant", "message": {**msg, "content": []}})], presupuesto_tokens=10000
     )
     assert m["presupuesto_agotado"] is True
+
+
+def test_la_fila_dice_si_uso_la_herramienta_esperada():
+    p = {"herramientas_esperadas": ["localidad"]}
+    assert evaluar.uso_esperada(p, ["buscar_indicador_social", "localidad"]) is True
+    assert evaluar.uso_esperada(p, ["buscar_indicador_social"]) is False
+    assert evaluar.uso_esperada({"herramientas_esperadas": []}, []) is None
+
+
+def test_el_resumen_muestra_el_uso_de_la_esperada():
+    filas = [
+        {**_fila("con", True, 0.1), "uso_esperada": True},
+        {**_fila("con", False, 0.1), "uso_esperada": False},
+    ]
+    tabla = evaluar.resumen(filas)
+    assert "usó la esperada" in tabla and "| 1/2 |" in tabla
+
+
+def test_inestables_lista_las_preguntas_que_a_veces_aciertan():
+    filas = [
+        {"id": "a", "modo": "con", "correcta": True},
+        {"id": "a", "modo": "con", "correcta": False},
+        {"id": "b", "modo": "con", "correcta": True},
+        {"id": "b", "modo": "con", "correcta": True},
+    ]
+    assert evaluar.inestables(filas) == {"con": ["a"]}
+
+
+def test_un_intento_que_no_corrio_no_cuenta_como_fallo():
+    filas = [
+        {**_fila("con", False, None), "motivo_fin": "sin_resultado"},
+        _fila("con", True, 0.1),
+    ]
+    tabla = evaluar.resumen(filas)
+    assert "| 1/1 (100%) |" in tabla and "no corrió" in tabla
+    assert evaluar.corrio({"motivo_fin": "sin_resultado"}) is False
+    assert evaluar.corrio({"motivo_fin": "end_turn", "error_motor": "boom"}) is False
+    assert evaluar.corrio({"motivo_fin": "end_turn"}) is True

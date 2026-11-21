@@ -351,11 +351,41 @@ async def correr(
                             **v,
                             **m,
                             "costo_usd": costo,
+                            "uso_esperada": uso_esperada(p, m["llamadas"]) if con else None,
                             "respuesta": texto,
                         }
                     )
                     print(f"{p['id']:<34} {modo:<4} {'OK' if v['correcta'] else '--'}  {v['motivo']}", file=sys.stderr)
     return filas
+
+
+def uso_esperada(pregunta: dict, llamadas: list[str]) -> Optional[bool]:
+    """True si llamó al menos a una de las herramientas esperadas; None si la pregunta no espera ninguna.
+
+    Separa "el servidor no tiene el dato" de "el agente no eligió la herramienta"."""
+    esperadas = set(pregunta.get("herramientas_esperadas") or [])
+    if not esperadas:
+        return None
+    return bool(esperadas & set(llamadas))
+
+
+def corrio(fila: dict) -> bool:
+    """False si el intento no llegó a correr (el motor falló o no devolvió resultado): no es un fallo del
+    agente, así que no entra en el porcentaje de acierto."""
+    return fila.get("motivo_fin") != "sin_resultado" and not fila.get("error_motor")
+
+
+def inestables(filas: list[dict]) -> dict[str, list[str]]:
+    """Por modo, las preguntas con aciertos y fallos entre sus repeticiones."""
+    vistos: dict[tuple[str, str], set[bool]] = {}
+    for f in filas:
+        if corrio(f):
+            vistos.setdefault((f["modo"], f["id"]), set()).add(bool(f["correcta"]))
+    salida: dict[str, list[str]] = {}
+    for (modo, id_), resultados in sorted(vistos.items()):
+        if len(resultados) > 1:
+            salida.setdefault(modo, []).append(id_)
+    return salida
 
 
 def resumen(filas: list[dict]) -> str:
@@ -365,32 +395,36 @@ def resumen(filas: list[dict]) -> str:
     por los aciertos. Si algún intento no tiene precio, el grupo dice `s/d`: sumar solo los que tienen
     daría un costo menor al real."""
     lineas = [
-        "| modo | tipo | aciertos | llamadas promedio | errores de herramienta | tokens promedio "
-        "| US$ promedio | US$ por acierto | cortadas por presupuesto |",
-        "|---|---|---:|---:|---:|---:|---:|---:|---:|",
+        "| modo | tipo | aciertos | usó la esperada | llamadas promedio | errores de herramienta "
+        "| tokens promedio | US$ promedio | US$ por acierto | cortadas por presupuesto | no corrió |",
+        "|---|---|---:|---:|---:|---:|---:|---:|---:|---:|---:|",
     ]
     for modo in sorted({f["modo"] for f in filas}):
         for tipo in ["numero", "texto", "comportamiento", "todas"]:
-            g = [f for f in filas if f["modo"] == modo and (tipo == "todas" or f["tipo"] == tipo)]
-            if not g:
+            todas = [f for f in filas if f["modo"] == modo and (tipo == "todas" or f["tipo"] == tipo)]
+            g = [f for f in todas if corrio(f)]
+            if not todas:
                 continue
+            n = max(len(g), 1)
             ok = sum(f["correcta"] for f in g)
-            llamadas = sum(len(f["llamadas"]) for f in g) / len(g)
+            usadas = [f.get("uso_esperada") for f in g if f.get("uso_esperada") is not None]
+            uso = f"{sum(usadas)}/{len(usadas)}"
+            llamadas = sum(len(f["llamadas"]) for f in g) / n
             errores = sum(f["errores_herramienta"] for f in g)
-            tokens = sum(f["tokens_entrada"] + f["tokens_salida"] for f in g) / len(g)
+            tokens = sum(f["tokens_entrada"] + f["tokens_salida"] for f in g) / n
             costos = [f.get("costo_usd") for f in g]
-            if any(c is None for c in costos):
+            if not g or any(c is None for c in costos):
                 promedio, por_acierto = "s/d", "s/d"
             else:
                 total = sum(c for c in costos if c is not None)
-                promedio = f"{total / len(g):.4f}"
+                promedio = f"{total / n:.4f}"
                 por_acierto = f"{total / ok:.4f}" if ok else "s/d"
             cortadas = sum(bool(f.get("presupuesto_agotado")) for f in g)
             nombre = f"**{tipo}**" if tipo == "todas" else tipo
-            aciertos = f"{ok}/{len(g)} ({100 * ok / len(g):.0f}%)"
+            aciertos = f"{ok}/{len(g)} ({100 * ok / n:.0f}%)"
             lineas.append(
-                f"| {modo} | {nombre} | {aciertos} | {llamadas:.1f} | {errores} | {tokens:,.0f} "
-                f"| {promedio} | {por_acierto} | {cortadas} |"
+                f"| {modo} | {nombre} | {aciertos} | {uso} | {llamadas:.1f} | {errores} | {tokens:,.0f} "
+                f"| {promedio} | {por_acierto} | {cortadas} | {len(todas) - len(g)} |"
             )
     return "\n".join(lineas) + "\n"
 
@@ -471,6 +505,9 @@ def main(argv: Optional[list[str]] = None) -> int:
         encoding="utf-8",
     )
     print(resumen(filas))
+    if args.repeticiones > 1:
+        for modo, ids in inestables(filas).items():
+            print(f"inestables ({modo}): {', '.join(ids)}")
     print(f"detalle: {destino}", file=sys.stderr)
     return 0
 
