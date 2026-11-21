@@ -239,6 +239,36 @@ class TestIndicadorSocial:
         with pytest.raises(ValueError, match="Salto"):
             h.indicador_social("tasa-empleo-segun-departamento-total-pais", "Rivera")
 
+    PAGINA_VIEJA = "<html><head><title>X</title></head><body><table></table></body></html>"
+
+    def test_un_indicador_ilegible_sale_de_la_busqueda(self, monkeypatch):
+        from uydatos import observatorio
+
+        monkeypatch.setattr(
+            observatorio.red, "bajar", lambda url, ruta: ruta.write_text(self.PAGINA_VIEJA, encoding="utf-8") or ruta
+        )
+        with pytest.raises(observatorio.ObservatorioInvalido):
+            h.indicador_social("tasa-empleo-total-pais")
+        r = h.buscar_indicador_social("empleo")
+        assert "tasa-empleo-total-pais" not in r["indicadores"]
+        assert r["descartados_ilegibles"] == 1 and r["encontrados"] == 1
+        assert "formato viejo" in r["nota"]
+
+    def test_sin_ilegibles_no_descarta_nada(self):
+        r = h.buscar_indicador_social("empleo")
+        assert r["descartados_ilegibles"] == 0 and len(r["indicadores"]) == 2
+
+    def test_la_marca_de_ilegible_vence(self):
+        from datetime import date, timedelta
+
+        from mcp_uruguay import cache
+
+        ruta = cache.directorio() / "observatorio" / "ilegibles.json"
+        ruta.parent.mkdir(parents=True, exist_ok=True)
+        vieja = (date.today() - timedelta(days=31)).isoformat()
+        ruta.write_text(self.json.dumps({"tasa-empleo-total-pais": vieja}), encoding="utf-8")
+        assert h.buscar_indicador_social("empleo")["descartados_ilegibles"] == 0
+
 
 class TestParidadCombustibles:
     @pytest.fixture(autouse=True)
