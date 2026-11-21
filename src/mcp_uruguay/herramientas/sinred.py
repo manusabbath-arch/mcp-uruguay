@@ -2,6 +2,9 @@
 
 from __future__ import annotations
 
+import json
+import os
+from datetime import date, timedelta
 from pathlib import Path
 from typing import Literal, Optional, Union
 
@@ -83,6 +86,7 @@ class IndicadoresEncontrados(TypedDict):
     indicadores: list[str]
     encontrados: int
     total: int
+    descartados_ilegibles: int
     nota: str
     fuente: str
     bajado: str
@@ -252,18 +256,62 @@ def _indice_observatorio() -> tuple[list[str], Path]:
     )
 
 
+_DIAS_ILEGIBLE = 30
+
+
+def _ruta_ilegibles() -> Path:
+    return cache.directorio() / "observatorio" / "ilegibles.json"
+
+
+def _leer_marcas() -> dict[str, str]:
+    try:
+        marcas = json.loads(_ruta_ilegibles().read_text(encoding="utf-8"))
+    except (OSError, ValueError):
+        return {}
+    return marcas if isinstance(marcas, dict) else {}
+
+
+def _ilegibles() -> set[str]:
+    """Indicadores cuya página se intentó leer en los últimos 30 días y tenía un formato que no se lee.
+
+    La búsqueda no los ofrece: sugerir un nombre que la lectura va a rechazar lleva al agente a un
+    callejón (medido en la eval del 2026-11-21: cuatro llamadas perdidas)."""
+    limite = (date.today() - timedelta(days=_DIAS_ILEGIBLE)).isoformat()
+    return {slug for slug, dia in _leer_marcas().items() if str(dia) >= limite}
+
+
+def _marcar_ilegible(slug: str) -> None:
+    ruta = _ruta_ilegibles()
+    ruta.parent.mkdir(parents=True, exist_ok=True)
+    marcas = _leer_marcas()
+    marcas[slug] = date.today().isoformat()
+    # Escritura atómica: en modo remoto varios clientes comparten la caché.
+    nueva = ruta.with_name(f"{ruta.name}.{os.getpid()}.nuevo")
+    nueva.write_text(json.dumps(marcas, sort_keys=True), encoding="utf-8")
+    os.replace(nueva, ruta)
+
+
 def buscar_indicador_social(texto: str, cantidad: int = 20) -> IndicadoresEncontrados:
     slugs, ruta = _indice_observatorio()
-    encontrados = observatorio.buscar(slugs, texto, cantidad=len(slugs))
+    ilegibles = _ilegibles()
+    todos = observatorio.buscar(slugs, texto, cantidad=len(slugs))
+    encontrados = [s for s in todos if s not in ilegibles]
+    descartados = len(todos) - len(encontrados)
     return {
         "indicadores": encontrados[: max(1, min(cantidad, 100))],
         "encontrados": len(encontrados),
         "total": len(slugs),
+        "descartados_ilegibles": descartados,
         "nota": (
             "Pasar uno de estos nombres, tal cual, a indicador_social. Los nombres salen del título, sin "
             "tildes: 'segun-departamento' abre por departamento, 'segun-sexo' por sexo, y 'total-pais' "
             "es del país entero. Los más cortos primero."
             + ("" if encontrados else " Sin resultados: probar con menos palabras o con su raíz.")
+            + (
+                f" Se omitieron {descartados} con la página en formato viejo, que indicador_social no puede leer."
+                if descartados
+                else ""
+            )
         ),
         "fuente": FUENTE_OBSERVATORIO + " (sitemap)",
         "bajado": cache.sello(ruta),
@@ -282,12 +330,16 @@ def indicador_social(indicador: str, filtro: str = "") -> IndicadorSocial:
             parecidos = []
         sugerencia = parecidos or "buscarlo con buscar_indicador_social"
         raise ValueError(f"{indicador!r} no es un indicador del MIDES. Parecidos: {sugerencia}")
-    r, ruta = cache.archivo(
-        cache.directorio() / "observatorio" / f"{nombre}.html",
-        lambda ruta: observatorio.red.bajar(url, ruta),
-        lambda ruta: observatorio.leer_pagina(ruta.read_text(encoding="utf-8"), url),
-        cache.DIA,
-    )
+    try:
+        r, ruta = cache.archivo(
+            cache.directorio() / "observatorio" / f"{nombre}.html",
+            lambda ruta: observatorio.red.bajar(url, ruta),
+            lambda ruta: observatorio.leer_pagina(ruta.read_text(encoding="utf-8"), url),
+            cache.DIA,
+        )
+    except observatorio.ObservatorioInvalido:
+        _marcar_ilegible(nombre)
+        raise
     filas = r["filas"]
     if filtro:
         palabras = [_sin_tildes(p) for p in filtro.split(",") if p.strip()]
