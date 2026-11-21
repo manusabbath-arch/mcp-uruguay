@@ -203,6 +203,39 @@ Dos cosas ayudan:
   progreso. Sirve si el cliente lo muestra o reinicia su plazo con él; no todos lo hacen, y para esos
   `--precalentar` sigue siendo la salida.
 
+## Servidor remoto (HTTP)
+
+Para servir a varios clientes desde una máquina, en vez de que cada uno corra su copia por stdio:
+
+```sh
+uvx --from 'mcp-uruguay[remoto]' mcp-uruguay --remoto
+```
+
+Corre el transporte `streamable-http` del SDK de MCP en `http://127.0.0.1:8420/mcp`. Sin autenticación:
+los datos son públicos y de solo lectura. Todos los clientes comparten la misma caché, así que el segundo
+que pide un dato lo recibe de la copia que bajó el primero.
+
+| Variable | Por defecto | Qué hace |
+| --- | --- | --- |
+| `MCP_URUGUAY_HTTP_HOST` | `127.0.0.1` | Dirección donde escucha. |
+| `MCP_URUGUAY_HTTP_PORT` | `8420` | Puerto. |
+| `MCP_URUGUAY_RATE_LIMIT_POR_MIN` | `30` | Pedidos HTTP por minuto y por IP. |
+| `MCP_URUGUAY_RATE_LIMIT_RAFAGA` | `5` | Pedidos seguidos permitidos antes de empezar a limitar. |
+
+Pasado el límite responde **HTTP 429** con `Retry-After` en segundos. El límite cuenta pedidos HTTP, no
+llamadas a herramientas: abrir la sesión MCP y listar herramientas también consume. Vive en la memoria de
+un solo proceso; con más de un worker o réplica cada uno llevaría su cuenta.
+
+**Ponelo detrás de un reverse proxy** (nginx, Caddy) que termine TLS; por eso escucha en `127.0.0.1`.
+La IP de cada cliente se toma de la primera entrada de `X-Forwarded-For`, así que el proxy tiene que
+**reemplazar** ese encabezado, no agregarle: en nginx, `proxy_set_header X-Forwarded-For $remote_addr;`
+(no `$proxy_add_x_forwarded_for`). Si no, un cliente puede mandar el suyo y esquivar el límite.
+
+En modo remoto, `diagnostico` oculta la carpeta de la caché: mostraría el usuario del sistema.
+
+El diseño (caché compartida, límite de pedidos, `diagnostico`) está en
+[`docs/2026-11-18-plan-http.md`](docs/2026-11-18-plan-http.md).
+
 ## Desarrollo
 
 ```sh

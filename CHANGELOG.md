@@ -2,6 +2,12 @@
 
 ## Sin publicar
 
+- **`mcp-uruguay --remoto`: el servidor por HTTP** (transporte `streamable-http`, extra `[remoto]`), para
+  servir a varios clientes desde una máquina con una sola caché. Escucha en `127.0.0.1:8420`
+  (`MCP_URUGUAY_HTTP_HOST`, `MCP_URUGUAY_HTTP_PORT`) para ir detrás de un reverse proxy con TLS, y limita
+  los pedidos por IP: 30 por minuto con ráfaga de 5 (`MCP_URUGUAY_RATE_LIMIT_POR_MIN`,
+  `MCP_URUGUAY_RATE_LIMIT_RAFAGA`), con HTTP 429 y `Retry-After` al pasarse. En ese modo `diagnostico`
+  oculta la carpeta de la caché. Ver la sección *Servidor remoto* del README.
 - **`herramientas.py` (2.680 líneas) pasa a ser un paquete con un módulo por dominio** (`monedas`,
   `combustibles`, `rio_y_clima`, `territorio`, `estado`, `agua`, `sinred` y `comun`; el más grande tiene 717
   líneas). **Sin cambios para quien usa el servidor ni para quien importa `herramientas`**: el paquete
