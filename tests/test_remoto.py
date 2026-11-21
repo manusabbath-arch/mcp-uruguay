@@ -113,7 +113,7 @@ def test_rotar_x_forwarded_for_no_esquiva_el_limite(monkeypatch):
 
     monkeypatch.setenv("MCP_URUGUAY_RATE_LIMIT_RAFAGA", "3")
     monkeypatch.setenv("MCP_URUGUAY_RATE_LIMIT_POR_MIN", "1")
-    with TestClient(construir_app(servidor)) as cliente:
+    with TestClient(construir_app(servidor), base_url="http://127.0.0.1:8420") as cliente:
         codigos = [cliente.get("/mcp", headers={"x-forwarded-for": f"9.9.9.{i}"}).status_code for i in range(5)]
     assert codigos[3:] == [429, 429]
     assert 429 not in codigos[:3]
