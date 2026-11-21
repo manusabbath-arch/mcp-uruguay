@@ -343,9 +343,10 @@ def ubicar_punto(lat: float, lon: float) -> h.Ubicacion:
 
 @herramienta("Población y viviendas de una localidad (INE)", EN_RED)
 def localidad(nombre: str = "", departamento: str = "", cantidad: int = 20) -> h.Localidades:
-    """Población y viviendas 2023 de una localidad uruguaya, por nombre (sin importar tildes). Si el nombre
-    existe en más de un departamento, devuelve todas; `departamento` desambigua. Solo con `departamento`,
-    lista sus localidades de mayor a menor población (hasta `cantidad`)."""
+    """Población oficial del Censo 2023 (INE) y viviendas de una localidad uruguaya, y la población
+    oficial de su departamento. Por nombre (sin importar tildes); si existe en más de un departamento,
+    devuelve todas y `departamento` desambigua. Solo con `departamento`, lista sus localidades de mayor
+    a menor población (hasta `cantidad`)."""
     return h.localidad(nombre, departamento, cantidad)
 
 

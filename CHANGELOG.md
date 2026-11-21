@@ -2,6 +2,14 @@
 
 ## Sin publicar
 
+- **`localidad` trae la población oficial del Censo 2023** (`poblacion_oficial_2023` por localidad y
+  `departamentos` con la población oficial de cada departamento), de los tabulados del INE que lee
+  `uydatos.censo` (cuadros 12 y 13, datos ponderados). `poblacion_2023` sigue siendo la de la capa
+  cartográfica, que no está ponderada: ciudad de Salto 114.043 en la capa y 112.527 oficial. Motivo:
+  en la eval, las dos preguntas de población fallaron en las tres corridas porque la única cifra
+  disponible era la de la capa. 641 de las 652 localidades de la capa tienen cifra oficial; las 11
+  restantes quedan en `null`. Si el tabulado no se puede bajar, la herramienta responde igual y lo
+  dice en la nota. Requiere `uydatos[hojas]>=0.17.3` (trae `openpyxl`).
 - **`herramientas.py` (2.680 líneas) pasa a ser un paquete con un módulo por dominio** (`monedas`,
   `combustibles`, `rio_y_clima`, `territorio`, `estado`, `agua`, `sinred` y `comun`; el más grande tiene 717
   líneas). **Sin cambios para quien usa el servidor ni para quien importa `herramientas`**: el paquete

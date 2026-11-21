@@ -196,9 +196,10 @@ por número. Devuelve el enlace al texto actualizado en IMPO.
 
 ## `localidad` — Población y viviendas de una localidad (INE)
 
-Población y viviendas 2023 de una localidad uruguaya, por nombre (sin importar tildes). Si el nombre
-existe en más de un departamento, devuelve todas; `departamento` desambigua. Solo con `departamento`,
-lista sus localidades de mayor a menor población (hasta `cantidad`).
+Población oficial del Censo 2023 (INE) y viviendas de una localidad uruguaya, y la población
+oficial de su departamento. Por nombre (sin importar tildes); si existe en más de un departamento,
+devuelve todas y `departamento` desambigua. Solo con `departamento`, lista sus localidades de mayor
+a menor población (hasta `cantidad`).
 
 | parametro | tipo | obligatorio |
 |---|---|---|

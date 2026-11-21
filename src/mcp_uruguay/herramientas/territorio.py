@@ -7,7 +7,8 @@ from typing import Optional
 # En Python < 3.12, pydantic no arma el esquema de un `typing.TypedDict`: el SDK se queda sin
 # esquema de salida y la respuesta sin `structuredContent`. Medido en el CI de 3.10 y 3.11.
 from typing_extensions import NotRequired, TypedDict
-from uydatos import ideuy, limites
+from uydatos import censo, ideuy, limites
+from uydatos.errores import DatosInvalidos
 
 from mcp_uruguay import cache
 from mcp_uruguay.herramientas.comun import _sin_tildes
@@ -63,13 +64,20 @@ class DatosLocalidad(TypedDict):
     poblacion_2023: Optional[int]
     viviendas_2023: Optional[int]
     capital: Optional[bool]
+    poblacion_oficial_2023: Optional[int]
     centro_aproximado: dict[str, float]
+
+
+class PoblacionDepartamento(TypedDict):
+    departamento: str
+    poblacion_oficial_2023: Optional[int]
 
 
 class Localidades(TypedDict):
     """La respuesta de `localidad()`."""
 
     localidades: list[DatosLocalidad]
+    departamentos: list[PoblacionDepartamento]
     total: int
     nota: str
     fuente: str
@@ -91,6 +99,27 @@ def _capa(capa: str) -> tuple[list[dict], str]:
         _capas.clear() if len(_capas) > 4 else None
         _capas[clave] = limites.leer(capa, ruta)
     return _capas[clave], cache.sello(ruta)
+
+
+FUENTE_CENSO = censo.FUENTE
+
+
+def _tabulado_censo(cuadro: str) -> dict[str, int]:
+    """Población oficial del Censo 2023, de la caché (30 días): por código INE de 5 dígitos (cuadro 13)
+    o por nombre de departamento sin tildes (cuadro 12; el nombre, porque la capa y el tabulado lo
+    escriben igual y el código de la capa no siempre trae el del departamento).
+
+    Levanta `OSError` o `DatosInvalidos` si no se pudo bajar o leer: quien llama decide."""
+    leer = censo.leer_departamentos if cuadro == "departamentos" else censo.leer_localidades
+    filas, _ = cache.archivo(
+        cache.directorio() / "censo" / f"{cuadro}.xlsx",
+        lambda p: censo.descargar(cuadro, p),
+        leer,
+        30 * cache.DIA,
+    )
+    if cuadro == "departamentos":
+        return {_sin_tildes(f["departamento"]): f["poblacion"] for f in filas}
+    return {f["codigo"]: f["poblacion"] for f in filas}
 
 
 def ubicar_punto(lat: float, lon: float) -> Ubicacion:
@@ -175,6 +204,12 @@ def localidad(nombre: str = "", departamento: str = "", cantidad: int = 20) -> L
         donde = f" en {departamento}" if departamento else ""
         raise ValueError(f"no hay una localidad {nombre!r}{donde}. Parecidas: {parecidas[:10] or 'ninguna'}")
     elegidas.sort(key=lambda a: -(a["datos"].get("poblacion_2023") or 0))
+    try:
+        oficial_loc, oficial_dep = _tabulado_censo("localidades"), _tabulado_censo("departamentos")
+        aviso_censo = ""
+    except (OSError, DatosInvalidos) as e:
+        oficial_loc, oficial_dep = {}, {}
+        aviso_censo = f" No se pudo leer el tabulado oficial del INE ({e}): poblacion_oficial_2023 queda sin dato."
     salida: list[DatosLocalidad] = [
         {
             "nombre": a["nombre"],
@@ -183,6 +218,7 @@ def localidad(nombre: str = "", departamento: str = "", cantidad: int = 20) -> L
             "poblacion_2023": a["datos"].get("poblacion_2023"),
             "viviendas_2023": a["datos"].get("viviendas_2023"),
             "capital": a["datos"].get("capital"),
+            "poblacion_oficial_2023": oficial_loc.get(f"{a['codigo']:05d}") if isinstance(a["codigo"], int) else None,
             "centro_aproximado": {
                 "lat": round((a["bbox"][1] + a["bbox"][3]) / 2, 5),
                 "lon": round((a["bbox"][0] + a["bbox"][2]) / 2, 5),
@@ -190,16 +226,24 @@ def localidad(nombre: str = "", departamento: str = "", cantidad: int = 20) -> L
         }
         for a in elegidas[: max(1, min(cantidad, 100))]
     ]
+    departamentos: list[PoblacionDepartamento] = [
+        {"departamento": nombre_dep, "poblacion_oficial_2023": oficial_dep.get(_sin_tildes(nombre_dep))}
+        for nombre_dep in sorted({a["departamento"] for a in elegidas[: max(1, min(cantidad, 100))]})
+    ]
     return {
         "localidades": salida,
+        "departamentos": departamentos,
         "total": len(elegidas),
         "nota": (
-            "Población y viviendas de los campos pob_tot_23 y viv_tot_23 de la capa cartográfica del INE (el año "
-            "sale del nombre del campo). Esa cifra puede diferir de la que el INE publica en sus infografías del "
-            "Censo 2023 (ciudad de Salto: 114.043 en la capa, 112.527 en la infografía): para citar la población "
-            "oficial de una ciudad, decir que es la de la capa o contrastar con la infografía. Ordenadas de mayor "
-            "a menor población. centro_aproximado es el centro del rectángulo que la contiene, no un centroide."
+            "poblacion_oficial_2023 es la cifra que publica el INE (tabulados del Censo 2023, datos "
+            "ponderados, cuadro 13 por localidad y cuadro 12 por departamento): es la que se cita. "
+            "poblacion_2023 y viviendas_2023 son los campos pob_tot_23 y viv_tot_23 de la capa "
+            "cartográfica, que no están ponderados y difieren (ciudad de Salto: 114.043 en la capa, "
+            "112.527 oficial). La población de un departamento está en departamentos, no en la suma de "
+            "sus localidades. 11 de las 652 localidades de la capa no están en el tabulado (medido el "
+            "2026-11-21): ahí poblacion_oficial_2023 es null. Ordenadas de mayor a menor población. "
+            "centro_aproximado es el centro del rectángulo que la contiene, no un centroide." + aviso_censo
         ),
-        "fuente": FUENTE_LIMITES,
+        "fuente": f"{FUENTE_LIMITES}; {FUENTE_CENSO}",
         "bajado": bajado,
     }
