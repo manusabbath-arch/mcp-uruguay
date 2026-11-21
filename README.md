@@ -226,10 +226,11 @@ Pasado el límite responde **HTTP 429** con `Retry-After` en segundos. El límit
 llamadas a herramientas: abrir la sesión MCP y listar herramientas también consume. Vive en la memoria de
 un solo proceso; con más de un worker o réplica cada uno llevaría su cuenta.
 
-**Ponelo detrás de un reverse proxy** (nginx, Caddy) que termine TLS; por eso escucha en `127.0.0.1`.
-La IP de cada cliente se toma de la primera entrada de `X-Forwarded-For`, así que el proxy tiene que
-**reemplazar** ese encabezado, no agregarle: en nginx, `proxy_set_header X-Forwarded-For $remote_addr;`
-(no `$proxy_add_x_forwarded_for`). Si no, un cliente puede mandar el suyo y esquivar el límite.
+**Ponelo detrás de un reverse proxy** (nginx, Caddy, cloudflared) que termine TLS; por eso escucha en
+`127.0.0.1`. `X-Forwarded-For` solo se tiene en cuenta cuando el pedido llega desde la propia máquina
+(el proxy), y se lee de derecha a izquierda salteando los saltos locales: sirve igual si el proxy
+reemplaza el encabezado o le agrega (`$proxy_add_x_forwarded_for`), y lo que mande el cliente queda a
+la izquierda sin usarse. Un pedido que llega directo de afuera se limita por su IP real.
 
 En modo remoto, `diagnostico` oculta la carpeta de la caché: mostraría el usuario del sistema.
 

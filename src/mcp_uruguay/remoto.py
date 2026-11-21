@@ -7,6 +7,7 @@ que un cliente mal configurado no genere tráfico concurrente contra las fuentes
 
 from __future__ import annotations
 
+import ipaddress
 import os
 import time
 from typing import TYPE_CHECKING
@@ -18,6 +19,14 @@ from starlette.responses import JSONResponse
 if TYPE_CHECKING:
     from mcp.server.mcpserver import MCPServer
     from starlette.applications import Starlette
+
+
+def _es_local(ip: str) -> bool:
+    """Loopback (127.0.0.0/8, ::1): el único proxy en el que se confía. Un valor que no es IP no es local."""
+    try:
+        return ipaddress.ip_address(ip).is_loopback
+    except ValueError:
+        return False
 
 
 class LimitadorPorIP(BaseHTTPMiddleware):
@@ -36,11 +45,22 @@ class LimitadorPorIP(BaseHTTPMiddleware):
         self._cubetas: dict[str, tuple[float, float]] = {}  # ip -> (tokens, ultimo_chequeo)
 
     def _ip(self, request: Request) -> str:
+        """La IP a limitar. `X-Forwarded-For` solo vale si el pedido llega de un proxy local.
+
+        Sin esa condición, cualquiera manda el encabezado e inventa una IP distinta por pedido. Detrás
+        del proxy, la lista se lee de derecha a izquierda salteando los saltos locales (cloudflared ->
+        nginx agrega 127.0.0.1 al final): lo que el cliente haya escrito queda a la izquierda y no se usa.
+        """
+        cliente = request.client
+        directa = cliente.host if cliente else "desconocida"
+        if not _es_local(directa):
+            return directa
         delante = request.headers.get("x-forwarded-for")
         if delante:
-            return delante.split(",")[0].strip()
-        cliente = request.client
-        return cliente.host if cliente else "desconocida"
+            for salto in reversed([s.strip() for s in delante.split(",") if s.strip()]):
+                if not _es_local(salto):
+                    return salto
+        return directa
 
     def _permitido(self, ip: str) -> tuple[bool, float]:
         ahora = time.monotonic()

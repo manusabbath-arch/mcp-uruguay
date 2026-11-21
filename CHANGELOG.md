@@ -7,7 +7,8 @@
   (`MCP_URUGUAY_HTTP_HOST`, `MCP_URUGUAY_HTTP_PORT`) para ir detrás de un reverse proxy con TLS, y limita
   los pedidos por IP: 30 por minuto con ráfaga de 5 (`MCP_URUGUAY_RATE_LIMIT_POR_MIN`,
   `MCP_URUGUAY_RATE_LIMIT_RAFAGA`), con HTTP 429 y `Retry-After` al pasarse. En ese modo `diagnostico`
-  oculta la carpeta de la caché. Ver la sección *Servidor remoto* del README.
+  oculta la carpeta de la caché. Ver la sección *Servidor remoto* del README. `X-Forwarded-For` solo
+  cuenta si el pedido llega del proxy local: rotar ese encabezado desde afuera ya no esquiva el límite.
 - **`herramientas.py` (2.680 líneas) pasa a ser un paquete con un módulo por dominio** (`monedas`,
   `combustibles`, `rio_y_clima`, `territorio`, `estado`, `agua`, `sinred` y `comun`; el más grande tiene 717
   líneas). **Sin cambios para quien usa el servidor ni para quien importa `herramientas`**: el paquete
