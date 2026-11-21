@@ -401,6 +401,7 @@ def test_cli_la_traza_sale_del_stream():
         False,
     )
     assert paso["segundos"] == 1.5 and paso["bytes_resultado"] == 4
+    assert paso["resultado"] == "40.6"  # el texto, no solo el tamaño: es lo que respalda la cifra
     assert (m["turnos"], m["motivo_fin"], m["costo_usd_cli"]) == (2, "success", 0.0123)
     assert (m["tokens_entrada"], m["tokens_salida"], m["tokens_cache_leidos"]) == (1100, 60, 7000)
 
@@ -548,3 +549,82 @@ def test_un_intento_que_no_corrio_no_cuenta_como_fallo():
     assert evaluar.corrio({"motivo_fin": "sin_resultado"}) is False
     assert evaluar.corrio({"motivo_fin": "end_turn", "error_motor": "boom"}) is False
     assert evaluar.corrio({"motivo_fin": "end_turn"}) is True
+
+
+# --- El respaldo del número en la traza (R3) ---------------------------------------------------------
+
+
+def _paso(resultado=""):
+    return {
+        "turno": 1,
+        "herramienta": "ventas_combustible",
+        "argumentos": {},
+        "segundos": 0.1,
+        "error": False,
+        "bytes_resultado": len(resultado.encode("utf-8")),
+        "resultado": resultado,
+    }
+
+
+def test_un_numero_que_salio_de_una_herramienta_esta_respaldado():
+    p = _pregunta("balotaje-2024-delgado-votos")
+    texto = "Segun la Corte Electoral\nRESPUESTA: 1101296"
+    assert evaluar.respaldado(p, texto, [_paso('{"votos": 1101296, "partido": "PN")}')]) is True
+
+
+def test_un_numero_que_no_esta_en_la_traza_no_esta_respaldado():
+    """El caso `leyes` 403: acertó el número sin haberlo leído de ninguna herramienta."""
+    p = _pregunta("balotaje-2024-delgado-votos")
+    texto = "RESPUESTA: 1101296"
+    assert evaluar.respaldado(p, texto, [_paso('{"error": "403 Forbidden"}')]) is False
+
+
+def test_el_respaldo_busca_las_formas_en_que_se_escribe_la_cifra():
+    p = _pregunta("balotaje-2024-orsi-pct")
+    assert evaluar.respaldado(p, "RESPUESTA: 49,84", [_paso('{"porcentaje": 49.84}')]) is True
+    assert evaluar.respaldado(p, "RESPUESTA: 49.84", [_paso('"pct": 49,84')]) is True
+
+
+def test_el_respaldo_no_encuentra_una_cifra_dentro_de_otra():
+    p = _pregunta("balotaje-2024-orsi-pct")
+    assert evaluar.respaldado(p, "RESPUESTA: 49.84", [_paso('{"porcentaje": 149.84}')]) is False
+
+
+def test_el_respaldo_de_una_fecha_prueba_sus_formatos():
+    p = _pregunta("ley-19889-promulgacion")
+    assert evaluar.respaldado(p, "RESPUESTA: 2020-07-09", [_paso("Promulgada el 9/7/2020")]) is True
+
+
+def test_una_pregunta_de_comportamiento_no_mide_respaldo():
+    p = next(q for q in evaluar.cargar() if q["tipo"] == "comportamiento")
+    assert evaluar.respaldado(p, "El domingo no hay cotizacion.\nRESPUESTA: SIN DATO", [_paso("{}")]) is None
+
+
+def test_sin_dato_no_tiene_nada_que_respaldar():
+    p = _pregunta("balotaje-2024-delgado-votos")
+    assert evaluar.respaldado(p, "RESPUESTA: SIN DATO", [_paso('{"votos": 1}')]) is None
+
+
+def test_contestar_sin_llamar_a_ninguna_herramienta_no_tiene_respaldo():
+    p = _pregunta("balotaje-2024-delgado-votos")
+    assert evaluar.respaldado(p, "RESPUESTA: 1101296", []) is False
+
+
+def test_una_traza_vieja_sin_el_texto_no_se_puede_medir():
+    """Las corridas guardadas antes de este campo no dicen si el número se respaldó: no se inventa."""
+    p = _pregunta("balotaje-2024-delgado-votos")
+    viejo = {"turno": 1, "herramienta": "x", "argumentos": {}, "segundos": 0.1, "error": False}
+    assert evaluar.respaldado(p, "RESPUESTA: 1101296", [viejo]) is None
+
+
+def test_el_resumen_muestra_el_respaldo_y_solo_con_servidor():
+    filas = [
+        {**_fila("con", True, 0.1), "respaldado": True},
+        {**_fila("con", True, 0.1), "respaldado": False},
+        {**_fila("con", False, 0.1), "respaldado": None},
+        {**_fila("sin", True, 0.1), "respaldado": None},
+    ]
+    tabla = evaluar.resumen(filas)
+    assert "respaldado" in tabla
+    assert "| 1/2 |" in tabla  # dos mediciones, una respaldada
+    assert "| sin | **todas** | 1/1 (100%)" in tabla and tabla.count("—") >= 1

@@ -106,6 +106,9 @@ def parsear_eventos(
                         "segundos": round(segundo - inicio, 2),
                         "error": es_error,
                         "bytes_resultado": len(contenido.encode("utf-8")),
+                        # El texto, no solo el tamaño: `evaluar.respaldado` busca ahí la cifra que el
+                        # agente escribió. Sin esto, un acierto de memoria y uno respaldado se ven igual.
+                        "resultado": contenido,
                     }
                 )
         elif tipo == "result":

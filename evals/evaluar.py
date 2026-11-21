@@ -33,6 +33,8 @@ from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any, Optional
 
+import confirmar
+
 AQUI = Path(__file__).resolve().parent
 PREGUNTAS = AQUI / "preguntas.json"
 MODELO = "claude-opus-5-5"
@@ -268,6 +270,7 @@ async def preguntar(
                     "segundos": round(time.monotonic() - t1, 2),
                     "error": es_error,
                     "bytes_resultado": len(contenido.encode("utf-8")),
+                    "resultado": contenido,
                 }
             )
             resultados.append({"type": "tool_result", "tool_use_id": b.id, "content": contenido, "is_error": es_error})
@@ -352,10 +355,17 @@ async def correr(
                             **m,
                             "costo_usd": costo,
                             "uso_esperada": uso_esperada(p, m["llamadas"]) if con else None,
+                            "respaldado": respaldado(p, texto, m["pasos"]) if con else None,
                             "respuesta": texto,
                         }
                     )
-                    print(f"{p['id']:<34} {modo:<4} {'OK' if v['correcta'] else '--'}  {v['motivo']}", file=sys.stderr)
+                    respaldo = ""
+                    if filas[-1]["respaldado"] is False:
+                        respaldo = "  (sin respaldo en la traza)"
+                    print(
+                        f"{p['id']:<34} {modo:<4} {'OK' if v['correcta'] else '--'}  {v['motivo']}{respaldo}",
+                        file=sys.stderr,
+                    )
     return filas
 
 
@@ -367,6 +377,47 @@ def uso_esperada(pregunta: dict, llamadas: list[str]) -> Optional[bool]:
     if not esperadas:
         return None
     return bool(esperadas & set(llamadas))
+
+
+def _formas_del_valor(pregunta: dict, valor: str) -> list[str]:
+    """Las formas en que ese valor puede estar escrito en el texto de una herramienta, ya normalizadas.
+
+    Las de `confirmar.formas`, pero armadas con **lo que respondió el agente**, no con lo esperado:
+    un número equivocado también tiene que poder decir si salió de una herramienta."""
+    if pregunta["tipo"] == "numero":
+        v = numero(valor)
+        return [] if v is None else [_normal(f) for f in confirmar.formas({"tipo": "numero", "esperado": v})]
+    return [_normal(f) for f in confirmar.formas({"tipo": "texto", "patron": valor})]
+
+
+def respaldado(pregunta: dict, texto: str, pasos: list[dict]) -> Optional[bool]:
+    """¿El valor de `RESPUESTA:` aparece en lo que devolvieron las herramientas?
+
+    Separa "acertó con el dato" de "acertó de memoria": un acierto sin respaldo en la traza pudo
+    salir de lo que el modelo ya sabía, no del servidor. Mide lo que ya pasó, no adivina.
+
+    `None` cuando no hay nada que verificar: las preguntas de comportamiento (ahí lo correcto es
+    avisar, no citar una cifra), una respuesta `SIN DATO`, una respuesta sin valor reconocible, o una
+    traza guardada antes de que los pasos llevaran el texto del resultado.
+
+    `False` cuando contestó sin llamar a ninguna herramienta: ahí no hay nada que respalde el número.
+
+    La comparación es la de `confirmar.aparece`, entera: `4,83` no aparece dentro de `14,83`.
+    """
+    if pregunta["tipo"] == "comportamiento":
+        return None
+    valor = linea_respuesta(texto)
+    if valor is None or _normal(valor).strip() == "sin dato":
+        return None
+    if not pasos:
+        return False
+    textos = [_normal(p.get("resultado") or "") for p in pasos]
+    if not any(textos):
+        return None  # traza del formato anterior: el texto del resultado no se guardaba
+    formas = _formas_del_valor(pregunta, valor)
+    if not formas:
+        return None
+    return any(confirmar.aparece(forma, cuerpo) for cuerpo in textos for forma in formas)
 
 
 def corrio(fila: dict) -> bool:
@@ -396,8 +447,8 @@ def resumen(filas: list[dict]) -> str:
     daría un costo menor al real."""
     lineas = [
         "| modo | tipo | aciertos | usó la esperada | llamadas promedio | errores de herramienta "
-        "| tokens promedio | US$ promedio | US$ por acierto | cortadas por presupuesto | no corrió |",
-        "|---|---|---:|---:|---:|---:|---:|---:|---:|---:|---:|",
+        "| tokens promedio | US$ promedio | US$ por acierto | cortadas por presupuesto | no corrió | respaldado |",
+        "|---|---|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|",
     ]
     for modo in sorted({f["modo"] for f in filas}):
         for tipo in ["numero", "texto", "comportamiento", "todas"]:
@@ -420,11 +471,13 @@ def resumen(filas: list[dict]) -> str:
                 promedio = f"{total / n:.4f}"
                 por_acierto = f"{total / ok:.4f}" if ok else "s/d"
             cortadas = sum(bool(f.get("presupuesto_agotado")) for f in g)
+            respaldadas = [f["respaldado"] for f in g if f.get("respaldado") is not None]
+            respaldo = f"{sum(respaldadas)}/{len(respaldadas)}" if respaldadas else "—"
             nombre = f"**{tipo}**" if tipo == "todas" else tipo
             aciertos = f"{ok}/{len(g)} ({100 * ok / n:.0f}%)"
             lineas.append(
                 f"| {modo} | {nombre} | {aciertos} | {uso} | {llamadas:.1f} | {errores} | {tokens:,.0f} "
-                f"| {promedio} | {por_acierto} | {cortadas} | {len(todas) - len(g)} |"
+                f"| {promedio} | {por_acierto} | {cortadas} | {len(todas) - len(g)} | {respaldo} |"
             )
     return "\n".join(lineas) + "\n"
 
