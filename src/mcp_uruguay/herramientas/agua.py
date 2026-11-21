@@ -89,7 +89,7 @@ def _archivo_ose(area: str) -> Path:
     if not falta:
         os.utime(ruta)
         return ruta
-    nueva = ruta.with_name(ruta.name + ".nuevo")
+    nueva = cache._temporal(ruta)
     try:
         red.bajar(vigente["url"], nueva)
         ose.leer(nueva)
