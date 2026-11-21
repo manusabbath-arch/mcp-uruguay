@@ -155,7 +155,9 @@ def herramienta(titulo: str, anotaciones: ToolAnnotations) -> Callable:
             "ctx": Context,
         }
 
-        return servidor.tool(title=titulo, annotations=anotaciones)(envuelta)
+        return servidor.tool(
+            title=titulo, annotations=anotaciones, description=inspect.cleandoc(funcion.__doc__ or "")
+        )(envuelta)
 
     return decorar
 

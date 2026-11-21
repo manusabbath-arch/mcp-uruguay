@@ -27,3 +27,11 @@ def test_las_definiciones_no_crecen_sin_decidirlo():
     tamano = sum(len(t.description or "") + len(json.dumps(t.input_schema)) for t in tools)
     assert len(tools) <= TOPE_HERRAMIENTAS, f"{len(tools)} herramientas (tope {TOPE_HERRAMIENTAS})"
     assert tamano <= TOPE_CARACTERES, f"{tamano} caracteres de definiciones (tope {TOPE_CARACTERES})"
+
+
+def test_las_descripciones_viajan_sin_la_sangria_del_docstring():
+    """Antes de Python 3.13 el docstring conserva la sangría del código: 360 espacios de más por turno
+    en 31 herramientas (medido el 2026-11-21: 11.140 caracteres en 3.11 contra 10.780 en 3.13)."""
+    tools = anyio.run(_definiciones)
+    con_sangria = [t.name for t in tools if any(linea.startswith(" ") for linea in (t.description or "").splitlines())]
+    assert not con_sangria, con_sangria
