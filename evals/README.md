@@ -93,6 +93,24 @@ del grupo, fallidos incluidos, por los aciertos: es lo que cuesta de verdad una 
 uv run --with anthropic python evals/evaluar.py --id ipca-brasil-2024 --conjunto todos --presupuesto-tokens 60000
 ```
 
+### Con Claude Code en vez de la API (`--motor claude-cli`)
+
+Si no hay clave de la API pero sí Claude Code instalado y con sesión iniciada (`claude`, y adentro
+`/login`), `--motor claude-cli` corre cada pregunta con `claude -p` (`evals/motor_claude_cli.py`):
+
+- un proceso nuevo por pregunta, sin sesión guardada, en una carpeta vacía;
+- sin las herramientas propias de Claude Code (`--tools ""`) ni la configuración del usuario
+  (`--setting-sources ""`), y con el mismo prompt de sistema que el motor de la API;
+- con servidor, la única herramienta es `mcp-uruguay` por stdio (`--strict-mcp-config`).
+
+La traza sale del stream de eventos (los segundos de cada paso son los que pasan entre la llamada y su
+resultado) y el costo es el que informa Claude Code: con suscripción es lo que costaría por la API, no
+lo que se paga. Si la sesión venció, el intento termina con `motivo_fin: "error"` y cuenta como fallo.
+
+```sh
+uv run --with-editable . python evals/evaluar.py --motor claude-cli --id ipca-brasil-2024 --conjunto todos
+```
+
 El modelo por defecto es `claude-opus-5-5` con esfuerzo `medium` (`--modelo` y `--esfuerzo` lo
 cambian). Un `refusal` cuenta como fallo y queda registrado. **No se usa el respaldo automático a otro
 modelo** (`fallbacks`), para que el número sea de un solo modelo.

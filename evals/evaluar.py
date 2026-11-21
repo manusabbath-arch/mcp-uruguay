@@ -281,11 +281,20 @@ async def correr(
     esfuerzo="medium",
     repeticiones=1,
     presupuesto_tokens: Optional[int] = None,
+    motor: str = "api",
+    preguntar_cli=None,
 ):
-    """Cada pregunta, en cada modo, `repeticiones` veces. Devuelve una fila por intento."""
+    """Cada pregunta, en cada modo, `repeticiones` veces. Devuelve una fila por intento.
+
+    `motor="claude-cli"` corre cada pregunta con Claude Code headless (`motor_claude_cli.py`) en vez de
+    la API; el costo es el que informa Claude Code. `preguntar_cli` reemplaza ese motor en los tests."""
     from mcp import Client
 
     from mcp_uruguay.servidor import servidor
+
+    if motor == "claude-cli" and preguntar_cli is None:
+        from motor_claude_cli import preguntar_claude_cli as preguntar_cli
+    import anyio
 
     filas = []
     async with Client(servidor) as sesion:
@@ -294,20 +303,35 @@ async def correr(
             for modo in modos:
                 for n in range(repeticiones):
                     con = modo == "con"
-                    texto, m = await preguntar(
-                        cliente,
-                        p["pregunta"],
-                        sesion=sesion if con else None,
-                        herramientas=herramientas if con else None,
-                        modelo=modelo,
-                        esfuerzo=esfuerzo,
-                        presupuesto_tokens=presupuesto_tokens,
-                    )
-                    v = (
-                        verificar(p, texto)
-                        if m["motivo_fin"] != "refusal"
-                        else {"correcta": False, "motivo": "el modelo declinó (refusal)", "valor": None}
-                    )
+                    if preguntar_cli is not None:
+                        texto, m = await anyio.to_thread.run_sync(
+                            lambda: preguntar_cli(
+                                p["pregunta"],
+                                SISTEMA,
+                                con_servidor=con,
+                                modelo=modelo,
+                                esfuerzo=esfuerzo,
+                                presupuesto_tokens=presupuesto_tokens,
+                            )
+                        )
+                        costo = m.pop("costo_usd_cli", None)
+                    else:
+                        texto, m = await preguntar(
+                            cliente,
+                            p["pregunta"],
+                            sesion=sesion if con else None,
+                            herramientas=herramientas if con else None,
+                            modelo=modelo,
+                            esfuerzo=esfuerzo,
+                            presupuesto_tokens=presupuesto_tokens,
+                        )
+                        costo = costo_usd(m, modelo)
+                    if m["motivo_fin"] == "refusal":
+                        v = {"correcta": False, "motivo": "el modelo declinó (refusal)", "valor": None}
+                    elif m["motivo_fin"] in ("error", "sin_resultado"):
+                        v = {"correcta": False, "motivo": f"el agente no terminó ({m['motivo_fin']})", "valor": None}
+                    else:
+                        v = verificar(p, texto)
                     filas.append(
                         {
                             "id": p["id"],
@@ -315,9 +339,10 @@ async def correr(
                             "tipo": p["tipo"],
                             "modo": modo,
                             "intento": n + 1,
+                            "motor": motor,
                             **v,
                             **m,
-                            "costo_usd": costo_usd(m, modelo),
+                            "costo_usd": costo,
                             "respuesta": texto,
                         }
                     )
@@ -384,9 +409,13 @@ def main(argv: Optional[list[str]] = None) -> int:
         help="ENTRADA,SALIDA en US$ por millón de tokens, para un modelo que no está en PRECIOS",
     )
     ap.add_argument("--salida", type=Path, default=AQUI / "resultados")
+    ap.add_argument(
+        "--motor",
+        default="api",
+        choices=["api", "claude-cli"],
+        help="api: la API de Claude (ANTHROPIC_API_KEY); claude-cli: Claude Code headless con su sesión",
+    )
     args = ap.parse_args(argv)
-
-    import anthropic  # solo para correr de verdad: los tests usan un cliente falso
 
     if args.precio:
         entrada, salida = (float(x) for x in args.precio.split(","))
@@ -397,23 +426,36 @@ def main(argv: Optional[list[str]] = None) -> int:
         print("ninguna pregunta con esos filtros", file=sys.stderr)
         return 2
     modos = [m.strip() for m in args.modo.split(",") if m.strip()]
+    if args.motor == "api":
+        import anthropic  # solo para correr de verdad: los tests usan un cliente falso
+
+        cliente = anthropic.AsyncAnthropic()
+    else:
+        cliente = None
     filas = anyio.run(
         lambda: correr(
-            anthropic.AsyncAnthropic(),
+            cliente,
             preguntas,
             modos,
             modelo=args.modelo,
             esfuerzo=args.esfuerzo,
             repeticiones=args.repeticiones,
             presupuesto_tokens=args.presupuesto_tokens,
+            motor=args.motor,
         )
     )
     sello = datetime.now(timezone.utc).strftime("%Y%m%dT%H%M%SZ")
     args.salida.mkdir(parents=True, exist_ok=True)
-    destino = args.salida / f"{sello}-{args.modelo}-{args.conjunto}.json"
+    destino = args.salida / f"{sello}-{args.motor}-{args.modelo}-{args.conjunto}.json"
     destino.write_text(
         json.dumps(
-            {"modelo": args.modelo, "esfuerzo": args.esfuerzo, "conjunto": args.conjunto, "filas": filas},
+            {
+                "motor": args.motor,
+                "modelo": args.modelo,
+                "esfuerzo": args.esfuerzo,
+                "conjunto": args.conjunto,
+                "filas": filas,
+            },
             ensure_ascii=False,
             indent=2,
             default=str,

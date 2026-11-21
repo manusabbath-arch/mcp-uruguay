@@ -337,3 +337,117 @@ def test_las_respuestas_de_calculo_se_recalculan():
     pesos = [2, 9, 8, 7, 6, 3, 4]
     suma = sum(int(c) * w for c, w in zip("1234567", pesos))
     assert (10 - suma % 10) % 10 == 2  # 1.234.567-2 es válida; -3 no
+
+
+# --- Motor claude-cli (Claude Code headless), con eventos sintéticos ---------------------------------
+
+import motor_claude_cli as cli  # noqa: E402
+
+_EVENTOS = [
+    (0.1, {"type": "system", "subtype": "init"}),
+    (
+        1.0,
+        {
+            "type": "assistant",
+            "message": {
+                "usage": {"input_tokens": 500, "output_tokens": 40},
+                "content": [
+                    {"type": "tool_use", "id": "a", "name": "mcp__uruguay__cotizacion", "input": {"moneda": "USD"}}
+                ],
+            },
+        },
+    ),
+    (
+        2.5,
+        {
+            "type": "user",
+            "message": {"content": [{"type": "tool_result", "tool_use_id": "a", "content": [{"text": "40.6"}]}]},
+        },
+    ),
+    (
+        3.0,
+        {
+            "type": "assistant",
+            "message": {
+                "usage": {"input_tokens": 600, "output_tokens": 20},
+                "content": [{"type": "text", "text": "x"}],
+            },
+        },
+    ),
+    (
+        3.1,
+        {
+            "type": "result",
+            "subtype": "success",
+            "is_error": False,
+            "result": "Vale 40.6\nRESPUESTA: 40.6",
+            "total_cost_usd": 0.0123,
+            "usage": {"input_tokens": 1100, "output_tokens": 60, "cache_read_input_tokens": 7000},
+        },
+    ),
+]
+
+
+def test_cli_la_traza_sale_del_stream():
+    texto, m = cli.parsear_eventos(_EVENTOS)
+    assert evaluar.linea_respuesta(texto) == "40.6"
+    assert m["llamadas"] == ["cotizacion"]
+    (paso,) = m["pasos"]
+    assert (paso["turno"], paso["herramienta"], paso["argumentos"], paso["error"]) == (
+        1,
+        "cotizacion",
+        {"moneda": "USD"},
+        False,
+    )
+    assert paso["segundos"] == 1.5 and paso["bytes_resultado"] == 4
+    assert (m["turnos"], m["motivo_fin"], m["costo_usd_cli"]) == (2, "success", 0.0123)
+    assert (m["tokens_entrada"], m["tokens_salida"], m["tokens_cache_leidos"]) == (1100, 60, 7000)
+
+
+def test_cli_presupuesto_corta_y_suma_los_turnos():
+    _, m = cli.parsear_eventos(_EVENTOS, presupuesto_tokens=500)
+    assert (m["motivo_fin"], m["presupuesto_agotado"], m["turnos"]) == ("presupuesto_agotado", True, 1)
+    assert (m["tokens_entrada"], m["tokens_salida"], m["costo_usd_cli"]) == (500, 40, None)
+
+
+def test_cli_un_error_de_autenticacion_no_cuenta_como_respuesta():
+    ev = [(0.2, {"type": "result", "subtype": "success", "is_error": True, "result": "Failed to authenticate"})]
+    _, m = cli.parsear_eventos(ev)
+    assert m["motivo_fin"] == "error"
+
+
+def test_cli_el_comando_aisla_al_agente():
+    sin = cli.comando("SIS", con_servidor=False, modelo=None, esfuerzo=None, mcp_config=None)
+    for bandera in ("--no-session-persistence", "--strict-mcp-config"):
+        assert bandera in sin
+    assert sin[sin.index("--tools") + 1] == "" and sin[sin.index("--setting-sources") + 1] == ""
+    assert "--allowedTools" not in sin and "--mcp-config" not in sin
+    con = cli.comando("SIS", con_servidor=True, modelo="m", esfuerzo="low", mcp_config=Path("/x/mcp.json"))
+    assert con[con.index("--allowedTools") + 1] == "mcp__uruguay"
+    assert con[con.index("--mcp-config") + 1] == "/x/mcp.json"
+    assert con[con.index("--model") + 1] == "m" and con[con.index("--effort") + 1] == "low"
+
+
+async def test_correr_con_motor_cli_usa_el_costo_del_cli():
+    p = next(q for q in evaluar.cargar() if q["id"] == "ipca-brasil-2024")
+    vistos = []
+
+    def falso(pregunta, sistema, **kw):
+        vistos.append(kw["con_servidor"])
+        texto, m = cli.parsear_eventos(_EVENTOS)
+        return texto, m
+
+    filas = await evaluar.correr(None, [p], ["con", "sin"], motor="claude-cli", preguntar_cli=falso)
+    assert vistos == [True, False]
+    assert all(f["motor"] == "claude-cli" and f["costo_usd"] == 0.0123 for f in filas)
+    assert "costo_usd_cli" not in filas[0]
+
+
+async def test_correr_con_motor_cli_que_falla_cuenta_como_fallo():
+    p = next(q for q in evaluar.cargar() if q["id"] == "ipca-brasil-2024")
+
+    def falso(pregunta, sistema, **kw):
+        return cli.parsear_eventos([(0.1, {"type": "result", "is_error": True, "result": "RESPUESTA: 4.83"})])
+
+    (fila,) = await evaluar.correr(None, [p], ["sin"], motor="claude-cli", preguntar_cli=falso)
+    assert (fila["correcta"], fila["motivo"]) == (False, "el agente no terminó (error)")
