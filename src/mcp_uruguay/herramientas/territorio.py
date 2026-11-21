@@ -194,9 +194,11 @@ def localidad(nombre: str = "", departamento: str = "", cantidad: int = 20) -> L
         "localidades": salida,
         "total": len(elegidas),
         "nota": (
-            "Población y viviendas de los campos pob_tot_23 y viv_tot_23 de la capa del INE (el año sale del nombre "
-            "del campo). Ordenadas de mayor a menor población. centro_aproximado es el centro del rectángulo que la "
-            "contiene, no un centroide."
+            "Población y viviendas de los campos pob_tot_23 y viv_tot_23 de la capa cartográfica del INE (el año "
+            "sale del nombre del campo). Esa cifra puede diferir de la que el INE publica en sus infografías del "
+            "Censo 2023 (ciudad de Salto: 114.043 en la capa, 112.527 en la infografía): para citar la población "
+            "oficial de una ciudad, decir que es la de la capa o contrastar con la infografía. Ordenadas de mayor "
+            "a menor población. centro_aproximado es el centro del rectángulo que la contiene, no un centroide."
         ),
         "fuente": FUENTE_LIMITES,
         "bajado": bajado,
