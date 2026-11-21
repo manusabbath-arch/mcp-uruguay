@@ -13,7 +13,7 @@ from mcp import Client
 
 from mcp_uruguay.servidor import servidor
 
-TOPE_CARACTERES = 19_713  # medido el 2026-11-21: 31 herramientas, descripción + input_schema
+TOPE_CARACTERES = 19_771  # 2026-11-21: 19.713 + 58 de `localidad` (población oficial del INE)
 TOPE_HERRAMIENTAS = 31
 
 

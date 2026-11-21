@@ -37,6 +37,12 @@
   otro. Ahora cada bajada crea un temporal único junto al archivo (`cache._temporal`), y
   `diagnostico` no lista ninguna de las dos formas de temporal (`<archivo>.XXXX.nuevo` y las
   carpetas `.nuevo-*` del BCU, que antes se colaban como copias).
+- **`localidad` trae la población oficial del Censo 2023** (`poblacion_oficial_2023` por localidad y
+  `departamentos` con la población oficial de cada departamento), de los tabulados del INE que lee
+  `uydatos.censo` (cuadros 12 y 13, datos ponderados). `poblacion_2023` sigue siendo la de la capa
+  cartográfica: ciudad de Salto 114.043 en la capa y 112.527 oficial. Si el tabulado no se puede bajar,
+  la herramienta responde igual y lo dice en la nota. Se conserva `uydatos>=0.18,<0.19` y se agrega
+  el extra `hojas` para leer los tabulados publicados.
 - **`herramientas.py` (2.680 líneas) pasa a ser un paquete con un módulo por dominio** (`monedas`,
   `combustibles`, `rio_y_clima`, `territorio`, `estado`, `agua`, `sinred` y `comun`; el más grande tiene 717
   líneas). **Sin cambios para quien usa el servidor ni para quien importa `herramientas`**: el paquete

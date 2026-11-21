@@ -19,7 +19,7 @@ dependencies = [
     "mcp>=2.3,<3",
     "truststore>=0.10",
     "typing_extensions>=4.7",
-    "uydatos>=0.18,<0.19",
+    "uydatos[hojas]>=0.18,<0.19",
 ]
 
 [project.optional-dependencies]
