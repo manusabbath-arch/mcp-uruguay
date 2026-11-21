@@ -60,6 +60,7 @@ class TestBalotaje:
             {"opcion": "TotalDelgadoRipoll", "votos": 111, "pct_sobre_emitidos": 41.11},
         ]
         assert "observados" in r["nota"] and "localidad" in r["nota"]
+        assert "escrutinio primario" in r["nota"] and "definitivo con observados" in r["nota"]
 
     def test_por_departamento(self, elecciones):
         r = h.resultados_electorales("balotaje-2024", "salto")

@@ -119,8 +119,10 @@ def resultados_electorales(eleccion: str, departamento: str = "") -> ResultadoEl
             "Suma de todas las mesas publicadas por la Corte, incluidas las mesas de observados (votos de quienes "
             "votaron fuera de su circuito, escrutados aparte): es el escrutinio definitivo de los datos abiertos. "
             "Los observados no tienen localidad, así que no se pueden repartir por barrio o localidad. Partidos: "
-            "votos por hoja más votos al lema. Los porcentajes son sobre los votos emitidos; los porcentajes "
-            "oficiales de la Corte pueden usar otra base. En las nacionales, opciones son los plebiscitos."
+            "votos por hoja más votos al lema. Los porcentajes son sobre los votos emitidos, observados incluidos. "
+            "La cifra difundida la noche de la elección es el escrutinio primario, sin observados, y por eso "
+            "difiere en unas décimas: al citar un porcentaje, decir que es del escrutinio definitivo con "
+            "observados. En las nacionales, opciones son los plebiscitos."
         ),
         "fuente": FUENTE_ELECCIONES,
         "bajado": bajado,
