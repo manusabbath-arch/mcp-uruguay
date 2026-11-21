@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import json
 import sys
 from pathlib import Path
 from types import SimpleNamespace as NS
@@ -451,3 +452,26 @@ async def test_correr_con_motor_cli_que_falla_cuenta_como_fallo():
 
     (fila,) = await evaluar.correr(None, [p], ["sin"], motor="claude-cli", preguntar_cli=falso)
     assert (fila["correcta"], fila["motivo"]) == (False, "el agente no terminó (error)")
+
+
+def test_cli_la_pregunta_va_despues_de_doble_guion():
+    # `--allowedTools` acepta varios valores: sin `--`, la pregunta se lee como una herramienta más.
+    capturado = {}
+
+    class ProcesoFalso:
+        stdout = iter([json.dumps({"type": "result", "result": "RESPUESTA: 1", "total_cost_usd": 0.0}) + "\n"])
+        stderr = None
+
+        def poll(self):
+            return 0
+
+        def wait(self):
+            return 0
+
+    def lanzar(args, **kw):
+        capturado["args"] = args
+        return ProcesoFalso()
+
+    texto, _ = cli.preguntar_claude_cli("¿cuánto?", "SIS", con_servidor=True, lanzar=lanzar)
+    assert capturado["args"][-2:] == ["--", "¿cuánto?"]
+    assert evaluar.linea_respuesta(texto) == "1"

@@ -174,7 +174,7 @@ def preguntar_claude_cli(
         cmd = comando(sistema, con_servidor=con_servidor, modelo=modelo, esfuerzo=esfuerzo, mcp_config=config)
         inicio = time.monotonic()
         proceso = lanzar(
-            cmd + [pregunta],
+            cmd + ["--", pregunta],  # `--allowedTools` toma varios valores: sin `--` se comería la pregunta
             cwd=carpeta,  # una carpeta vacía: ningún CLAUDE.md del usuario entra al contexto
             stdin=subprocess.DEVNULL,
             stdout=subprocess.PIPE,
