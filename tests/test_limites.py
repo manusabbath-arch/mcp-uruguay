@@ -153,3 +153,7 @@ class TestLocalidad:
     def test_sin_nada(self, capas):
         with pytest.raises(ValueError):
             h.localidad("", "")
+
+    def test_avisa_que_la_poblacion_es_de_la_capa_y_no_la_publicada(self, capas):
+        nota = h.localidad("garibaldi")["nota"]
+        assert "infografías" in nota and "puede diferir" in nota
