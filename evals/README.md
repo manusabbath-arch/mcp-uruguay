@@ -68,9 +68,30 @@ uv run --with anthropic python evals/evaluar.py --modo con,sin --conjunto desarr
 uv run --with anthropic python evals/evaluar.py --modo con,sin --conjunto reservado --repeticiones 3
 ```
 
-Imprime una tabla (acierto por modo y tipo, llamadas, errores de herramienta y tokens) y guarda cada
-intento en `evals/resultados/<fecha>-<modelo>-<conjunto>.json`, con la respuesta completa. Esa carpeta
-no se versiona.
+Imprime una tabla (acierto por modo y tipo, llamadas, errores de herramienta, tokens, costo en US$ y
+costo por acierto) y guarda cada intento en `evals/resultados/<fecha>-<modelo>-<conjunto>.json`, con la
+respuesta completa. Esa carpeta no se versiona.
+
+### Trazas, presupuesto y costo
+
+Cada intento guardado trae su traza:
+
+- `pasos`: una entrada por llamada a herramienta, con el turno, los argumentos, los segundos, si dio
+  error y el tamaño del resultado en bytes.
+- `turnos_detalle`: los tokens de entrada, salida y caché (leídos y escritos) y los segundos de cada
+  turno del modelo.
+- `costo_usd`: calculado con la tabla `PRECIOS` de `evaluar.py`. Un modelo sin precio da `null` y la
+  tabla dice `s/d`: sin dato no es gratis. Para otro modelo, `--precio ENTRADA,SALIDA` (US$ por millón).
+
+`--presupuesto-tokens N` pone un tope duro por intento: cuando entrada + salida llegan a `N`, el
+intento corta antes del turno siguiente, queda con `motivo_fin: "presupuesto_agotado"` y cuenta como
+fallo. La tabla muestra cuántos intentos se cortaron. El **costo por acierto** divide el gasto total
+del grupo, fallidos incluidos, por los aciertos: es lo que cuesta de verdad una respuesta correcta.
+
+```sh
+# Una pregunta con tope de 60.000 tokens, para medir el costo real antes de correr todo
+uv run --with anthropic python evals/evaluar.py --id ipca-brasil-2024 --conjunto todos --presupuesto-tokens 60000
+```
 
 El modelo por defecto es `claude-opus-5-5` con esfuerzo `medium` (`--modelo` y `--esfuerzo` lo
 cambian). Un `refusal` cuenta como fallo y queda registrado. **No se usa el respaldo automático a otro

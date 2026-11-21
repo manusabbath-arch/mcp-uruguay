@@ -180,6 +180,92 @@ async def test_la_corrida_marca_el_refusal_como_fallo():
     assert "| sin | **todas** | 0/1 (0%)" in evaluar.resumen([fila])
 
 
+# --- Trazas, presupuesto y costo --------------------------------------------------------------------
+
+
+async def test_cada_paso_queda_en_la_traza():
+    from mcp import Client
+
+    from mcp_uruguay.servidor import servidor
+
+    ok = NS(type="tool_use", id="t1", name="validar_documento", input={"numero": "1.234.567-2", "tipo": "ci"})
+    mal = NS(type="tool_use", id="t2", name="semana", input={"fecha": "no-es-fecha"})
+    cliente = ClienteFalso(
+        [
+            _respuesta([ok, mal], "tool_use", entrada=300, salida=50),
+            _respuesta([NS(type="text", text="RESPUESTA: valida")], "end_turn", entrada=400, salida=10),
+        ]
+    )
+    async with Client(servidor) as sesion:
+        _, m = await evaluar.preguntar(cliente, "?", sesion=sesion, herramientas=await evaluar.herramientas_de(sesion))
+    pasos = m["pasos"]
+    assert [(p["turno"], p["herramienta"], p["error"]) for p in pasos] == [
+        (1, "validar_documento", False),
+        (1, "semana", True),
+    ]
+    assert pasos[0]["argumentos"] == {"numero": "1.234.567-2", "tipo": "ci"}
+    assert all(p["segundos"] >= 0 and p["bytes_resultado"] > 0 for p in pasos)
+    assert [(t["turno"], t["tokens_entrada"], t["tokens_salida"]) for t in m["turnos_detalle"]] == [
+        (1, 300, 50),
+        (2, 400, 10),
+    ]
+
+
+async def test_el_presupuesto_corta_antes_del_turno_siguiente():
+    llamada = NS(type="tool_use", id="t1", name="semana", input={"fecha": "2026-01-01"})
+    cliente = ClienteFalso([_respuesta([llamada], "tool_use", entrada=900, salida=200)])
+    texto, m = await evaluar.preguntar(cliente, "?", presupuesto_tokens=1000)
+    assert (m["motivo_fin"], m["presupuesto_agotado"], m["turnos"]) == ("presupuesto_agotado", True, 1)
+    assert len(cliente.pedidos) == 1 and m["pasos"] == []
+
+
+async def test_dentro_del_presupuesto_no_corta():
+    cliente = ClienteFalso([_respuesta([NS(type="text", text="RESPUESTA: 1")], "end_turn", entrada=10, salida=5)])
+    _, m = await evaluar.preguntar(cliente, "?", presupuesto_tokens=1000)
+    assert (m["motivo_fin"], m["presupuesto_agotado"]) == ("end_turn", False)
+
+
+def test_costo_con_precio_conocido_y_sin_precio():
+    m = {
+        "tokens_entrada": 1_000_000,
+        "tokens_salida": 100_000,
+        "tokens_cache_leidos": 2_000_000,
+        "tokens_cache_escritos": 0,
+    }
+    precio = evaluar.PRECIOS["claude-opus-5-5"]
+    esperado = precio["entrada"] + 0.1 * precio["salida"] + 2 * precio["cache_leido"]
+    assert evaluar.costo_usd(m, "claude-opus-5-5") == pytest.approx(esperado)
+    # Sin precio publicado no hay costo: nunca 0, que se leería como gratis.
+    assert evaluar.costo_usd(m, "modelo-inventado") is None
+
+
+def _fila(modo, correcta, costo, agotado=False):
+    return {
+        "modo": modo,
+        "tipo": "numero",
+        "correcta": correcta,
+        "llamadas": [],
+        "errores_herramienta": 0,
+        "tokens_entrada": 10,
+        "tokens_salida": 5,
+        "costo_usd": costo,
+        "presupuesto_agotado": agotado,
+    }
+
+
+def test_el_resumen_trae_costo_por_acierto():
+    filas = [_fila("con", True, 0.2), _fila("con", False, 0.1, agotado=True), _fila("con", True, 0.3)]
+    tabla = evaluar.resumen(filas)
+    # US$ 0.60 en total, 2 aciertos -> US$ 0.30 por acierto; 1 de 3 cortadas por presupuesto
+    assert "| con | **todas** | 2/3 (67%)" in tabla
+    assert "| 0.2000 | 0.3000 | 1 |" in tabla
+
+
+def test_el_resumen_sin_costo_dice_sin_dato():
+    tabla = evaluar.resumen([_fila("sin", True, None)])
+    assert "| s/d | s/d | 0 |" in tabla
+
+
 # --- La confirmación contra la fuente ----------------------------------------------------------------
 
 import confirmar  # noqa: E402

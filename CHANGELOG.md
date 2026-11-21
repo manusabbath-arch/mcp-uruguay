@@ -2,6 +2,11 @@
 
 ## Sin publicar
 
+- **La evaluación guarda la traza y el costo de cada intento** (`evals/evaluar.py`): cada llamada a
+  herramienta con sus argumentos, segundos, error y tamaño del resultado; los tokens y segundos de cada
+  turno; y el costo en US$ según una tabla de precios (sin precio, `s/d`, nunca 0). `--presupuesto-tokens`
+  corta un intento al llegar al tope y lo cuenta como fallo. La tabla suma **US$ por acierto**, con los
+  intentos fallidos incluidos en el gasto.
 - **`herramientas.py` (2.680 líneas) pasa a ser un paquete con un módulo por dominio** (`monedas`,
   `combustibles`, `rio_y_clima`, `territorio`, `estado`, `agua`, `sinred` y `comun`; el más grande tiene 717
   líneas). **Sin cambios para quien usa el servidor ni para quien importa `herramientas`**: el paquete
