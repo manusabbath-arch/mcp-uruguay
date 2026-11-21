@@ -46,6 +46,14 @@ PRECIOS: dict[str, dict[str, float]] = {
 }
 
 
+def tokens_totales(m: dict) -> int:
+    """Todo lo que el modelo procesó: entrada, salida y caché (leída y escrita).
+
+    Es lo que cuenta el presupuesto: con caché de prompts la entrada nueva es casi cero y un tope que
+    solo mirara entrada + salida no cortaría nunca."""
+    return sum(m.get(k, 0) for k in ("tokens_entrada", "tokens_salida", "tokens_cache_leidos", "tokens_cache_escritos"))
+
+
 def precio_de(entrada: float, salida: float) -> dict[str, float]:
     return {"entrada": entrada, "salida": salida, "cache_leido": entrada * 0.1, "cache_escrito": entrada * 1.25}
 
@@ -185,7 +193,7 @@ async def preguntar(
 
     La traza queda en `pasos` (una entrada por llamada a herramienta: turno, argumentos, segundos, error
     y tamaño del resultado) y `turnos_detalle` (tokens y segundos de cada turno del modelo). Con
-    `presupuesto_tokens`, cuando entrada + salida acumuladas lo alcanzan el ciclo corta antes del turno
+    `presupuesto_tokens`, cuando los tokens acumulados (`tokens_totales`) lo alcanzan el ciclo corta antes del turno
     siguiente (`motivo_fin = "presupuesto_agotado"`): un tope duro, no una estimación."""
     mensajes: list[dict] = [{"role": "user", "content": pregunta}]
     m = {
@@ -234,7 +242,7 @@ async def preguntar(
         mensajes.append({"role": "assistant", "content": r.content})
         if r.stop_reason not in ("pause_turn", "tool_use"):
             break
-        if presupuesto_tokens is not None and m["tokens_entrada"] + m["tokens_salida"] >= presupuesto_tokens:
+        if presupuesto_tokens is not None and tokens_totales(m) >= presupuesto_tokens:
             motivo_fin, m["presupuesto_agotado"] = "presupuesto_agotado", True
             break
         if r.stop_reason == "pause_turn":
@@ -401,7 +409,7 @@ def main(argv: Optional[list[str]] = None) -> int:
         "--presupuesto-tokens",
         type=int,
         default=None,
-        help="tope de tokens (entrada + salida) por intento; al alcanzarlo el intento corta y cuenta como fallo",
+        help="tope de tokens (entrada, salida y caché) por intento; al alcanzarlo el intento corta y cuenta como fallo",
     )
     ap.add_argument(
         "--precio",

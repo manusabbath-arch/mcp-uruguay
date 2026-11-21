@@ -85,7 +85,10 @@ def parsear_eventos(
                         segundo,
                         {"turno": m["turnos"], "herramienta": nombre, "argumentos": bloque.get("input", {})},
                     )
-            usado = sum(d["tokens_entrada"] + d["tokens_salida"] for d in m["turnos_detalle"])
+            usado = sum(
+                d["tokens_entrada"] + d["tokens_salida"] + d["tokens_cache_leidos"] + d["tokens_cache_escritos"]
+                for d in m["turnos_detalle"]
+            )
             if presupuesto_tokens is not None and usado >= presupuesto_tokens:
                 m["presupuesto_agotado"], m["motivo_fin"] = True, "presupuesto_agotado"
                 break

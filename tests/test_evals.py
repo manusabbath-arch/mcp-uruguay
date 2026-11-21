@@ -492,3 +492,21 @@ def test_cli_varios_eventos_del_mismo_mensaje_son_un_solo_turno():
     assert m["turnos"] == 1 and len(m["turnos_detalle"]) == 1
     assert m["turnos_detalle"][0]["tokens_salida"] == 30
     assert [p["turno"] for p in m["pasos"]] == [1]
+
+
+async def test_el_presupuesto_cuenta_la_cache():
+    # Con caché de prompts la entrada nueva es casi cero: un tope sin la caché no cortaría nunca.
+    llamada = NS(type="tool_use", id="t1", name="semana", input={"fecha": "2026-01-01"})
+    r = _respuesta([llamada], "tool_use", entrada=2, salida=30)
+    r.usage.cache_read_input_tokens = 11000
+    cliente = ClienteFalso([r])
+    _, m = await evaluar.preguntar(cliente, "?", presupuesto_tokens=10000)
+    assert (m["motivo_fin"], m["presupuesto_agotado"]) == ("presupuesto_agotado", True)
+
+
+def test_cli_el_presupuesto_cuenta_la_cache():
+    msg = {"id": "m1", "usage": {"input_tokens": 2, "output_tokens": 30, "cache_creation_input_tokens": 11000}}
+    _, m = cli.parsear_eventos(
+        [(1.0, {"type": "assistant", "message": {**msg, "content": []}})], presupuesto_tokens=10000
+    )
+    assert m["presupuesto_agotado"] is True

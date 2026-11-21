@@ -83,7 +83,8 @@ Cada intento guardado trae su traza:
 - `costo_usd`: calculado con la tabla `PRECIOS` de `evaluar.py`. Un modelo sin precio da `null` y la
   tabla dice `s/d`: sin dato no es gratis. Para otro modelo, `--precio ENTRADA,SALIDA` (US$ por millón).
 
-`--presupuesto-tokens N` pone un tope duro por intento: cuando entrada + salida llegan a `N`, el
+`--presupuesto-tokens N` pone un tope duro por intento: cuando los tokens procesados (entrada, salida y
+caché leída y escrita: con caché la entrada nueva es casi cero) llegan a `N`, el
 intento corta antes del turno siguiente, queda con `motivo_fin: "presupuesto_agotado"` y cuenta como
 fallo. La tabla muestra cuántos intentos se cortaron. El **costo por acierto** divide el gasto total
 del grupo, fallidos incluidos, por los aciertos: es lo que cuesta de verdad una respuesta correcta.
