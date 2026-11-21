@@ -26,6 +26,11 @@ Un null es "sin dato", nunca cero."""
 
 servidor = MCPServer(name="mcp-uruguay", version=__version__, instructions=INSTRUCCIONES)
 
+#: True cuando el proceso corre via `--remoto` (M8, streamable-http). `diagnostico()` lo usa para
+#: no devolver la ruta de disco del servidor a un llamador de internet. `main()` es quien lo pone en
+#: True antes de arrancar; en stdio queda en False siempre.
+EN_REMOTO = False
+
 EN_RED = ToolAnnotations(read_only_hint=True, destructive_hint=False, idempotent_hint=True, open_world_hint=True)
 LOCAL = ToolAnnotations(read_only_hint=True, destructive_hint=False, idempotent_hint=True, open_world_hint=False)
 
@@ -470,7 +475,7 @@ def diagnostico() -> h.Diagnostico:
     """Que archivo de cada fuente esta cacheado en esta maquina, de cuando es la copia que se esta
     usando, y cuanto pesa. Sirve para saber si un numero viejo viene de una copia vieja.
     No sale a la red."""
-    return h.diagnostico()
+    return h.diagnostico(remoto=EN_REMOTO)
 
 
 for _nombre, (_funcion, _titulo) in guias.PROMPTS.items():
@@ -487,7 +492,9 @@ for _uri, (_funcion, _titulo, _descripcion) in guias.RECURSOS.items():
 
 
 def main() -> None:
-    """Sin argumentos corre el servidor por stdio. `--precalentar` baja la caché y termina."""
+    """Sin argumentos corre el servidor por stdio. `--precalentar` baja la caché y termina.
+    `--remoto` corre streamable-http (M8): ver docs/2026-11-18-plan-http.md antes de usarlo en
+    producción."""
     import sys
 
     # Validar TLS con el almacén de certificados del sistema, no con el que trae Python. En Windows
@@ -503,6 +510,13 @@ def main() -> None:
         from mcp_uruguay.precalentar import precalentar
 
         raise SystemExit(precalentar())
+    if "--remoto" in sys.argv[1:]:
+        global EN_REMOTO
+        EN_REMOTO = True
+        from mcp_uruguay.remoto import ejecutar_remoto
+
+        ejecutar_remoto(servidor)
+        return
     servidor.run()
 
 

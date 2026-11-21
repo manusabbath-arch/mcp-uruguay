@@ -24,6 +24,7 @@ dependencies = [
 
 [project.optional-dependencies]
 test = ["pytest>=9.2.0"]
+remoto = ["uvicorn>=0.54", "starlette>=1.7"]
 
 [project.scripts]
 mcp-uruguay = "mcp_uruguay.servidor:main"

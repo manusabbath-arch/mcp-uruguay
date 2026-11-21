@@ -421,11 +421,15 @@ def paridad_combustibles(producto: str = "", desde: str = "", hasta: str = "") -
     }
 
 
-def diagnostico() -> Diagnostico:
+def diagnostico(remoto: bool = False) -> Diagnostico:
     """Que copia de cada fuente esta en disco, de cuando es, y si esta vencida.
 
     Es la primera pregunta cuando un numero no cierra: no todos los archivos se refrescan igual (un
     mes cerrado del BCU no cambia nunca, el IPC se vuelve a pedir cada dia). **No sale a la red.**
+
+    `remoto=True` (servidor en modo HTTP, M8) oculta `directorio`: en stdio/local el llamador es el
+    mismo usuario de la maquina y la ruta ayuda a depurar; en remoto expondria el username del
+    servidor a cualquier cliente de internet sin ninguna ganancia a cambio.
     """
     d = cache.directorio()
     archivos = []
@@ -440,11 +444,17 @@ def diagnostico() -> Diagnostico:
             }
         )
     return {
-        "directorio": str(d),
+        "directorio": "(oculto en modo remoto: ver nota)" if remoto else str(d),
         "archivos": archivos,
         "nota": (
             "`bajado` es cuando se obtuvo la copia que se esta usando, en hora local. "
             "Si una fuente no aparece, todavia no se pidio en esta maquina: no es un error. "
             "Los archivos `.nuevo` son descargas en curso y se omiten."
+            + (
+                " `directorio` se oculta en modo remoto (M8): expondria el nombre de usuario del "
+                "servidor sin ninguna ganancia para quien pregunta."
+                if remoto
+                else ""
+            )
         ),
     }

@@ -1,10 +1,10 @@
 version = 1
-revision = 5
+revision = 3
 requires-python = ">=3.10"
 resolution-markers = [
     "python_full_version >= '3.14'",
     "python_full_version >= '3.12' and python_full_version < '3.14' and sys_platform == 'emscripten'",
-    "python_full_version == '3.11.*' or (python_full_version >= '3.12' and python_full_version < '3.14' and sys_platform != 'emscripten')",
+    "(python_full_version >= '3.11' and python_full_version < '3.14' and sys_platform != 'emscripten') or (python_full_version == '3.11.*' and sys_platform == 'emscripten')",
     "python_full_version < '3.11'",
 ]
 
@@ -394,6 +394,10 @@ dependencies = [
 ]
 
 [package.optional-dependencies]
+remoto = [
+    { name = "starlette" },
+    { name = "uvicorn" },
+]
 test = [
     { name = "pytest" },
 ]
@@ -402,11 +406,13 @@ test = [
 requires-dist = [
     { name = "mcp", specifier = ">=2.3,<3" },
     { name = "pytest", marker = "extra == 'test'", specifier = ">=9.2.0" },
+    { name = "starlette", marker = "extra == 'remoto'", specifier = ">=1.7" },
     { name = "truststore", specifier = ">=0.10" },
     { name = "typing-extensions", specifier = ">=4.7" },
+    { name = "uvicorn", marker = "extra == 'remoto'", specifier = ">=0.54" },
     { name = "uydatos", specifier = ">=0.17,<0.18" },
 ]
-provides-extras = ["test"]
+provides-extras = ["test", "remoto"]
 
 [[package]]
 name = "opentelemetry-api"
@@ -834,7 +840,7 @@ source = { registry = "https://pypi.org/simple" }
 resolution-markers = [
     "python_full_version >= '3.14'",
     "python_full_version >= '3.12' and python_full_version < '3.14' and sys_platform == 'emscripten'",
-    "python_full_version == '3.11.*' or (python_full_version >= '3.12' and python_full_version < '3.14' and sys_platform != 'emscripten')",
+    "(python_full_version >= '3.11' and python_full_version < '3.14' and sys_platform != 'emscripten') or (python_full_version == '3.11.*' and sys_platform == 'emscripten')",
 ]
 sdist = { url = "https://files.pythonhosted.org/packages/42/68/3bd46b8a5e01d3c2ebdf9c5e9497912e3fe0cde02bac21a7130ca866e403/rpds_py-2026.9.1.tar.gz", hash = "sha256:4793ef7f78268b124b73fa933440f01d258bbae01de9fa53e9080c9ab0425a12", size = 63948, upload-time = "2026-10-04T16:32:36.469Z" }
 wheels = [
@@ -1111,9 +1117,9 @@ wheels = [
 
 [[package]]
 name = "uydatos"
-version = "0.17.0"
+version = "0.17.2"
 source = { registry = "https://pypi.org/simple" }
-sdist = { url = "https://files.pythonhosted.org/packages/39/5d/99c72c7af897a07149a43a3973289e58f14436877067da90d3c28ea53b55/uydatos-0.17.0.tar.gz", hash = "sha256:a037ccaa47721ecf41f4d6ad3eb392485d90f9eb298626dee37b522db4daebf0", size = 246396, upload-time = "2026-11-04T17:49:44.48Z" }
+sdist = { url = "https://files.pythonhosted.org/packages/1e/99/c6461616c4c6d0b9d8b5f0cef0d8d50f191595ad8f0f58636fbacd9acab7/uydatos-0.17.2.tar.gz", hash = "sha256:4be5398195dee51013d3c5508740f1894ed1db0e3bcb8740d8110469e9c5abc8", size = 181309, upload-time = "2026-11-21T15:20:37.011Z" }
 wheels = [
-    { url = "https://files.pythonhosted.org/packages/2c/c3/7ce4b23356b0e1d1721ab0fc06944cbfb8eb282b0908a5cd9a72c4193bb7/uydatos-0.17.0-py3-none-any.whl", hash = "sha256:420a2318e78c53f661d85b64bc8bd897fc5a1fbbe24655dafdca96d91f977d43", size = 141235, upload-time = "2026-11-04T17:49:42.988Z" },
+    { url = "https://files.pythonhosted.org/packages/c2/f7/b5d207d7931312b59f66849492f078d70900945d9b89c50917e6e21dd248/uydatos-0.17.2-py3-none-any.whl", hash = "sha256:69fcbc90f652133bc1fcca696ede9f279443e9371ea45745c92fff41aaaad65b", size = 141412, upload-time = "2026-11-21T15:20:36.014Z" },
 ]
