@@ -38,6 +38,39 @@ PREGUNTAS = AQUI / "preguntas.json"
 MODELO = "claude-opus-5-5"
 MAX_TURNOS = 15
 
+#: US$ por millón de tokens. Solo modelos con precio publicado: uno que no está devuelve costo `None`
+#: (sin dato), nunca 0. La caché se cobra como en la API de Claude: leer a 0,1x la entrada y escribir
+#: (5 minutos) a 1,25x. `--precio ENTRADA,SALIDA` agrega uno para una corrida.
+PRECIOS: dict[str, dict[str, float]] = {
+    "claude-opus-5-5": {"entrada": 4.0, "salida": 20.0, "cache_leido": 0.4, "cache_escrito": 5.0},
+}
+
+
+def tokens_totales(m: dict) -> int:
+    """Todo lo que el modelo procesó: entrada, salida y caché (leída y escrita).
+
+    Es lo que cuenta el presupuesto: con caché de prompts la entrada nueva es casi cero y un tope que
+    solo mirara entrada + salida no cortaría nunca."""
+    return sum(m.get(k, 0) for k in ("tokens_entrada", "tokens_salida", "tokens_cache_leidos", "tokens_cache_escritos"))
+
+
+def precio_de(entrada: float, salida: float) -> dict[str, float]:
+    return {"entrada": entrada, "salida": salida, "cache_leido": entrada * 0.1, "cache_escrito": entrada * 1.25}
+
+
+def costo_usd(m: dict, modelo: str) -> Optional[float]:
+    """Lo que costó un intento según sus tokens; `None` si el modelo no tiene precio en `PRECIOS`."""
+    p = PRECIOS.get(modelo)
+    if p is None:
+        return None
+    return (
+        m.get("tokens_entrada", 0) * p["entrada"]
+        + m.get("tokens_salida", 0) * p["salida"]
+        + m.get("tokens_cache_leidos", 0) * p["cache_leido"]
+        + m.get("tokens_cache_escritos", 0) * p["cache_escrito"]
+    ) / 1_000_000
+
+
 SISTEMA = """\
 Respondés preguntas sobre datos públicos de Uruguay y la región. Usá las herramientas cuando las \
 tengas y citá de dónde sale cada número. Si no podés responder con un dato verificable, decilo: un \
@@ -142,12 +175,26 @@ async def herramientas_de(sesion) -> list[dict]:
     return [{"name": t.name, "description": t.description or "", "input_schema": t.input_schema} for t in lista]
 
 
-async def preguntar(cliente, pregunta: str, *, sesion=None, herramientas=None, modelo=MODELO, esfuerzo="medium"):
+async def preguntar(
+    cliente,
+    pregunta: str,
+    *,
+    sesion=None,
+    herramientas=None,
+    modelo=MODELO,
+    esfuerzo="medium",
+    presupuesto_tokens: Optional[int] = None,
+):
     """Corre el ciclo del agente sobre una pregunta y devuelve el texto final y las métricas.
 
     Con `sesion` (un cliente MCP conectado al servidor), las herramientas son las del servidor; sin
     sesión, el agente responde solo con lo que sabe. Ciclo propio y no el tool runner del SDK porque
-    cada llamada se cuenta y se registra, y porque así se prueba con un cliente falso."""
+    cada llamada se cuenta y se registra, y porque así se prueba con un cliente falso.
+
+    La traza queda en `pasos` (una entrada por llamada a herramienta: turno, argumentos, segundos, error
+    y tamaño del resultado) y `turnos_detalle` (tokens y segundos de cada turno del modelo). Con
+    `presupuesto_tokens`, cuando los tokens acumulados (`tokens_totales`) lo alcanzan el ciclo corta antes del turno
+    siguiente (`motivo_fin = "presupuesto_agotado"`): un tope duro, no una estimación."""
     mensajes: list[dict] = [{"role": "user", "content": pregunta}]
     m = {
         "llamadas": [],
@@ -155,7 +202,11 @@ async def preguntar(cliente, pregunta: str, *, sesion=None, herramientas=None, m
         "tokens_entrada": 0,
         "tokens_salida": 0,
         "tokens_cache_leidos": 0,
+        "tokens_cache_escritos": 0,
         "turnos": 0,
+        "pasos": [],
+        "turnos_detalle": [],
+        "presupuesto_agotado": False,
     }
     parametros: dict[str, Any] = {
         "model": modelo,
@@ -172,23 +223,36 @@ async def preguntar(cliente, pregunta: str, *, sesion=None, herramientas=None, m
     texto, motivo_fin = "", ""
     while m["turnos"] < MAX_TURNOS:
         m["turnos"] += 1
+        t0 = time.monotonic()
         r = await cliente.messages.create(messages=mensajes, **parametros)
-        m["tokens_entrada"] += r.usage.input_tokens
-        m["tokens_salida"] += r.usage.output_tokens
-        m["tokens_cache_leidos"] += getattr(r.usage, "cache_read_input_tokens", 0) or 0
+        uso = {
+            "turno": m["turnos"],
+            "tokens_entrada": r.usage.input_tokens,
+            "tokens_salida": r.usage.output_tokens,
+            "tokens_cache_leidos": getattr(r.usage, "cache_read_input_tokens", 0) or 0,
+            "tokens_cache_escritos": getattr(r.usage, "cache_creation_input_tokens", 0) or 0,
+            "segundos": round(time.monotonic() - t0, 2),
+        }
+        m["turnos_detalle"].append(uso)
+        for k in ("tokens_entrada", "tokens_salida", "tokens_cache_leidos", "tokens_cache_escritos"):
+            m[k] += uso[k]
         motivo_fin = r.stop_reason
         texto = "\n".join(b.text for b in r.content if b.type == "text")
         # El contenido completo, con los bloques de razonamiento, vuelve tal cual en el turno siguiente.
         mensajes.append({"role": "assistant", "content": r.content})
+        if r.stop_reason not in ("pause_turn", "tool_use"):
+            break
+        if presupuesto_tokens is not None and tokens_totales(m) >= presupuesto_tokens:
+            motivo_fin, m["presupuesto_agotado"] = "presupuesto_agotado", True
+            break
         if r.stop_reason == "pause_turn":
             continue
-        if r.stop_reason != "tool_use":
-            break
         resultados = []
         for b in r.content:
             if b.type != "tool_use":
                 continue
             m["llamadas"].append(b.name)
+            t1 = time.monotonic()
             try:
                 res = await sesion.call_tool(b.name, b.input)
                 es_error = bool(getattr(res, "is_error", False))
@@ -196,6 +260,16 @@ async def preguntar(cliente, pregunta: str, *, sesion=None, herramientas=None, m
             except Exception as e:  # la herramienta falló: el agente lo ve como error, la corrida sigue
                 es_error, contenido = True, f"{type(e).__name__}: {e}"
             m["errores_herramienta"] += es_error
+            m["pasos"].append(
+                {
+                    "turno": m["turnos"],
+                    "herramienta": b.name,
+                    "argumentos": b.input,
+                    "segundos": round(time.monotonic() - t1, 2),
+                    "error": es_error,
+                    "bytes_resultado": len(contenido.encode("utf-8")),
+                }
+            )
             resultados.append({"type": "tool_result", "tool_use_id": b.id, "content": contenido, "is_error": es_error})
         # Todos los resultados en un solo mensaje: separarlos desalienta las llamadas en paralelo.
         mensajes.append({"role": "user", "content": resultados})
@@ -206,11 +280,29 @@ async def preguntar(cliente, pregunta: str, *, sesion=None, herramientas=None, m
     return texto, m
 
 
-async def correr(cliente, preguntas: list[dict], modos: list[str], *, modelo=MODELO, esfuerzo="medium", repeticiones=1):
-    """Cada pregunta, en cada modo, `repeticiones` veces. Devuelve una fila por intento."""
+async def correr(
+    cliente,
+    preguntas: list[dict],
+    modos: list[str],
+    *,
+    modelo=MODELO,
+    esfuerzo="medium",
+    repeticiones=1,
+    presupuesto_tokens: Optional[int] = None,
+    motor: str = "api",
+    preguntar_cli=None,
+):
+    """Cada pregunta, en cada modo, `repeticiones` veces. Devuelve una fila por intento.
+
+    `motor="claude-cli"` corre cada pregunta con Claude Code headless (`motor_claude_cli.py`) en vez de
+    la API; el costo es el que informa Claude Code. `preguntar_cli` reemplaza ese motor en los tests."""
     from mcp import Client
 
     from mcp_uruguay.servidor import servidor
+
+    if motor == "claude-cli" and preguntar_cli is None:
+        from motor_claude_cli import preguntar_claude_cli as preguntar_cli
+    import anyio
 
     filas = []
     async with Client(servidor) as sesion:
@@ -219,19 +311,35 @@ async def correr(cliente, preguntas: list[dict], modos: list[str], *, modelo=MOD
             for modo in modos:
                 for n in range(repeticiones):
                     con = modo == "con"
-                    texto, m = await preguntar(
-                        cliente,
-                        p["pregunta"],
-                        sesion=sesion if con else None,
-                        herramientas=herramientas if con else None,
-                        modelo=modelo,
-                        esfuerzo=esfuerzo,
-                    )
-                    v = (
-                        verificar(p, texto)
-                        if m["motivo_fin"] != "refusal"
-                        else {"correcta": False, "motivo": "el modelo declinó (refusal)", "valor": None}
-                    )
+                    if preguntar_cli is not None:
+                        texto, m = await anyio.to_thread.run_sync(
+                            lambda: preguntar_cli(
+                                p["pregunta"],
+                                SISTEMA,
+                                con_servidor=con,
+                                modelo=modelo,
+                                esfuerzo=esfuerzo,
+                                presupuesto_tokens=presupuesto_tokens,
+                            )
+                        )
+                        costo = m.pop("costo_usd_cli", None)
+                    else:
+                        texto, m = await preguntar(
+                            cliente,
+                            p["pregunta"],
+                            sesion=sesion if con else None,
+                            herramientas=herramientas if con else None,
+                            modelo=modelo,
+                            esfuerzo=esfuerzo,
+                            presupuesto_tokens=presupuesto_tokens,
+                        )
+                        costo = costo_usd(m, modelo)
+                    if m["motivo_fin"] == "refusal":
+                        v = {"correcta": False, "motivo": "el modelo declinó (refusal)", "valor": None}
+                    elif m["motivo_fin"] in ("error", "sin_resultado"):
+                        v = {"correcta": False, "motivo": f"el agente no terminó ({m['motivo_fin']})", "valor": None}
+                    else:
+                        v = verificar(p, texto)
                     filas.append(
                         {
                             "id": p["id"],
@@ -239,8 +347,11 @@ async def correr(cliente, preguntas: list[dict], modos: list[str], *, modelo=MOD
                             "tipo": p["tipo"],
                             "modo": modo,
                             "intento": n + 1,
+                            "motor": motor,
                             **v,
                             **m,
+                            "costo_usd": costo,
+                            "uso_esperada": uso_esperada(p, m["llamadas"]) if con else None,
                             "respuesta": texto,
                         }
                     )
@@ -248,24 +359,73 @@ async def correr(cliente, preguntas: list[dict], modos: list[str], *, modelo=MOD
     return filas
 
 
+def uso_esperada(pregunta: dict, llamadas: list[str]) -> Optional[bool]:
+    """True si llamó al menos a una de las herramientas esperadas; None si la pregunta no espera ninguna.
+
+    Separa "el servidor no tiene el dato" de "el agente no eligió la herramienta"."""
+    esperadas = set(pregunta.get("herramientas_esperadas") or [])
+    if not esperadas:
+        return None
+    return bool(esperadas & set(llamadas))
+
+
+def corrio(fila: dict) -> bool:
+    """False si el intento no llegó a correr (el motor falló o no devolvió resultado): no es un fallo del
+    agente, así que no entra en el porcentaje de acierto."""
+    return fila.get("motivo_fin") != "sin_resultado" and not fila.get("error_motor")
+
+
+def inestables(filas: list[dict]) -> dict[str, list[str]]:
+    """Por modo, las preguntas con aciertos y fallos entre sus repeticiones."""
+    vistos: dict[tuple[str, str], set[bool]] = {}
+    for f in filas:
+        if corrio(f):
+            vistos.setdefault((f["modo"], f["id"]), set()).add(bool(f["correcta"]))
+    salida: dict[str, list[str]] = {}
+    for (modo, id_), resultados in sorted(vistos.items()):
+        if len(resultados) > 1:
+            salida.setdefault(modo, []).append(id_)
+    return salida
+
+
 def resumen(filas: list[dict]) -> str:
-    """La tabla para el README: acierto por modo y tipo, llamadas y tokens."""
+    """La tabla para el README: acierto por modo y tipo, llamadas, tokens, costo y cortes por presupuesto.
+
+    El costo por acierto es el gasto total del grupo (los intentos fallidos también se pagan) dividido
+    por los aciertos. Si algún intento no tiene precio, el grupo dice `s/d`: sumar solo los que tienen
+    daría un costo menor al real."""
     lineas = [
-        "| modo | tipo | aciertos | llamadas promedio | errores de herramienta | tokens promedio |",
-        "|---|---|---:|---:|---:|---:|",
+        "| modo | tipo | aciertos | usó la esperada | llamadas promedio | errores de herramienta "
+        "| tokens promedio | US$ promedio | US$ por acierto | cortadas por presupuesto | no corrió |",
+        "|---|---|---:|---:|---:|---:|---:|---:|---:|---:|---:|",
     ]
     for modo in sorted({f["modo"] for f in filas}):
         for tipo in ["numero", "texto", "comportamiento", "todas"]:
-            g = [f for f in filas if f["modo"] == modo and (tipo == "todas" or f["tipo"] == tipo)]
-            if not g:
+            todas = [f for f in filas if f["modo"] == modo and (tipo == "todas" or f["tipo"] == tipo)]
+            g = [f for f in todas if corrio(f)]
+            if not todas:
                 continue
+            n = max(len(g), 1)
             ok = sum(f["correcta"] for f in g)
-            llamadas = sum(len(f["llamadas"]) for f in g) / len(g)
+            usadas = [f.get("uso_esperada") for f in g if f.get("uso_esperada") is not None]
+            uso = f"{sum(usadas)}/{len(usadas)}"
+            llamadas = sum(len(f["llamadas"]) for f in g) / n
             errores = sum(f["errores_herramienta"] for f in g)
-            tokens = sum(f["tokens_entrada"] + f["tokens_salida"] for f in g) / len(g)
+            tokens = sum(f["tokens_entrada"] + f["tokens_salida"] for f in g) / n
+            costos = [f.get("costo_usd") for f in g]
+            if not g or any(c is None for c in costos):
+                promedio, por_acierto = "s/d", "s/d"
+            else:
+                total = sum(c for c in costos if c is not None)
+                promedio = f"{total / n:.4f}"
+                por_acierto = f"{total / ok:.4f}" if ok else "s/d"
+            cortadas = sum(bool(f.get("presupuesto_agotado")) for f in g)
             nombre = f"**{tipo}**" if tipo == "todas" else tipo
-            aciertos = f"{ok}/{len(g)} ({100 * ok / len(g):.0f}%)"
-            lineas.append(f"| {modo} | {nombre} | {aciertos} | {llamadas:.1f} | {errores} | {tokens:,.0f} |")
+            aciertos = f"{ok}/{len(g)} ({100 * ok / n:.0f}%)"
+            lineas.append(
+                f"| {modo} | {nombre} | {aciertos} | {uso} | {llamadas:.1f} | {errores} | {tokens:,.0f} "
+                f"| {promedio} | {por_acierto} | {cortadas} | {len(todas) - len(g)} |"
+            )
     return "\n".join(lineas) + "\n"
 
 
@@ -279,32 +439,65 @@ def main(argv: Optional[list[str]] = None) -> int:
     ap.add_argument("--modelo", default=MODELO)
     ap.add_argument("--esfuerzo", default="medium", choices=["low", "medium", "high", "xhigh", "max"])
     ap.add_argument("--repeticiones", type=int, default=1)
+    ap.add_argument(
+        "--presupuesto-tokens",
+        type=int,
+        default=None,
+        help="tope de tokens (entrada, salida y caché) por intento; al alcanzarlo el intento corta y cuenta como fallo",
+    )
+    ap.add_argument(
+        "--precio",
+        default=None,
+        help="ENTRADA,SALIDA en US$ por millón de tokens, para un modelo que no está en PRECIOS",
+    )
     ap.add_argument("--salida", type=Path, default=AQUI / "resultados")
+    ap.add_argument(
+        "--motor",
+        default="api",
+        choices=["api", "claude-cli"],
+        help="api: la API de Claude (ANTHROPIC_API_KEY); claude-cli: Claude Code headless con su sesión",
+    )
     args = ap.parse_args(argv)
 
-    import anthropic  # solo para correr de verdad: los tests usan un cliente falso
+    if args.precio:
+        entrada, salida = (float(x) for x in args.precio.split(","))
+        PRECIOS[args.modelo] = precio_de(entrada, salida)
 
     preguntas = cargar(args.conjunto, args.id)
     if not preguntas:
         print("ninguna pregunta con esos filtros", file=sys.stderr)
         return 2
     modos = [m.strip() for m in args.modo.split(",") if m.strip()]
+    if args.motor == "api":
+        import anthropic  # solo para correr de verdad: los tests usan un cliente falso
+
+        cliente = anthropic.AsyncAnthropic()
+    else:
+        cliente = None
     filas = anyio.run(
         lambda: correr(
-            anthropic.AsyncAnthropic(),
+            cliente,
             preguntas,
             modos,
             modelo=args.modelo,
             esfuerzo=args.esfuerzo,
             repeticiones=args.repeticiones,
+            presupuesto_tokens=args.presupuesto_tokens,
+            motor=args.motor,
         )
     )
     sello = datetime.now(timezone.utc).strftime("%Y%m%dT%H%M%SZ")
     args.salida.mkdir(parents=True, exist_ok=True)
-    destino = args.salida / f"{sello}-{args.modelo}-{args.conjunto}.json"
+    destino = args.salida / f"{sello}-{args.motor}-{args.modelo}-{args.conjunto}.json"
     destino.write_text(
         json.dumps(
-            {"modelo": args.modelo, "esfuerzo": args.esfuerzo, "conjunto": args.conjunto, "filas": filas},
+            {
+                "motor": args.motor,
+                "modelo": args.modelo,
+                "esfuerzo": args.esfuerzo,
+                "conjunto": args.conjunto,
+                "filas": filas,
+            },
             ensure_ascii=False,
             indent=2,
             default=str,
@@ -312,6 +505,9 @@ def main(argv: Optional[list[str]] = None) -> int:
         encoding="utf-8",
     )
     print(resumen(filas))
+    if args.repeticiones > 1:
+        for modo, ids in inestables(filas).items():
+            print(f"inestables ({modo}): {', '.join(ids)}")
     print(f"detalle: {destino}", file=sys.stderr)
     return 0
 

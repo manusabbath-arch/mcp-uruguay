@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import json
 import sys
 from pathlib import Path
 from types import SimpleNamespace as NS
@@ -180,6 +181,92 @@ async def test_la_corrida_marca_el_refusal_como_fallo():
     assert "| sin | **todas** | 0/1 (0%)" in evaluar.resumen([fila])
 
 
+# --- Trazas, presupuesto y costo --------------------------------------------------------------------
+
+
+async def test_cada_paso_queda_en_la_traza():
+    from mcp import Client
+
+    from mcp_uruguay.servidor import servidor
+
+    ok = NS(type="tool_use", id="t1", name="validar_documento", input={"numero": "1.234.567-2", "tipo": "ci"})
+    mal = NS(type="tool_use", id="t2", name="semana", input={"fecha": "no-es-fecha"})
+    cliente = ClienteFalso(
+        [
+            _respuesta([ok, mal], "tool_use", entrada=300, salida=50),
+            _respuesta([NS(type="text", text="RESPUESTA: valida")], "end_turn", entrada=400, salida=10),
+        ]
+    )
+    async with Client(servidor) as sesion:
+        _, m = await evaluar.preguntar(cliente, "?", sesion=sesion, herramientas=await evaluar.herramientas_de(sesion))
+    pasos = m["pasos"]
+    assert [(p["turno"], p["herramienta"], p["error"]) for p in pasos] == [
+        (1, "validar_documento", False),
+        (1, "semana", True),
+    ]
+    assert pasos[0]["argumentos"] == {"numero": "1.234.567-2", "tipo": "ci"}
+    assert all(p["segundos"] >= 0 and p["bytes_resultado"] > 0 for p in pasos)
+    assert [(t["turno"], t["tokens_entrada"], t["tokens_salida"]) for t in m["turnos_detalle"]] == [
+        (1, 300, 50),
+        (2, 400, 10),
+    ]
+
+
+async def test_el_presupuesto_corta_antes_del_turno_siguiente():
+    llamada = NS(type="tool_use", id="t1", name="semana", input={"fecha": "2026-01-01"})
+    cliente = ClienteFalso([_respuesta([llamada], "tool_use", entrada=900, salida=200)])
+    texto, m = await evaluar.preguntar(cliente, "?", presupuesto_tokens=1000)
+    assert (m["motivo_fin"], m["presupuesto_agotado"], m["turnos"]) == ("presupuesto_agotado", True, 1)
+    assert len(cliente.pedidos) == 1 and m["pasos"] == []
+
+
+async def test_dentro_del_presupuesto_no_corta():
+    cliente = ClienteFalso([_respuesta([NS(type="text", text="RESPUESTA: 1")], "end_turn", entrada=10, salida=5)])
+    _, m = await evaluar.preguntar(cliente, "?", presupuesto_tokens=1000)
+    assert (m["motivo_fin"], m["presupuesto_agotado"]) == ("end_turn", False)
+
+
+def test_costo_con_precio_conocido_y_sin_precio():
+    m = {
+        "tokens_entrada": 1_000_000,
+        "tokens_salida": 100_000,
+        "tokens_cache_leidos": 2_000_000,
+        "tokens_cache_escritos": 0,
+    }
+    precio = evaluar.PRECIOS["claude-opus-5-5"]
+    esperado = precio["entrada"] + 0.1 * precio["salida"] + 2 * precio["cache_leido"]
+    assert evaluar.costo_usd(m, "claude-opus-5-5") == pytest.approx(esperado)
+    # Sin precio publicado no hay costo: nunca 0, que se leería como gratis.
+    assert evaluar.costo_usd(m, "modelo-inventado") is None
+
+
+def _fila(modo, correcta, costo, agotado=False):
+    return {
+        "modo": modo,
+        "tipo": "numero",
+        "correcta": correcta,
+        "llamadas": [],
+        "errores_herramienta": 0,
+        "tokens_entrada": 10,
+        "tokens_salida": 5,
+        "costo_usd": costo,
+        "presupuesto_agotado": agotado,
+    }
+
+
+def test_el_resumen_trae_costo_por_acierto():
+    filas = [_fila("con", True, 0.2), _fila("con", False, 0.1, agotado=True), _fila("con", True, 0.3)]
+    tabla = evaluar.resumen(filas)
+    # US$ 0.60 en total, 2 aciertos -> US$ 0.30 por acierto; 1 de 3 cortadas por presupuesto
+    assert "| con | **todas** | 2/3 (67%)" in tabla
+    assert "| 0.2000 | 0.3000 | 1 |" in tabla
+
+
+def test_el_resumen_sin_costo_dice_sin_dato():
+    tabla = evaluar.resumen([_fila("sin", True, None)])
+    assert "| s/d | s/d | 0 |" in tabla
+
+
 # --- La confirmación contra la fuente ----------------------------------------------------------------
 
 import confirmar  # noqa: E402
@@ -251,3 +338,213 @@ def test_las_respuestas_de_calculo_se_recalculan():
     pesos = [2, 9, 8, 7, 6, 3, 4]
     suma = sum(int(c) * w for c, w in zip("1234567", pesos))
     assert (10 - suma % 10) % 10 == 2  # 1.234.567-2 es válida; -3 no
+
+
+# --- Motor claude-cli (Claude Code headless), con eventos sintéticos ---------------------------------
+
+import motor_claude_cli as cli  # noqa: E402
+
+_EVENTOS = [
+    (0.1, {"type": "system", "subtype": "init"}),
+    (
+        1.0,
+        {
+            "type": "assistant",
+            "message": {
+                "usage": {"input_tokens": 500, "output_tokens": 40},
+                "content": [
+                    {"type": "tool_use", "id": "a", "name": "mcp__uruguay__cotizacion", "input": {"moneda": "USD"}}
+                ],
+            },
+        },
+    ),
+    (
+        2.5,
+        {
+            "type": "user",
+            "message": {"content": [{"type": "tool_result", "tool_use_id": "a", "content": [{"text": "40.6"}]}]},
+        },
+    ),
+    (
+        3.0,
+        {
+            "type": "assistant",
+            "message": {
+                "usage": {"input_tokens": 600, "output_tokens": 20},
+                "content": [{"type": "text", "text": "x"}],
+            },
+        },
+    ),
+    (
+        3.1,
+        {
+            "type": "result",
+            "subtype": "success",
+            "is_error": False,
+            "result": "Vale 40.6\nRESPUESTA: 40.6",
+            "total_cost_usd": 0.0123,
+            "usage": {"input_tokens": 1100, "output_tokens": 60, "cache_read_input_tokens": 7000},
+        },
+    ),
+]
+
+
+def test_cli_la_traza_sale_del_stream():
+    texto, m = cli.parsear_eventos(_EVENTOS)
+    assert evaluar.linea_respuesta(texto) == "40.6"
+    assert m["llamadas"] == ["cotizacion"]
+    (paso,) = m["pasos"]
+    assert (paso["turno"], paso["herramienta"], paso["argumentos"], paso["error"]) == (
+        1,
+        "cotizacion",
+        {"moneda": "USD"},
+        False,
+    )
+    assert paso["segundos"] == 1.5 and paso["bytes_resultado"] == 4
+    assert (m["turnos"], m["motivo_fin"], m["costo_usd_cli"]) == (2, "success", 0.0123)
+    assert (m["tokens_entrada"], m["tokens_salida"], m["tokens_cache_leidos"]) == (1100, 60, 7000)
+
+
+def test_cli_presupuesto_corta_y_suma_los_turnos():
+    _, m = cli.parsear_eventos(_EVENTOS, presupuesto_tokens=500)
+    assert (m["motivo_fin"], m["presupuesto_agotado"], m["turnos"]) == ("presupuesto_agotado", True, 1)
+    assert (m["tokens_entrada"], m["tokens_salida"], m["costo_usd_cli"]) == (500, 40, None)
+
+
+def test_cli_un_error_de_autenticacion_no_cuenta_como_respuesta():
+    ev = [(0.2, {"type": "result", "subtype": "success", "is_error": True, "result": "Failed to authenticate"})]
+    _, m = cli.parsear_eventos(ev)
+    assert m["motivo_fin"] == "error"
+
+
+def test_cli_el_comando_aisla_al_agente():
+    sin = cli.comando("SIS", con_servidor=False, modelo=None, esfuerzo=None, mcp_config=None)
+    for bandera in ("--no-session-persistence", "--strict-mcp-config"):
+        assert bandera in sin
+    assert sin[sin.index("--tools") + 1] == "" and sin[sin.index("--setting-sources") + 1] == ""
+    assert "--allowedTools" not in sin and "--mcp-config" not in sin
+    con = cli.comando("SIS", con_servidor=True, modelo="m", esfuerzo="low", mcp_config=Path("/x/mcp.json"))
+    assert con[con.index("--allowedTools") + 1] == "mcp__uruguay"
+    assert con[con.index("--mcp-config") + 1] == "/x/mcp.json"
+    assert con[con.index("--model") + 1] == "m" and con[con.index("--effort") + 1] == "low"
+
+
+async def test_correr_con_motor_cli_usa_el_costo_del_cli():
+    p = next(q for q in evaluar.cargar() if q["id"] == "ipca-brasil-2024")
+    vistos = []
+
+    def falso(pregunta, sistema, **kw):
+        vistos.append(kw["con_servidor"])
+        texto, m = cli.parsear_eventos(_EVENTOS)
+        return texto, m
+
+    filas = await evaluar.correr(None, [p], ["con", "sin"], motor="claude-cli", preguntar_cli=falso)
+    assert vistos == [True, False]
+    assert all(f["motor"] == "claude-cli" and f["costo_usd"] == 0.0123 for f in filas)
+    assert "costo_usd_cli" not in filas[0]
+
+
+async def test_correr_con_motor_cli_que_falla_cuenta_como_fallo():
+    p = next(q for q in evaluar.cargar() if q["id"] == "ipca-brasil-2024")
+
+    def falso(pregunta, sistema, **kw):
+        return cli.parsear_eventos([(0.1, {"type": "result", "is_error": True, "result": "RESPUESTA: 4.83"})])
+
+    (fila,) = await evaluar.correr(None, [p], ["sin"], motor="claude-cli", preguntar_cli=falso)
+    assert (fila["correcta"], fila["motivo"]) == (False, "el agente no terminó (error)")
+
+
+def test_cli_la_pregunta_va_despues_de_doble_guion():
+    # `--allowedTools` acepta varios valores: sin `--`, la pregunta se lee como una herramienta más.
+    capturado = {}
+
+    class ProcesoFalso:
+        stdout = iter([json.dumps({"type": "result", "result": "RESPUESTA: 1", "total_cost_usd": 0.0}) + "\n"])
+        stderr = None
+
+        def poll(self):
+            return 0
+
+        def wait(self):
+            return 0
+
+    def lanzar(args, **kw):
+        capturado["args"] = args
+        return ProcesoFalso()
+
+    texto, _ = cli.preguntar_claude_cli("¿cuánto?", "SIS", con_servidor=True, lanzar=lanzar)
+    assert capturado["args"][-2:] == ["--", "¿cuánto?"]
+    assert evaluar.linea_respuesta(texto) == "1"
+
+
+def test_cli_varios_eventos_del_mismo_mensaje_son_un_solo_turno():
+    # Claude Code emite un evento `assistant` por bloque de contenido, con el mismo id de mensaje.
+    def ev(seg, bloque, salida):
+        msg = {"id": "msg_1", "usage": {"input_tokens": 2, "output_tokens": salida}, "content": [bloque]}
+        return (seg, {"type": "assistant", "message": msg})
+
+    eventos = [
+        ev(1.0, {"type": "text", "text": "Busco."}, 8),
+        ev(1.2, {"type": "tool_use", "id": "a", "name": "mcp__uruguay__semana", "input": {}}, 30),
+        (1.5, {"type": "user", "message": {"content": [{"type": "tool_result", "tool_use_id": "a", "content": "ok"}]}}),
+    ]
+    _, m = cli.parsear_eventos(eventos)
+    assert m["turnos"] == 1 and len(m["turnos_detalle"]) == 1
+    assert m["turnos_detalle"][0]["tokens_salida"] == 30
+    assert [p["turno"] for p in m["pasos"]] == [1]
+
+
+async def test_el_presupuesto_cuenta_la_cache():
+    # Con caché de prompts la entrada nueva es casi cero: un tope sin la caché no cortaría nunca.
+    llamada = NS(type="tool_use", id="t1", name="semana", input={"fecha": "2026-01-01"})
+    r = _respuesta([llamada], "tool_use", entrada=2, salida=30)
+    r.usage.cache_read_input_tokens = 11000
+    cliente = ClienteFalso([r])
+    _, m = await evaluar.preguntar(cliente, "?", presupuesto_tokens=10000)
+    assert (m["motivo_fin"], m["presupuesto_agotado"]) == ("presupuesto_agotado", True)
+
+
+def test_cli_el_presupuesto_cuenta_la_cache():
+    msg = {"id": "m1", "usage": {"input_tokens": 2, "output_tokens": 30, "cache_creation_input_tokens": 11000}}
+    _, m = cli.parsear_eventos(
+        [(1.0, {"type": "assistant", "message": {**msg, "content": []}})], presupuesto_tokens=10000
+    )
+    assert m["presupuesto_agotado"] is True
+
+
+def test_la_fila_dice_si_uso_la_herramienta_esperada():
+    p = {"herramientas_esperadas": ["localidad"]}
+    assert evaluar.uso_esperada(p, ["buscar_indicador_social", "localidad"]) is True
+    assert evaluar.uso_esperada(p, ["buscar_indicador_social"]) is False
+    assert evaluar.uso_esperada({"herramientas_esperadas": []}, []) is None
+
+
+def test_el_resumen_muestra_el_uso_de_la_esperada():
+    filas = [
+        {**_fila("con", True, 0.1), "uso_esperada": True},
+        {**_fila("con", False, 0.1), "uso_esperada": False},
+    ]
+    tabla = evaluar.resumen(filas)
+    assert "usó la esperada" in tabla and "| 1/2 |" in tabla
+
+
+def test_inestables_lista_las_preguntas_que_a_veces_aciertan():
+    filas = [
+        {"id": "a", "modo": "con", "correcta": True},
+        {"id": "a", "modo": "con", "correcta": False},
+        {"id": "b", "modo": "con", "correcta": True},
+        {"id": "b", "modo": "con", "correcta": True},
+    ]
+    assert evaluar.inestables(filas) == {"con": ["a"]}
+
+
+def test_un_intento_que_no_corrio_no_cuenta_como_fallo():
+    filas = [
+        {**_fila("con", False, None), "motivo_fin": "sin_resultado"},
+        _fila("con", True, 0.1),
+    ]
+    tabla = evaluar.resumen(filas)
+    assert "| 1/1 (100%) |" in tabla and "no corrió" in tabla
+    assert evaluar.corrio({"motivo_fin": "sin_resultado"}) is False
+    assert evaluar.corrio({"motivo_fin": "end_turn", "error_motor": "boom"}) is False
+    assert evaluar.corrio({"motivo_fin": "end_turn"}) is True

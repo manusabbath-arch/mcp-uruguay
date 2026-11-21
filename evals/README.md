@@ -51,6 +51,12 @@ mira** al ajustar: es el número que se publica.
 2. **Revisar las preguntas que caducan.** `trampa-caudal-concordia-hoy` depende de que la fuente siga
    atrasada.
 3. **Correr el conjunto reservado al menos tres veces** (`--repeticiones 3`). Una corrida sola tiene ruido.
+   Con más de una repetición, debajo de la tabla sale `inestables`: las preguntas que aciertan en unas
+   repeticiones y fallan en otras.
+
+La tabla separa dos cosas que el porcentaje mezcla: `usó la esperada` (si el agente llamó a alguna de
+las `herramientas_esperadas` de la pregunta: un fallo con `0/1` es de elección, no de dato) y
+`no corrió` (intentos en que el motor falló o no devolvió resultado; no entran en el porcentaje).
 
 ## Cómo correrla
 
@@ -68,9 +74,49 @@ uv run --with anthropic python evals/evaluar.py --modo con,sin --conjunto desarr
 uv run --with anthropic python evals/evaluar.py --modo con,sin --conjunto reservado --repeticiones 3
 ```
 
-Imprime una tabla (acierto por modo y tipo, llamadas, errores de herramienta y tokens) y guarda cada
-intento en `evals/resultados/<fecha>-<modelo>-<conjunto>.json`, con la respuesta completa. Esa carpeta
-no se versiona.
+Imprime una tabla (acierto por modo y tipo, llamadas, errores de herramienta, tokens, costo en US$ y
+costo por acierto) y guarda cada intento en `evals/resultados/<fecha>-<modelo>-<conjunto>.json`, con la
+respuesta completa. Esa carpeta no se versiona.
+
+### Trazas, presupuesto y costo
+
+Cada intento guardado trae su traza:
+
+- `pasos`: una entrada por llamada a herramienta, con el turno, los argumentos, los segundos, si dio
+  error y el tamaño del resultado en bytes.
+- `turnos_detalle`: los tokens de entrada, salida y caché (leídos y escritos) y los segundos de cada
+  turno del modelo.
+- `costo_usd`: calculado con la tabla `PRECIOS` de `evaluar.py`. Un modelo sin precio da `null` y la
+  tabla dice `s/d`: sin dato no es gratis. Para otro modelo, `--precio ENTRADA,SALIDA` (US$ por millón).
+
+`--presupuesto-tokens N` pone un tope duro por intento: cuando los tokens procesados (entrada, salida y
+caché leída y escrita: con caché la entrada nueva es casi cero) llegan a `N`, el
+intento corta antes del turno siguiente, queda con `motivo_fin: "presupuesto_agotado"` y cuenta como
+fallo. La tabla muestra cuántos intentos se cortaron. El **costo por acierto** divide el gasto total
+del grupo, fallidos incluidos, por los aciertos: es lo que cuesta de verdad una respuesta correcta.
+
+```sh
+# Una pregunta con tope de 60.000 tokens, para medir el costo real antes de correr todo
+uv run --with anthropic python evals/evaluar.py --id ipca-brasil-2024 --conjunto todos --presupuesto-tokens 60000
+```
+
+### Con Claude Code en vez de la API (`--motor claude-cli`)
+
+Si no hay clave de la API pero sí Claude Code instalado y con sesión iniciada (`claude`, y adentro
+`/login`), `--motor claude-cli` corre cada pregunta con `claude -p` (`evals/motor_claude_cli.py`):
+
+- un proceso nuevo por pregunta, sin sesión guardada, en una carpeta vacía;
+- sin las herramientas propias de Claude Code (`--tools ""`) ni la configuración del usuario
+  (`--setting-sources ""`), y con el mismo prompt de sistema que el motor de la API;
+- con servidor, la única herramienta es `mcp-uruguay` por stdio (`--strict-mcp-config`).
+
+La traza sale del stream de eventos (los segundos de cada paso son los que pasan entre la llamada y su
+resultado) y el costo es el que informa Claude Code: con suscripción es lo que costaría por la API, no
+lo que se paga. Si la sesión venció, el intento termina con `motivo_fin: "error"` y cuenta como fallo.
+
+```sh
+uv run --with-editable . python evals/evaluar.py --motor claude-cli --id ipca-brasil-2024 --conjunto todos
+```
 
 El modelo por defecto es `claude-opus-5-5` con esfuerzo `medium` (`--modelo` y `--esfuerzo` lo
 cambian). Un `refusal` cuenta como fallo y queda registrado. **No se usa el respaldo automático a otro
