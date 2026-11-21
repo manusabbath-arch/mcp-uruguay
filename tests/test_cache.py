@@ -255,3 +255,95 @@ class TestLaHoraEsLaDeUruguay:
         ruta.write_text("dato", encoding="utf-8")
         assert cache.sello(ruta).endswith("-03:00")
         assert cache.ahora().utcoffset().total_seconds() == -3 * 3600
+
+
+class TestProcedencia:
+    """R2: cada respuesta puede llevar el sha256 de las copias que la respaldan, para verificarla.
+
+    El plan lo pide contra un número que el agente cita: sin el hash y la fecha de la copia, la
+    respuesta se cree o no se cree. No se anota nada mientras nadie escucha: el hash de un CSV de
+    122 MB no se paga en un script ni en un test.
+    """
+
+    def test_anota_la_copia_leida_con_su_sha256(self, tmp_path):
+        import hashlib
+
+        ruta = tmp_path / "x.txt"
+        ruta.write_text("dato", encoding="utf-8")
+        with cache.vigilar_procedencia() as leidas:
+            cache.archivo(ruta, _sin_red, lambda p: p.read_text(encoding="utf-8"), ttl=3600)
+        (copia,) = leidas
+        assert copia["sha256"] == hashlib.sha256(b"dato").hexdigest()
+        assert (copia["archivo"], copia["bytes"], copia["url"]) == ("x.txt", 4, None)
+        assert copia["bajado"].endswith("-03:00")
+
+    def test_el_camino_es_el_de_la_cache_y_no_el_del_disco(self, cache_temporal):
+        """En modo remoto una ruta absoluta expondría el usuario del servidor."""
+        ruta = cache_temporal / "bcu" / "2225_2026-08.xml"
+        ruta.parent.mkdir(parents=True)
+        ruta.write_text("<x/>", encoding="utf-8")
+        with cache.vigilar_procedencia() as leidas:
+            cache.archivo(ruta, _sin_red, lambda p: p.read_text(encoding="utf-8"), ttl=3600)
+        assert leidas[0]["archivo"] == "bcu/2225_2026-08.xml"
+
+    def test_dos_archivos_dos_entradas_y_cada_una_una_vez(self, cache_temporal):
+        cache_temporal.mkdir(parents=True, exist_ok=True)
+        a, b = cache_temporal / "a.txt", cache_temporal / "b.txt"
+        a.write_text("A", encoding="utf-8")
+        b.write_text("BB", encoding="utf-8")
+        with cache.vigilar_procedencia() as leidas:
+            for _ in range(2):  # leer dos veces el mismo archivo no duplica la entrada
+                cache.archivo(a, _sin_red, lambda p: p.read_text(encoding="utf-8"), 3600)
+                cache.archivo(b, _sin_red, lambda p: p.read_text(encoding="utf-8"), 3600)
+        assert [(c["archivo"], c["bytes"]) for c in leidas] == [("a.txt", 1), ("b.txt", 2)]
+
+    def test_sin_nadie_escuchando_no_se_anota_ni_se_hashea(self, tmp_path):
+        ruta = tmp_path / "x.txt"
+        ruta.write_text("dato", encoding="utf-8")
+        cache.archivo(ruta, _sin_red, lambda p: p.read_text(encoding="utf-8"), 3600)
+        assert cache._leidas.get() is None
+
+    def test_la_url_va_solo_si_la_herramienta_la_conoce(self, cache_temporal):
+        ruta = cache_temporal / "ose" / "fisicoquimico.csv"
+        ruta.parent.mkdir(parents=True)
+        ruta.write_text("x", encoding="utf-8")
+        with cache.vigilar_procedencia() as leidas:
+            cache.archivo(ruta, _sin_red, lambda p: p.read_text(encoding="utf-8"), 3600, url="https://ose.test/f.csv")
+        assert leidas[0]["url"] == "https://ose.test/f.csv"
+
+    def test_bcu_serie_anota_cada_mes_que_leyo(self, monkeypatch, cache_temporal):
+        monkeypatch.setattr(bcu, "descargar", BcuFalso())
+        with cache.vigilar_procedencia() as leidas:
+            cache.bcu_serie(2225, date(2026, 8, 1), date(2026, 9, 30), hoy=date(2026, 10, 9))
+        assert [c["archivo"] for c in leidas] == ["bcu/2225_2026-08.xml", "bcu/2225_2026-09.xml"]
+
+    def test_el_hash_se_calcula_una_vez_por_copia(self, monkeypatch, cache_temporal):
+        """430 ms por llamada sobre los 122 MB de OSE: el segundo pedido no los vuelve a pagar."""
+        calculados = []
+        monkeypatch.setattr(cache.procedencia, "sha256", lambda ruta: calculados.append(ruta) or "0" * 64)
+        monkeypatch.setattr(cache, "_hashes", {})
+        cache_temporal.mkdir(parents=True, exist_ok=True)
+        ruta = cache_temporal / "x.txt"
+        ruta.write_text("dato", encoding="utf-8")
+        for _ in range(2):
+            with cache.vigilar_procedencia() as leidas:
+                cache.archivo(ruta, _sin_red, lambda p: p.read_text(encoding="utf-8"), 3600)
+                assert leidas[0]["sha256"] == "0" * 64
+        assert len(calculados) == 1
+
+    def test_una_copia_nueva_se_vuelve_a_hashear(self, monkeypatch, cache_temporal):
+        import os
+
+        calculados = []
+        monkeypatch.setattr(cache.procedencia, "sha256", lambda ruta: calculados.append(1) or "1" * 64)
+        monkeypatch.setattr(cache, "_hashes", {})
+        cache_temporal.mkdir(parents=True, exist_ok=True)
+        ruta = cache_temporal / "x.txt"
+        ruta.write_text("uno", encoding="utf-8")
+        with cache.vigilar_procedencia():
+            cache.archivo(ruta, _sin_red, lambda p: p.read_text(encoding="utf-8"), 3600)
+        ruta.write_text("dos", encoding="utf-8")
+        os.utime(ruta, (1, 1))  # otro mtime, como el de una copia recién publicada
+        with cache.vigilar_procedencia() as leidas:
+            cache.archivo(ruta, _sin_red, lambda p: p.read_text(encoding="utf-8"), 3600)
+        assert len(calculados) == 2 and leidas[0]["sha256"] == "1" * 64

@@ -26,7 +26,7 @@ class PrecioCombustible(TypedDict):
     unidad: str
 
 
-class CombustibleAncap(TypedDict, total=False):
+class CombustibleAncap(cache.Procedencia, TypedDict, total=False):
     """La respuesta de `combustible_ancap()`, en sus dos caminos.
 
     Sin `producto` trae solo `productos`; con `producto`, trae `producto` y `precios`. `nota`,
@@ -66,7 +66,7 @@ class AnioVentas(TypedDict):
     faltan: list[int]
 
 
-class VentasCombustible(TypedDict, total=False):
+class VentasCombustible(cache.Procedencia, TypedDict, total=False):
     """La respuesta de `ventas_combustible()`, en sus dos caminos.
 
     Sin `linea` trae `lineas`, `mercados` y `cobertura`; con `linea`, trae `linea`, `mercado`,

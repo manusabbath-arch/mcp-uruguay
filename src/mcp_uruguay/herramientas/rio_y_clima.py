@@ -42,7 +42,7 @@ class TendenciaTemperatura(TypedDict):
     anios: int
 
 
-class Clima(TypedDict, total=False):
+class Clima(cache.Procedencia, TypedDict, total=False):
     """La respuesta de `clima()`, en sus dos caminos.
 
     Con `desde`/`hasta` trae `dias` (una fila por dia) y `ultimo_dato`; sin fechas, `dias` es el
@@ -94,7 +94,7 @@ class SerieInumet(TypedDict):
     dias: list[DiaInumet]
 
 
-class ObservacionesInumet(TypedDict, total=False):
+class ObservacionesInumet(cache.Procedencia, TypedDict, total=False):
     """La respuesta de `observaciones_inumet()`, en sus dos caminos.
 
     Sin `estacion`: `estaciones` trae la cobertura de cada una. Con `estacion`, `desde`, `hasta` y
@@ -123,7 +123,7 @@ class EstacionCercana(TypedDict):
     ultimo_dato: Optional[str]
 
 
-class EstacionesCercanas(TypedDict):
+class EstacionesCercanas(cache.Procedencia, TypedDict):
     """La respuesta de `estaciones_cercanas()`."""
 
     estaciones: list[EstacionCercana]
@@ -383,7 +383,7 @@ class CoberturaRio(TypedDict):
     con_H: int
 
 
-class NivelRio(TypedDict):
+class NivelRio(cache.Procedencia, TypedDict):
     """La respuesta de `nivel_rio()`."""
 
     estacion: EstacionRio
@@ -419,7 +419,7 @@ class Posicion(TypedDict):
     orden: str
 
 
-class NivelRioComparado(TypedDict):
+class NivelRioComparado(cache.Procedencia, TypedDict):
     """La respuesta de `nivel_rio_comparado()`."""
 
     estacion: EstacionRio
@@ -583,7 +583,7 @@ class NivelesIna(TypedDict):
     aguas_bajas: Optional[float]
 
 
-class NivelRioIna(TypedDict):
+class NivelRioIna(cache.Procedencia, TypedDict):
     """La respuesta de `nivel_rio_ina()`."""
 
     escala: str

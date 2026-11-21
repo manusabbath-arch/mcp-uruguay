@@ -41,7 +41,7 @@ class DireccionCercana(TypedDict):
     distancia_km: float
 
 
-class Ubicacion(TypedDict):
+class Ubicacion(cache.Procedencia, TypedDict):
     """La respuesta de `ubicar_punto()`."""
 
     lat: float
@@ -66,7 +66,7 @@ class DatosLocalidad(TypedDict):
     centro_aproximado: dict[str, float]
 
 
-class Localidades(TypedDict):
+class Localidades(cache.Procedencia, TypedDict):
     """La respuesta de `localidad()`."""
 
     localidades: list[DatosLocalidad]

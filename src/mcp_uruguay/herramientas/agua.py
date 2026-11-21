@@ -46,7 +46,7 @@ class LocalidadOse(TypedDict):
     departamento: str
 
 
-class CalidadAgua(TypedDict, total=False):
+class CalidadAgua(cache.Procedencia, TypedDict, total=False):
     """La respuesta de `calidad_agua()`. Sin `localidad`, solo `localidades`."""
 
     localidades: list[LocalidadOse]
@@ -77,17 +77,20 @@ def _archivo_ose(area: str) -> Path:
 
     ruta = cache.directorio() / "ose" / f"{area}.csv"
     if not cache.vencido(ruta, TTL_OSE):
+        cache.anotar_lectura(ruta)
         return ruta
     ruta.parent.mkdir(parents=True, exist_ok=True)
     try:
         vigente = ose.recursos_vigentes()[area]
     except OSError:
         if ruta.exists():  # sin red, la copia vieja sirve y su `bajado` dice de cuándo es
+            cache.anotar_lectura(ruta)
             return ruta
         raise
     falta, _ = ose.hace_falta_bajar(area, ruta, vigente)
     if not falta:
         os.utime(ruta)
+        cache.anotar_lectura(ruta, vigente.get("url"))
         return ruta
     nueva = ruta.with_name(ruta.name + ".nuevo")
     try:
@@ -96,9 +99,11 @@ def _archivo_ose(area: str) -> Path:
     except Exception:
         nueva.unlink(missing_ok=True)
         if ruta.exists():
+            cache.anotar_lectura(ruta, vigente.get("url"))
             return ruta
         raise
     nueva.replace(ruta)
+    cache.anotar_lectura(ruta, vigente.get("url"))
     return ruta
 
 

@@ -77,7 +77,7 @@ class RecursosCatalogo(TypedDict):
     fuente: str
 
 
-class IndicadoresEncontrados(TypedDict):
+class IndicadoresEncontrados(cache.Procedencia, TypedDict):
     """La respuesta de `buscar_indicador_social()`: nombres para pasar a `indicador_social`."""
 
     indicadores: list[str]
@@ -97,7 +97,7 @@ class FilaIndicador(TypedDict):
     valores: dict[str, Optional[float]]
 
 
-class IndicadorSocial(TypedDict):
+class IndicadorSocial(cache.Procedencia, TypedDict):
     """La respuesta de `indicador_social()`: la ficha del MIDES y la tabla, con sus avisos."""
 
     titulo: str
@@ -138,7 +138,7 @@ class ResumenParidad(TypedDict):
     meses: int
 
 
-class ParidadCombustibles(TypedDict, total=False):
+class ParidadCombustibles(cache.Procedencia, TypedDict, total=False):
     """La respuesta de `paridad_combustibles()`, en sus dos caminos.
 
     Sin `producto` trae `resumen` (los cuatro comparables); con `producto`, `producto`, `serie`,

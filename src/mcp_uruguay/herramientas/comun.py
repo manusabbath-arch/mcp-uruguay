@@ -10,6 +10,8 @@ from typing import Union
 # esquema de salida y la respuesta sin `structuredContent`. Medido en el CI de 3.10 y 3.11.
 from typing_extensions import NotRequired, TypedDict
 
+from mcp_uruguay import cache
+
 
 def _fecha(texto: str, campo: str) -> date:
     try:
@@ -26,7 +28,7 @@ def _mes(texto: str, campo: str) -> date:
         raise ValueError(f"{campo}: {texto!r} no es un mes AAAA-MM") from None
 
 
-class VariacionReal(TypedDict):
+class VariacionReal(cache.Procedencia, TypedDict):
     """La respuesta de `variacion_real()`. `indice` trae el valor de cada mes y su descripción."""
 
     variacion_nominal_pct: float
