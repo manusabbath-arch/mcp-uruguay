@@ -53,22 +53,28 @@ def parsear_eventos(
         "costo_usd_cli": None,
     }
     texto = ""
+    ultimo_id: Optional[str] = None
     abiertos: dict[str, tuple[float, dict]] = {}
     for segundo, ev in eventos:
         tipo = ev.get("type")
         if tipo == "assistant":
             msg = ev.get("message", {})
             uso = msg.get("usage", {}) or {}
-            m["turnos"] += 1
             detalle = {
-                "turno": m["turnos"],
                 "tokens_entrada": uso.get("input_tokens", 0) or 0,
                 "tokens_salida": uso.get("output_tokens", 0) or 0,
                 "tokens_cache_leidos": uso.get("cache_read_input_tokens", 0) or 0,
                 "tokens_cache_escritos": uso.get("cache_creation_input_tokens", 0) or 0,
                 "segundos": round(segundo, 2),
             }
-            m["turnos_detalle"].append(detalle)
+            # Un evento por bloque de contenido, con el mismo id: el turno es el mensaje, no el evento.
+            id_msg = msg.get("id")
+            if id_msg is None or id_msg != ultimo_id:
+                m["turnos"] += 1
+                m["turnos_detalle"].append({"turno": m["turnos"], **detalle})
+            else:
+                m["turnos_detalle"][-1].update(detalle)
+            ultimo_id = id_msg
             for bloque in msg.get("content", []) or []:
                 if bloque.get("type") == "text":
                     texto = bloque.get("text", "")

@@ -475,3 +475,20 @@ def test_cli_la_pregunta_va_despues_de_doble_guion():
     texto, _ = cli.preguntar_claude_cli("¿cuánto?", "SIS", con_servidor=True, lanzar=lanzar)
     assert capturado["args"][-2:] == ["--", "¿cuánto?"]
     assert evaluar.linea_respuesta(texto) == "1"
+
+
+def test_cli_varios_eventos_del_mismo_mensaje_son_un_solo_turno():
+    # Claude Code emite un evento `assistant` por bloque de contenido, con el mismo id de mensaje.
+    def ev(seg, bloque, salida):
+        msg = {"id": "msg_1", "usage": {"input_tokens": 2, "output_tokens": salida}, "content": [bloque]}
+        return (seg, {"type": "assistant", "message": msg})
+
+    eventos = [
+        ev(1.0, {"type": "text", "text": "Busco."}, 8),
+        ev(1.2, {"type": "tool_use", "id": "a", "name": "mcp__uruguay__semana", "input": {}}, 30),
+        (1.5, {"type": "user", "message": {"content": [{"type": "tool_result", "tool_use_id": "a", "content": "ok"}]}}),
+    ]
+    _, m = cli.parsear_eventos(eventos)
+    assert m["turnos"] == 1 and len(m["turnos_detalle"]) == 1
+    assert m["turnos_detalle"][0]["tokens_salida"] == 30
+    assert [p["turno"] for p in m["pasos"]] == [1]
