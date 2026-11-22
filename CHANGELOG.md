@@ -2,6 +2,17 @@
 
 ## Sin publicar
 
+- **`nivel_rio_ina` marca las lecturas dudosas, sin descartar ninguna.** La respuesta trae `calidad`:
+  `pruebas`, el conteo `marcas` (`ok`, `rango`, `plano`) y las `marcadas` (hasta 20; si hay más,
+  `marcadas_omitidas` dice cuántas). Usa `uydatos.calidad` (0.18). `rango` son cotas de sensatez por
+  escala, medidas sobre el historial completo; `plano` es el mismo valor seis veces seguidas, un sensor
+  trabado. Medido con datos reales: Salto Grande Abajo (altura) tiene 15.029 de 25.301 lecturas planas,
+  todas de 2016 (meses de 0, 1 y 2 clavados), y Salto Grande Arriba (el embalse, ~34,5 m) tiene 76 lecturas
+  en 0,0 o casi entre 2009 y 2020. **No se prueba el salto entre lecturas**: aguas abajo de la represa un
+  río en crecida se mueve 2,5 m entre dos lecturas (p99 del cambio; mediana 0,34 m) y el desvío mediano
+  contra los vecinos es unas 5 veces el del embalse, así que cualquier umbral marcaría la operación de la
+  represa como error. `sin_dato` tampoco: el lector rechaza filas vacías y un hueco es una fila que no existe.
+  Requiere `uydatos>=0.18`.
 - **Cada respuesta puede llevar el sha256 de las copias que la respaldan.** Las herramientas que leen
   un archivo de la caché agregan `procedencia`: por copia, el `archivo` (relativo a la caché, nunca la
   ruta del disco del servidor), su `sha256`, `bajado` y `bytes`, y la `url` cuando la herramienta la

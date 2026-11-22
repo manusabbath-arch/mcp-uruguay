@@ -38,7 +38,7 @@ decirlo; uno que recibe un número plausible pero falso lo repite.
 | `observaciones_inumet` | Temperatura, lluvia, humedad, viento o presión de siete estaciones del país, agregada al día local (UTC-3); un día incompleto devuelve null | INUMET |
 | `nivel_rio` | Altura del río en una estación de la cuenca del río Uruguay, por día, y cuánto subió o bajó | CTM Salto Grande |
 | `nivel_rio_comparado` | ¿El río está alto o bajo para la época? Contra los mismos días de cada año desde 2017 | CTM Salto Grande |
-| `nivel_rio_ina` | Altura o caudal del río Uruguay en las escalas de Prefectura (Concordia desde 1931, Salto Grande Arriba y Abajo), con los niveles de alerta y cuántos días de atraso trae el dato | INA (Argentina) |
+| `nivel_rio_ina` | Altura o caudal del río Uruguay en las escalas de Prefectura (Concordia desde 1931, Salto Grande Arriba y Abajo), con los niveles de alerta, cuántos días de atraso trae el dato y marcas de calidad de las lecturas crudas (rango, plano) | INA (Argentina) |
 | `estaciones_cercanas` | Estaciones hidrometeorológicas de la cuenca del río Uruguay cerca de un punto | CTM Salto Grande |
 | `geocodificar_direccion` | Coordenadas de una dirección o esquina, con su calidad; descarta otra calle o el centro de la localidad | IDE.uy |
 | `ubicar_punto` | En qué departamento y localidad cae un punto, con la población 2023 de la localidad | INE, IDE.uy |
