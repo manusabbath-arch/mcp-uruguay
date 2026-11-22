@@ -9,7 +9,7 @@ from typing import Literal, Optional
 # En Python < 3.12, pydantic no arma el esquema de un `typing.TypedDict`: el SDK se queda sin
 # esquema de salida y la respuesta sin `structuredContent`. Medido en el CI de 3.10 y 3.11.
 from typing_extensions import NotRequired, TypedDict
-from uydatos import ina, inia, inumet, red, salto_grande
+from uydatos import calidad, ina, inia, inumet, red, salto_grande
 
 from mcp_uruguay import cache
 from mcp_uruguay.herramientas.comun import _fecha, _sin_tildes
@@ -583,6 +583,24 @@ class NivelesIna(TypedDict):
     aguas_bajas: Optional[float]
 
 
+class LecturaMarcada(TypedDict):
+    """Una lectura cruda que no salió `ok`, con su marca."""
+
+    instancia: str
+    valor: float
+    marca: str
+
+
+class CalidadIna(TypedDict):
+    """Qué pruebas de calidad se hicieron sobre las lecturas crudas y qué marcaron."""
+
+    pruebas: list[str]
+    lecturas: int
+    marcas: dict[str, int]
+    marcadas: list[LecturaMarcada]
+    marcadas_omitidas: NotRequired[int]
+
+
 class NivelRioIna(cache.Procedencia, TypedDict):
     """La respuesta de `nivel_rio_ina()`."""
 
@@ -596,6 +614,7 @@ class NivelRioIna(cache.Procedencia, TypedDict):
     ultima_carga: str
     dias_de_atraso: int
     niveles: NivelesIna
+    calidad: CalidadIna
     nota: str
     fuente: str
     bajado: str
@@ -604,6 +623,27 @@ class NivelRioIna(cache.Procedencia, TypedDict):
 
 
 FUENTE_INA = "INA (Argentina), sistema de alerta del INFORM, alerta.ina.gob.ar: escalas de Prefectura Naval"
+
+
+# Cotas de sensatez por (escala, variable), no límites de operación. Salen del historial completo de
+# cada serie (medido 2026-11-21): Concordia H -0,24 a 17,82 m (1931-2026); caudales hasta 35.389 m³/s
+# (Concordia), 33.837 (Salto Grande Arriba) y 30.437 (Abajo). Un caudal no baja de 0. El embalse
+# (Salto Grande Arriba H) tiene mediana 34,5 m y 76 lecturas en 0,0 o casi (2009-2020): son un sensor
+# caído, por eso su piso es 20. Salto Grande Abajo H no tiene piso útil: su 2016 son meses de lecturas
+# enteras (0, 1, 2) trabadas, que esta prueba atrapa por `plano` y no por rango. Estas cotas son más
+# estrechas que `ina.RANGO_FISICO` (H -10 a 60, Q 0 a 60.000), que rechaza el archivo entero como
+# defecto de la fuente: acá una lectura rara solo se marca y el resto de la serie se responde.
+LIMITES_INA: dict[tuple[str, str], tuple[float, float]] = {
+    ("Concordia", "H"): (-1.0, 25.0),
+    ("Concordia", "Q"): (0.0, 50000.0),
+    ("Salto Grande Arriba", "H"): (20.0, 45.0),
+    ("Salto Grande Arriba", "Q"): (0.0, 50000.0),
+    ("Salto Grande Abajo", "H"): (-1.0, 45.0),
+    ("Salto Grande Abajo", "Q"): (0.0, 50000.0),
+}
+
+MAX_MARCADAS_INA = 20  # tope de lecturas marcadas en la respuesta; el conteo es de todas
+PRUEBAS_INA = ["rango", "plano"]  # sin_dato no aplica (el lector rechaza filas vacías); el salto, ver la nota
 
 
 PRIMER_DIA_INA = date(1931, 1, 1)
@@ -634,6 +674,28 @@ def _niveles_ina(serie: int) -> dict:
         30 * cache.DIA,
     )
     return datos
+
+
+def _calidad_ina(filas: list[dict], escala: str, variable: str) -> CalidadIna:
+    """Marca las lecturas crudas (en orden de instancia) con las pruebas de `uydatos.calidad`."""
+    minimo, maximo = LIMITES_INA[(escala, variable)]
+    ordenadas = sorted(filas, key=lambda f: f["instancia"])
+    marcas = calidad.marcar([f["valor"] for f in ordenadas], minimo=minimo, maximo=maximo)
+    conteo = {k: v for k, v in calidad.resumen(marcas).items() if k == calidad.OK or k in PRUEBAS_INA}
+    marcadas: list[LecturaMarcada] = [
+        {"instancia": f["instancia"].strftime("%Y-%m-%d %H:%MZ"), "valor": f["valor"], "marca": m}
+        for f, m in zip(ordenadas, marcas)
+        if m != calidad.OK
+    ]
+    resultado: CalidadIna = {
+        "pruebas": list(PRUEBAS_INA),
+        "lecturas": len(ordenadas),
+        "marcas": conteo,
+        "marcadas": marcadas[:MAX_MARCADAS_INA],
+    }
+    if len(marcadas) > MAX_MARCADAS_INA:
+        resultado["marcadas_omitidas"] = len(marcadas) - MAX_MARCADAS_INA
+    return resultado
 
 
 def nivel_rio_ina(
@@ -683,13 +745,17 @@ def nivel_rio_ina(
     atraso = (hoy_ - ultima["dia_local"]).days
     meta = _niveles_ina(serie)
     s = ina.SERIES[serie]
+    calidad_ = _calidad_ina(filas, s["nombre"], variable)
     nota = (
         f"{'Un punto por mes' if mensual else 'Un punto por día local de Uruguay'} con el mínimo, la media y el "
         "máximo de las lecturas: la cadencia no es fija (hay días con dos lecturas) y un día sin fila es un "
         "hueco, no un cero. La unidad la fija el lector (el API no la declara). Las escalas son de Prefectura "
         "Naval Argentina: Concordia está frente a Salto, pero no es la estación Salto de la CTM (`nivel_rio`), "
         "y las dos alturas no son comparables entre sí. `niveles` son los de alerta de la propia escala, "
-        "según la metadata del INA, en la misma unidad que la altura."
+        "según la metadata del INA, en la misma unidad que la altura. `calidad` marca las lecturas crudas "
+        "(rango, plano) y no descarta ninguna: el punto sigue en `puntos`. No se prueba el salto: "
+        "aguas abajo de la represa de Salto Grande los cambios bruscos son operación real (medido: el desvío "
+        "mediano entre lecturas vecinas es unas 5 veces el del embalse) y un umbral los marcaría como error."
     )
     if atraso > ATRASO_AVISO_INA:
         nota += (
@@ -711,6 +777,7 @@ def nivel_rio_ina(
             "evacuacion": meta.get("nivel_evacuacion"),
             "aguas_bajas": meta.get("nivel_aguas_bajas"),
         },
+        "calidad": calidad_,
         "nota": nota,
         "fuente": FUENTE_INA,
         "bajado": cache.sello(ruta),

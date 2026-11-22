@@ -277,3 +277,67 @@ class TestNivelRioIna:
         with pytest.raises(ina.InaInvalido):
             h.nivel_rio_ina("Concordia", "H", "2025-01-01", "2025-02-01", hoy=HOY)
         assert not list((cache_temporal / "ina").glob("serie_*.csv"))
+
+
+class TestCalidadIna:
+    """Marcas de calidad sobre las lecturas crudas: rango, plano y sin dato. Marca, no descarta."""
+
+    def test_una_serie_que_se_mueve_sale_limpia(self, monkeypatch):
+        InaFalso(monkeypatch, valor=lambda d: 5.0 + d.day / 100)
+        c = h.nivel_rio_ina(hoy=HOY)["calidad"]
+        assert c["lecturas"] == 31 and c["marcadas"] == []
+        assert c["marcas"] == {"ok": 31, "rango": 0, "plano": 0}
+        assert c["pruebas"] == ["rango", "plano"]
+
+    def test_un_sensor_trabado_se_marca_desde_la_sexta_lectura_igual(self, monkeypatch):
+        """Un número plausible y falso es peor que un hueco: el hueco se ve."""
+        InaFalso(monkeypatch, valor=lambda d: 5.0)
+        c = h.nivel_rio_ina(hoy=HOY)["calidad"]
+        assert c["marcas"] == {"ok": 5, "rango": 0, "plano": 26}
+        assert c["marcadas"][0] == {"instancia": "2026-10-02 10:00Z", "valor": 5.0, "marca": "plano"}
+
+    def test_una_altura_imposible_es_rango_y_el_punto_sigue_en_la_respuesta(self, monkeypatch):
+        """Marca, no descarta: quien responde decide, y un valor extremo real no puede desaparecer."""
+        InaFalso(monkeypatch, valor=lambda d: 50.0 if d.day == 20 else 5.0 + d.day / 100)
+        r = h.nivel_rio_ina(hoy=HOY)
+        assert r["calidad"]["marcas"]["rango"] == 1
+        assert r["calidad"]["marcadas"] == [{"instancia": "2026-10-20 10:00Z", "valor": 50.0, "marca": "rango"}]
+        assert any(p["max"] == 50.0 for p in r["puntos"])
+
+    def test_el_embalse_en_cero_es_un_sensor_caido(self, monkeypatch):
+        """Medido: 76 lecturas de Salto Grande Arriba valen 0,0 o casi entre 2009 y 2020; la mediana es 34,5 m."""
+        InaFalso(monkeypatch, valor=lambda d: 0.0 if d.day == 5 else 34.0 + d.day / 100)
+        c = h.nivel_rio_ina("Salto Grande Arriba", "H", "2026-10-01", "2026-10-10", hoy=HOY)["calidad"]
+        assert [m["marca"] for m in c["marcadas"]] == ["rango"]
+
+    def test_un_caudal_sobre_el_maximo_historico_con_margen_se_marca(self, monkeypatch):
+        """Entre las cotas de la estación (50.000) y el rechazo del lector (60.000): se marca y se responde."""
+        InaFalso(monkeypatch, valor=lambda d: 55000.0 if d.day == 3 else 1000.0 + d.day)
+        c = h.nivel_rio_ina("Concordia", "Q", "2026-10-01", "2026-10-10", hoy=HOY)["calidad"]
+        assert c["marcas"]["rango"] == 1
+
+    def test_el_lector_rechaza_antes_lo_que_no_es_un_dato_posible(self, monkeypatch):
+        """Un caudal negativo no se marca: el archivo entero es un defecto de la fuente y se rechaza."""
+        InaFalso(monkeypatch, valor=lambda d: -5.0 if d.day == 3 else 1000.0 + d.day)
+        with pytest.raises(ina.InaInvalido, match="rango físico"):
+            h.nivel_rio_ina("Concordia", "Q", "2026-10-01", "2026-10-10", hoy=HOY)
+
+    def test_el_salto_no_se_prueba_y_la_respuesta_lo_dice(self, monkeypatch):
+        """Medido: aguas abajo de la represa el desvío mediano es 5 veces el del embalse; sería marcar la operación."""
+        InaFalso(monkeypatch, valor=lambda d: 5.0 + d.day / 100)
+        r = h.nivel_rio_ina(hoy=HOY)
+        assert "salto" not in r["calidad"]["marcas"] and "salto" not in r["calidad"]["pruebas"]
+        assert "No se prueba el salto" in r["nota"]
+
+    def test_las_marcadas_tienen_tope_y_el_conteo_es_completo(self, monkeypatch):
+        """Un sensor trabado meses no puede inflar la respuesta: el conteo dice cuántas fueron."""
+        InaFalso(monkeypatch, valor=lambda d: 5.0)
+        r = h.nivel_rio_ina("Concordia", "H", "2025-01-01", "2025-12-31", hoy=HOY)
+        c = r["calidad"]
+        assert c["marcas"]["plano"] == 360 and len(c["marcadas"]) == h.rio_y_clima.MAX_MARCADAS_INA
+        assert c["marcadas_omitidas"] == 360 - h.rio_y_clima.MAX_MARCADAS_INA
+
+    def test_toda_serie_del_ina_tiene_limites(self):
+        """Si uydatos suma una serie, esta tabla tiene que enterarse en vez de fallar con KeyError en vivo."""
+        faltan = {(s["nombre"], s["var"]) for s in ina.SERIES.values()} - set(h.rio_y_clima.LIMITES_INA)
+        assert not faltan
