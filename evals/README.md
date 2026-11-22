@@ -54,9 +54,16 @@ mira** al ajustar: es el número que se publica.
    Con más de una repetición, debajo de la tabla sale `inestables`: las preguntas que aciertan en unas
    repeticiones y fallan en otras.
 
-La tabla separa dos cosas que el porcentaje mezcla: `usó la esperada` (si el agente llamó a alguna de
-las `herramientas_esperadas` de la pregunta: un fallo con `0/1` es de elección, no de dato) y
-`no corrió` (intentos en que el motor falló o no devolvió resultado; no entran en el porcentaje).
+La tabla separa tres cosas que el porcentaje mezcla: `usó la esperada` (si el agente llamó a alguna de
+las `herramientas_esperadas` de la pregunta: un fallo con `0/1` es de elección, no de dato),
+`respaldado` (si el número de la línea `RESPUESTA:` aparece en el texto que devolvieron las
+herramientas: un acierto sin respaldo en la traza salió de lo que el modelo ya sabía, no del servidor)
+y `no corrió` (intentos en que el motor falló o no devolvió resultado; no entran en el porcentaje).
+
+`respaldado` se mide solo con el servidor, y no aplica a las preguntas de comportamiento (ahí lo
+correcto es avisar) ni a las respuestas `SIN DATO`: esas quedan fuera del denominador. Es la idea de
+*Proof-Carrying Numbers* del cookbook del Banco Mundial: cada cifra de la respuesta se busca en lo que
+el asistente recibió.
 
 ## Cómo correrla
 
@@ -83,7 +90,7 @@ respuesta completa. Esa carpeta no se versiona.
 Cada intento guardado trae su traza:
 
 - `pasos`: una entrada por llamada a herramienta, con el turno, los argumentos, los segundos, si dio
-  error y el tamaño del resultado en bytes.
+  error, el tamaño del resultado en bytes y su texto (`resultado`, el que usa `respaldado`).
 - `turnos_detalle`: los tokens de entrada, salida y caché (leídos y escritos) y los segundos de cada
   turno del modelo.
 - `costo_usd`: calculado con la tabla `PRECIOS` de `evaluar.py`. Un modelo sin precio da `null` y la
