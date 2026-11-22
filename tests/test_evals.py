@@ -426,7 +426,7 @@ def test_cli_el_comando_aisla_al_agente():
     assert "--allowedTools" not in sin and "--mcp-config" not in sin
     con = cli.comando("SIS", con_servidor=True, modelo="m", esfuerzo="low", mcp_config=Path("/x/mcp.json"))
     assert con[con.index("--allowedTools") + 1] == "mcp__uruguay"
-    assert con[con.index("--mcp-config") + 1] == "/x/mcp.json"
+    assert con[con.index("--mcp-config") + 1] == str(Path("/x/mcp.json"))  # en Windows son barras invertidas
     assert con[con.index("--model") + 1] == "m" and con[con.index("--effort") + 1] == "low"
 
 
