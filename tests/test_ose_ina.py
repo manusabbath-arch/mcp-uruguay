@@ -334,8 +334,8 @@ class TestCalidadIna:
         InaFalso(monkeypatch, valor=lambda d: 5.0)
         r = h.nivel_rio_ina("Concordia", "H", "2025-01-01", "2025-12-31", hoy=HOY)
         c = r["calidad"]
-        assert c["marcas"]["plano"] == 360 and len(c["marcadas"]) == h.rio_y_clima.MAX_MARCADAS_INA
-        assert c["marcadas_omitidas"] == 360 - h.rio_y_clima.MAX_MARCADAS_INA
+        assert c["marcas"]["plano"] == 360 and len(c["marcadas"]) == h.rio_y_clima.MAX_MARCADAS
+        assert c["marcadas_omitidas"] == 360 - h.rio_y_clima.MAX_MARCADAS
 
     def test_toda_serie_del_ina_tiene_limites(self):
         """Si uydatos suma una serie, esta tabla tiene que enterarse en vez de fallar con KeyError en vivo."""

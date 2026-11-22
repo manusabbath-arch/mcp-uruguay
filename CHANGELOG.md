@@ -2,6 +2,17 @@
 
 ## Sin publicar
 
+- **`clima` (INIA) y `observaciones_inumet` marcan los días dudosos, sin descartar ninguno.** Misma forma que
+  `nivel_rio_ina`: por serie, `pruebas`, `marcas`, `marcadas` (hasta 20) y `marcadas_omitidas`. `clima` marca
+  `tmax`, `tmin` y `lluvia_mm`; `observaciones_inumet` marca temperatura y presión (rango, plano, sin_dato),
+  humedad promedio y mínima (igual), humedad máxima y lluvia (sin `plano`). **`plano` solo donde el historial
+  real no tiene rachas de 6 días iguales**: la tmax y la tmin de INIA nunca repitieron más de 3 días en 56
+  años, pero la lluvia tiene 1.028 rachas de 6 o más días en 0 mm (53% de los días) y la humedad máxima
+  estuvo en 100 durante 27 días seguidos (saturación). Combinaciones sin cotas medidas (la suma de
+  temperaturas, el viento) no traen `calidad`. Medido sobre 2025 en Salto: ninguna lectura marcada por rango ni
+  por plano, solo `sin_dato` en INUMET (10 días de 365; 22 en lluvia), que ya se veía como `valor: null`; la
+  respuesta pesa 1% más en INIA y 2,7% en INUMET. Limitación: en datos reales no apareció ningún defecto de
+  estas fuentes, así que lo medido es la ausencia de falsos positivos, no una detección.
 - **`nivel_rio_ina` marca las lecturas dudosas, sin descartar ninguna.** La respuesta trae `calidad`:
   `pruebas`, el conteo `marcas` (`ok`, `rango`, `plano`) y las `marcadas` (hasta 20; si hay más,
   `marcadas_omitidas` dice cuántas). Usa `uydatos.calidad` (0.18). `rango` son cotas de sensatez por

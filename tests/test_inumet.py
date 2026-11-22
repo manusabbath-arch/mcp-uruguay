@@ -108,3 +108,72 @@ def test_el_viento_trae_dos_columnas_y_doce_por_dia(cache_temporal):
     # 12 observaciones es el día completo del viento: medirlo contra 24 lo dejaría todo en null.
     assert r["series"][0]["dias"][0]["valor"] == 110.0
     assert r["series"][0]["dias"][0]["observaciones"] == 12
+
+
+# --- calidad -----------------------------------------------------------------------------------------
+
+
+def _dias_completos(variable: str, columna: str, valores: list[float], cache_temporal, estacion="Salto G3"):
+    """Un día local completo por valor (24 horas de UTC 03:00 a 02:00), todas las horas con ese valor."""
+    filas = []
+    for d, valor in enumerate(valores):
+        for t in _horas(datetime(2026, 1, 1, 3) + timedelta(days=d), 24):
+            filas.append(f"{t:%Y-%m-%d %H:%M};{estacion};{valor}")
+    _csv(cache_temporal / "inumet", variable, f"fecha;estacion_id;{columna}", filas)
+
+
+def _calidad(variable: str, agregacion: str, dias: int = 8):
+    r = h.observaciones_inumet(variable, "Salto G3", "2026-01-01", f"2026-01-{dias:02d}", agregacion)
+    return r["series"][0].get("calidad")
+
+
+def test_la_calidad_cuenta_el_dia_incompleto_como_sin_dato(temperatura):
+    r = h.observaciones_inumet("temperatura", "Salto G3", "2026-01-01", "2026-01-02", "max")
+    c = r["series"][0]["calidad"]
+    assert c["pruebas"] == ["rango", "plano", "sin_dato"]
+    assert c["marcas"] == {"ok": 1, "rango": 0, "plano": 0, "sin_dato": 1}
+    assert c["marcadas"] == [{"fecha": "2026-01-02", "valor": None, "marca": "sin_dato"}]
+
+
+def test_una_temperatura_diaria_trabada_se_marca(cache_temporal):
+    """Medido: 0 rachas de 6 días iguales en 7 estaciones y 6,8 años de temperatura."""
+    _dias_completos("temperatura", "temp_aire", [15.0] * 8, cache_temporal)
+    c = _calidad("temperatura", "max")
+    assert c["marcas"] == {"ok": 5, "rango": 0, "plano": 3, "sin_dato": 0}
+    assert c["marcadas"][0] == {"fecha": "2026-01-06", "valor": 15.0, "marca": "plano"}
+
+
+def test_la_humedad_maxima_saturada_no_es_un_sensor_trabado(cache_temporal):
+    """Medido: la humedad máxima diaria estuvo en 100 durante 27 días seguidos (Paso de los Toros, 2025)."""
+    _dias_completos("humedad", "hum_relativa", [100.0] * 8, cache_temporal)
+    maximo, promedio = _calidad("humedad", "max"), _calidad("humedad", "promedio")
+    assert maximo["pruebas"] == ["rango", "sin_dato"] and maximo["marcas"] == {"ok": 8, "rango": 0, "sin_dato": 0}
+    assert promedio["pruebas"] == ["rango", "plano", "sin_dato"] and promedio["marcas"]["plano"] == 3
+
+
+def test_ocho_dias_sin_lluvia_no_son_un_sensor_trabado(cache_temporal):
+    _dias_completos("precipitacion", "precip_horario", [0.0] * 8, cache_temporal)
+    c = _calidad("precipitacion", "suma")
+    assert c["pruebas"] == ["rango", "sin_dato"] and c["marcas"] == {"ok": 8, "rango": 0, "sin_dato": 0}
+
+
+def test_una_combinacion_sin_cotas_medidas_no_trae_calidad(temperatura):
+    """La suma de temperaturas horarias no es una temperatura: sin cotas medidas no se inventa una prueba."""
+    r = h.observaciones_inumet("temperatura", "Salto G3", "2026-01-01", "2026-01-02", "suma")
+    assert "calidad" not in r["series"][0]
+
+
+def test_el_viento_no_trae_calidad(cache_temporal):
+    """La fuente del viento hoy trae dos recursos de datos y el lector la rechaza; la dirección es circular."""
+    filas = [f"{t:%Y-%m-%d %H:%M};Salto G3;90;10" for t in _horas(datetime(2026, 1, 1, 3), 24)]
+    _csv(cache_temporal / "inumet", "viento", "fecha;estacion_id;dir_viento;int_viento", filas)
+    r = h.observaciones_inumet("viento", "Salto G3", "2026-01-01", "2026-01-01", "promedio")
+    assert all("calidad" not in s for s in r["series"])
+
+
+def test_toda_cota_de_inumet_apunta_a_una_columna_y_una_agregacion_que_existen():
+    from uydatos import inumet
+
+    columnas = {c for _, cols, _ in inumet.DATASETS.values() for c in cols}
+    for columna, agregacion in h.rio_y_clima.CALIDAD_INUMET:
+        assert columna in columnas and agregacion in inumet.AGREGACIONES

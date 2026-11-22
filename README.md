@@ -34,8 +34,8 @@ decirlo; uno que recibe un número plausible pero falso lo repite.
 | `combustible_ancap` | Precio máximo al público de cada combustible, por mes | ANCAP |
 | `paridad_combustibles` | ¿ANCAP vende por encima o por debajo de lo que costaría importar? Ex planta contra el precio de paridad de importación, sin impuestos, mes a mes, con el desglose desde el FOB | URSEA, ANCAP |
 | `ventas_combustible` | Cuánto vendió ANCAP de cada combustible por mes y mercado, con los meses que la fuente no publicó | ANCAP |
-| `clima` | Lluvia y temperaturas diarias en Salto desde 1970 con su anomalía, o la tendencia por década | INIA |
-| `observaciones_inumet` | Temperatura, lluvia, humedad, viento o presión de siete estaciones del país, agregada al día local (UTC-3); un día incompleto devuelve null | INUMET |
+| `clima` | Lluvia y temperaturas diarias en Salto desde 1970 con su anomalía, o la tendencia por década, con marcas de calidad (rango, plano, sin dato) | INIA |
+| `observaciones_inumet` | Temperatura, lluvia, humedad, viento o presión de siete estaciones del país, agregada al día local (UTC-3); un día incompleto devuelve null, con marcas de calidad donde hay cotas medidas | INUMET |
 | `nivel_rio` | Altura del río en una estación de la cuenca del río Uruguay, por día, y cuánto subió o bajó | CTM Salto Grande |
 | `nivel_rio_comparado` | ¿El río está alto o bajo para la época? Contra los mismos días de cada año desde 2017 | CTM Salto Grande |
 | `nivel_rio_ina` | Altura o caudal del río Uruguay en las escalas de Prefectura (Concordia desde 1931, Salto Grande Arriba y Abajo), con los niveles de alerta, cuántos días de atraso trae el dato y marcas de calidad de las lecturas crudas (rango, plano) | INA (Argentina) |
