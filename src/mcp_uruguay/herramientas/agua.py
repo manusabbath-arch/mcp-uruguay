@@ -92,7 +92,7 @@ def _archivo_ose(area: str) -> Path:
         os.utime(ruta)
         cache.anotar_lectura(ruta, vigente.get("url"))
         return ruta
-    nueva = ruta.with_name(ruta.name + ".nuevo")
+    nueva = cache._temporal(ruta)
     try:
         red.bajar(vigente["url"], nueva)
         ose.leer(nueva)

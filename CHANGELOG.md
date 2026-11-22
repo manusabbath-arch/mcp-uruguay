@@ -9,6 +9,12 @@
   de creerle a la respuesta. El campo es opcional y va en la salida, no en las definiciones: el
   presupuesto de herramientas no se mueve. El hash se calcula una vez por copia (430 ms sobre los
   122 MB de OSE, medido; después se recuerda mientras el archivo no cambie).
+- **Cada descarga usa su propio temporal.** `cache.archivo`, `cache.sg_lecturas` y `calidad_agua`
+  escribían el mismo `<archivo>.nuevo`: dos clientes que comparten la caché —o el servidor en modo
+  remoto, donde la caché es compartida por diseño— podían publicar la copia a medio escribir del
+  otro. Ahora cada bajada crea un temporal único junto al archivo (`cache._temporal`), y
+  `diagnostico` no lista ninguna de las dos formas de temporal (`<archivo>.XXXX.nuevo` y las
+  carpetas `.nuevo-*` del BCU, que antes se colaban como copias).
 - **`herramientas.py` (2.680 líneas) pasa a ser un paquete con un módulo por dominio** (`monedas`,
   `combustibles`, `rio_y_clima`, `territorio`, `estado`, `agua`, `sinred` y `comun`; el más grande tiene 717
   líneas). **Sin cambios para quien usa el servidor ni para quien importa `herramientas`**: el paquete

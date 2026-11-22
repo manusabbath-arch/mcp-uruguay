@@ -22,6 +22,7 @@ from __future__ import annotations
 
 import contextlib
 import os
+import secrets
 import shutil
 import tempfile
 import time
@@ -216,6 +217,31 @@ def _poner_en_su_lugar(nueva: Path, ruta: Path) -> None:
             time.sleep(0.05 * (intento + 1))
 
 
+def _temporal(ruta: Path) -> Path:
+    """Un temporal propio de esta bajada, junto a `ruta`.
+
+    Dos clientes MCP comparten `~/.cache/mcp-uruguay`: con un nombre fijo (`<archivo>.nuevo`) dos
+    bajadas del mismo archivo escribían el mismo temporal y una publicaba la copia a medio escribir
+    de la otra. El sufijo `.nuevo` se mantiene porque `diagnostico` ignora esas copias: son
+    descargas en curso, no datos. El archivo se crea con `O_EXCL` y los permisos de siempre
+    (`0o666` menos el `umask`), que es lo que dejaba `write_bytes`.
+    """
+    for _ in range(10):
+        nombre = ruta.parent / f".{ruta.name}.{secrets.token_hex(4)}.nuevo"
+        try:
+            os.close(os.open(nombre, os.O_CREAT | os.O_EXCL | os.O_WRONLY, 0o666))
+        except FileExistsError:
+            continue
+        return nombre
+    raise FileExistsError(f"no se pudo crear un temporal único para {ruta}")
+
+
+def es_temporal(relativa: Path) -> bool:
+    """¿El camino es una descarga en curso? `_temporal` deja `<archivo>.XXXX.nuevo` y
+    `_refrescar_mes_bcu` una carpeta `.nuevo-*`: ninguna de las dos es una copia utilizable."""
+    return any(parte.endswith(".nuevo") or parte.startswith(".nuevo-") for parte in relativa.parts)
+
+
 def vencido(ruta: Path, ttl: float) -> bool:
     return not ruta.exists() or time.time() - ruta.stat().st_mtime > ttl
 
@@ -238,7 +264,7 @@ def archivo(
     """
     ruta.parent.mkdir(parents=True, exist_ok=True)
     if vencido(ruta, ttl):
-        nueva = ruta.with_name(ruta.name + ".nuevo")
+        nueva = _temporal(ruta)
         try:
             bajar(nueva)
             dato = leer(nueva)
@@ -365,7 +391,7 @@ def sg_lecturas(estacion: str, desde: date, hasta: date, hoy: date | None = None
     for mes in _meses(desde, hasta):
         ruta = carpeta / f"{estacion}_{mes:%Y-%m}.xml"
         if not _vigente(ruta, mes, hoy, 30 * 60):
-            nueva = ruta.with_name(ruta.name + ".nuevo")
+            nueva = _temporal(ruta)
             try:
                 salto_grande.descargar_datos(estacion, mes, _fin_de_mes(mes) + timedelta(days=1), nueva)
                 salto_grande.leer_datos(nueva)

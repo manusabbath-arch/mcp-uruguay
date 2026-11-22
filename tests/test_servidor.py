@@ -173,6 +173,9 @@ async def test_diagnostico_muestra_lo_que_hay_y_de_cuando(monkeypatch, tmp_path)
     (tmp_path / "bcu").mkdir()
     (tmp_path / "bcu" / "2225_2026-10.xml").write_bytes(b"<x/>")
     (tmp_path / "a-medio.nuevo").write_bytes(b"a medias")
+    (tmp_path / ".bcu.2225_2026-10.xml.k2j4h.nuevo").write_bytes(b"a medias")  # temporal de `_temporal`
+    (tmp_path / ".nuevo-xyz").mkdir()
+    (tmp_path / ".nuevo-xyz" / "2225_2026-09.xml").write_bytes(b"<x/>")  # carpeta de `_refrescar_mes_bcu`
     async with Client(servidor) as c:
         r = await c.call_tool("diagnostico", {})
     assert not r.is_error

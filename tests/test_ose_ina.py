@@ -155,6 +155,28 @@ class TestCalidadAgua:
             h.calidad_agua("Salto")
         assert not (cache_temporal / "ose" / "fisicoquimico.csv").exists()
 
+    def test_cada_bajada_va_a_un_temporal_propio(self, monkeypatch, cache_temporal):
+        """R1: `red.bajar` escribe directo en el destino; con un `.nuevo` compartido, dos clientes
+        publicaban el CSV a medio escribir del otro."""
+        vigente = {
+            a: {"url": f"https://ose.test/{a}.csv", "bytes": 10, "modificado": "2026-03-01"} for a in ose.ARCHIVOS
+        }
+        monkeypatch.setattr(ose, "recursos_vigentes", lambda: vigente)
+        monkeypatch.setattr(ose, "hace_falta_bajar", lambda *args, **kwargs: (True, None))
+        destinos = []
+
+        def sin_red(url, destino, **kwargs):
+            destinos.append(Path(destino))
+            raise OSError("sin red")
+
+        monkeypatch.setattr(red, "bajar", sin_red)
+        for _ in range(2):
+            with pytest.raises(OSError, match="sin red"):
+                h.calidad_agua("Salto")
+        assert len(destinos) == 2 and destinos[0] != destinos[1]
+        assert all(d.name != "fisicoquimico.csv.nuevo" for d in destinos)
+        assert all(d.parent == cache_temporal / "ose" for d in destinos)
+
 
 # --- INA ---------------------------------------------------------------------------------------------
 
