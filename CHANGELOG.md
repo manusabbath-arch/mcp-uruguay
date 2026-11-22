@@ -2,6 +2,13 @@
 
 ## Sin publicar
 
+- **Cada respuesta puede llevar el sha256 de las copias que la respaldan.** Las herramientas que leen
+  un archivo de la caché agregan `procedencia`: por copia, el `archivo` (relativo a la caché, nunca la
+  ruta del disco del servidor), su `sha256`, `bajado` y `bytes`, y la `url` cuando la herramienta la
+  conoce. Es lo que permite verificar un número contra los bytes exactos que leyó el servidor en vez
+  de creerle a la respuesta. El campo es opcional y va en la salida, no en las definiciones: el
+  presupuesto de herramientas no se mueve. El hash se calcula una vez por copia (430 ms sobre los
+  122 MB de OSE, medido; después se recuerda mientras el archivo no cambie).
 - **Cada descarga usa su propio temporal.** `cache.archivo`, `cache.sg_lecturas` y `calidad_agua`
   escribían el mismo `<archivo>.nuevo`: dos clientes que comparten la caché —o el servidor en modo
   remoto, donde la caché es compartida por diseño— podían publicar la copia a medio escribir del

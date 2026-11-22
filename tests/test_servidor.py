@@ -340,3 +340,63 @@ async def test_un_error_de_una_herramienta_lenta_sigue_saliendo_con_su_motivo(mo
     async with Client(servidor) as c:
         r = await c.call_tool("compras_estado", {"anio": 2025})
     assert r.is_error and "producto inexistente" in r.content[0].text
+
+
+async def test_la_respuesta_lleva_el_sha256_de_la_copia_que_la_respalda(monkeypatch, tmp_path):
+    """R2: con la copia y su hash, un número se puede verificar contra los bytes que leyó el servidor."""
+    import hashlib
+
+    monkeypatch.setenv("MCP_URUGUAY_CACHE", str(tmp_path))
+    csv = "\ufeff\ufeffAño;Mes;Producto;Unidad;Valor\n2026;7;SUPER 95 *;75,10;$/lt\n"
+    (tmp_path / "ancap.csv").write_text(csv, encoding="utf-8-sig")
+    async with Client(servidor) as c:
+        r = await c.call_tool("combustible_ancap", {"producto": "SUPER 95 *"})
+    assert not r.is_error
+    (copia,) = r.structured_content["procedencia"]
+    assert copia["archivo"] == "ancap.csv"
+    assert copia["sha256"] == hashlib.sha256((tmp_path / "ancap.csv").read_bytes()).hexdigest()
+    assert copia["bytes"] == (tmp_path / "ancap.csv").stat().st_size
+
+
+async def test_una_herramienta_sin_cache_no_lleva_procedencia():
+    """La geocodificación no lee copias del disco: un bloque vacío sería ruido en cada respuesta."""
+    async with Client(servidor) as c:
+        r = await c.call_tool("validar_documento", {"numero": "1.234.567-2", "tipo": "ci"})
+    assert not r.is_error and "procedencia" not in r.structured_content
+
+
+async def test_los_esquemas_declarados_anuncian_la_procedencia():
+    """El SDK descarta las claves que el esquema no declara: sin esto el campo no llegaría al cliente."""
+    async with Client(servidor) as c:
+        esquemas = {t.name: t.output_schema or {} for t in (await c.list_tools()).tools}
+    con_cache = [
+        "cotizacion",
+        "cotizacion_mensual",
+        "pesos_constantes",
+        "ipc_argentina",
+        "ipca_brasil",
+        "combustible_ancap",
+        "ventas_combustible",
+        "paridad_combustibles",
+        "clima",
+        "observaciones_inumet",
+        "estaciones_cercanas",
+        "nivel_rio",
+        "nivel_rio_comparado",
+        "nivel_rio_ina",
+        "calidad_agua",
+        "variacion_real",
+        "ubicar_punto",
+        "localidad",
+        "resultados_electorales",
+        "compras_estado",
+        "asistencia_parlamentaria",
+        "pedidos_de_informes",
+        "leyes",
+        "proyectos_parlamento",
+        "indicador_social",
+        "buscar_indicador_social",
+    ]
+    sin_procedencia = sorted(n for n in con_cache if "procedencia" not in esquemas[n].get("properties", {}))
+    assert not sin_procedencia, f"estos esquemas no declaran procedencia: {sin_procedencia}"
+    assert "procedencia" not in esquemas["validar_documento"]["properties"]

@@ -28,7 +28,7 @@ FUENTE_INDEC = "INDEC, vía la API de series de tiempo de datos.gob.ar (serie 14
 FUENTE_IBGE = "IBGE, API SIDRA, tabla 1737, variable 2266 (IPCA número-índice)"
 
 
-class Cotizacion(TypedDict):
+class Cotizacion(cache.Procedencia, TypedDict):
     """La respuesta de `cotizacion()`."""
 
     moneda: str
@@ -52,7 +52,7 @@ class MesBCU(TypedDict):
     completo: bool
 
 
-class CotizacionMensual(TypedDict):
+class CotizacionMensual(cache.Procedencia, TypedDict):
     """La respuesta de `cotizacion_mensual()`."""
 
     moneda: str
@@ -65,7 +65,7 @@ class CotizacionMensual(TypedDict):
     aviso: NotRequired[str]
 
 
-class PesosConstantes(TypedDict):
+class PesosConstantes(cache.Procedencia, TypedDict):
     """La respuesta de `pesos_constantes()`."""
 
     base: str
@@ -85,7 +85,7 @@ class PuntoIndice(TypedDict):
     valor: float
 
 
-class IpcArgentina(TypedDict):
+class IpcArgentina(cache.Procedencia, TypedDict):
     """La respuesta de `ipc_argentina()`."""
 
     serie: str
@@ -97,7 +97,7 @@ class IpcArgentina(TypedDict):
     aviso: NotRequired[str]
 
 
-class IpcaBrasil(TypedDict):
+class IpcaBrasil(cache.Procedencia, TypedDict):
     """La respuesta de `ipca_brasil()`."""
 
     serie: str

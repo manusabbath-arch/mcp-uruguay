@@ -29,12 +29,40 @@ import time
 from contextvars import ContextVar
 from datetime import date, datetime, timedelta, timezone
 from pathlib import Path
-from typing import Callable, Iterator, TypeVar
+from typing import Callable, Iterator, Optional, TypeVar
 from zoneinfo import ZoneInfo, ZoneInfoNotFoundError
 
-from uydatos import bcu, salto_grande
+from typing_extensions import TypedDict
+from uydatos import bcu, procedencia, salto_grande
 
 T = TypeVar("T")
+
+
+class CopiaUsada(TypedDict):
+    """Una copia del disco que respaldó la respuesta: qué archivo, de cuándo y con qué sha256.
+
+    Es lo que permite verificar un número contra los bytes exactos que leyó el servidor, sin creerle
+    nada a la respuesta. `url` va en `None` cuando la dirección la arma la fuente dentro de `uydatos`
+    y no llega hasta acá: preferible un hueco a una URL inventada.
+    """
+
+    archivo: str
+    url: Optional[str]
+    sha256: str
+    bajado: str
+    bytes: int
+
+
+class Procedencia(TypedDict, total=False):
+    """Lo que el servidor agrega a la respuesta: las copias que se leyeron para armarla.
+
+    Va en la salida y no en las definiciones de las herramientas: el trinquete de
+    `tests/test_presupuesto_herramientas.py` no se mueve. Los tipos de respuesta de las herramientas
+    heredan de acá, porque el SDK descarta las claves que el esquema declarado no tiene.
+    """
+
+    procedencia: list[CopiaUsada]
+
 
 HORA = 3600
 DIA = 24 * HORA
@@ -90,6 +118,74 @@ def _servida_vencida(ruta: Path) -> None:
     lista = _vencidas.get()
     if lista is not None and ruta.exists():
         lista.append(sello(ruta))
+
+
+# Las copias del disco que se leyeron durante una llamada: el servidor las pone en la respuesta.
+_leidas: ContextVar[Optional[list[CopiaUsada]]] = ContextVar("copias_leidas", default=None)
+
+
+@contextlib.contextmanager
+def vigilar_procedencia() -> Iterator[list[CopiaUsada]]:
+    """Anota, durante una llamada, cada copia que se leyó y su sha256.
+
+    El sha256 se calcula solo si alguien está escuchando: fuera de una herramienta (scripts, tests)
+    nadie paga el hash de un CSV de 122 MB.
+    """
+    lista: list[CopiaUsada] = []
+    marca = _leidas.set(lista)
+    try:
+        yield lista
+    finally:
+        _leidas.reset(marca)
+
+
+# Los sha256 ya calculados, por (camino, mtime y tamaño): rehacer el de un CSV de 122 MB en cada
+# llamada costaba 430 ms (medido); con esto, la segunda llamada no lo paga. Un archivo reemplazado
+# cambia de mtime.
+_hashes: dict[tuple[str, int, int], str] = {}
+
+
+def _sha256(ruta: Path) -> str:
+    """El sha256 de la copia, recordado mientras el archivo no cambie."""
+    estado = ruta.stat()
+    clave = (str(ruta), estado.st_mtime_ns, estado.st_size)
+    if clave not in _hashes:
+        if len(_hashes) > 512:  # un servidor remoto vive meses: el recordado no crece sin techo
+            _hashes.clear()
+        _hashes[clave] = procedencia.sha256(ruta)
+    return _hashes[clave]
+
+
+def anotar_lectura(ruta: Path, url: Optional[str] = None) -> None:
+    """Registra la copia `ruta` como respaldo de la respuesta en curso, una sola vez.
+
+    `url` es la dirección de la que salió el archivo, si la herramienta la conoce: las fuentes que
+    arman su URL dentro de `uydatos` la dejan en `None`.
+    """
+    lista = _leidas.get()
+    if lista is None or not ruta.is_file():
+        return
+    archivo = _nombre(ruta)
+    if any(c["archivo"] == archivo for c in lista):
+        return
+    lista.append(
+        {
+            "archivo": archivo,
+            "url": url,
+            "sha256": _sha256(ruta),
+            "bajado": sello(ruta),
+            "bytes": ruta.stat().st_size,
+        }
+    )
+
+
+def _nombre(ruta: Path) -> str:
+    """El camino relativo a la caché: en modo remoto, la ruta completa expondría el usuario del
+    servidor a cualquiera de internet."""
+    try:
+        return str(ruta.relative_to(directorio())).replace("\\", "/")
+    except ValueError:
+        return ruta.name
 
 
 def _reintentando(accion: Callable[[], T]) -> T:
@@ -150,11 +246,21 @@ def vencido(ruta: Path, ttl: float) -> bool:
     return not ruta.exists() or time.time() - ruta.stat().st_mtime > ttl
 
 
-def archivo(ruta: Path, bajar: Callable[[Path], object], leer: Callable[[Path], T], ttl: float) -> tuple[T, Path]:
+def archivo(
+    ruta: Path,
+    bajar: Callable[[Path], object],
+    leer: Callable[[Path], T],
+    ttl: float,
+    *,
+    url: Optional[str] = None,
+) -> tuple[T, Path]:
     """Devuelve `(leer(ruta), ruta)`, bajando antes si falta o venció.
 
     Si la descarga nueva no se puede leer, se descarta y se vuelve a la copia anterior si la
     había. Sin copia anterior, el error sube.
+
+    La copia que se sirve queda anotada como respaldo de la respuesta en curso (su sha256), con `url`
+    si la herramienta la conoce.
     """
     ruta.parent.mkdir(parents=True, exist_ok=True)
     if vencido(ruta, ttl):
@@ -166,11 +272,16 @@ def archivo(ruta: Path, bajar: Callable[[Path], object], leer: Callable[[Path], 
             nueva.unlink(missing_ok=True)
             if ruta.exists():
                 _servida_vencida(ruta)
-                return _reintentando(lambda: leer(ruta)), ruta
+                dato = _reintentando(lambda: leer(ruta))
+                anotar_lectura(ruta, url)
+                return dato, ruta
             raise
         _poner_en_su_lugar(nueva, ruta)
+        anotar_lectura(ruta, url)
         return dato, ruta
-    return _reintentando(lambda: leer(ruta)), ruta
+    dato = _reintentando(lambda: leer(ruta))
+    anotar_lectura(ruta, url)
+    return dato, ruta
 
 
 def _meses(desde: date, hasta: date) -> list[date]:
@@ -259,6 +370,7 @@ def bcu_serie(moneda: int, desde: date, hasta: date, hoy: date | None = None) ->
             ruta.unlink(missing_ok=True)  # una respuesta mala no se queda en la caché
             raise
         sellos.append(sello(ruta))
+        anotar_lectura(ruta)
     return dict(sorted(serie.items())), min(sellos) if sellos else ""
 
 
@@ -289,6 +401,7 @@ def sg_lecturas(estacion: str, desde: date, hasta: date, hoy: date | None = None
             _poner_en_su_lugar(nueva, ruta)
         lecturas += _reintentando(lambda: salto_grande.leer_datos(ruta))
         sellos.append(sello(ruta))
+        anotar_lectura(ruta)
     ini = datetime.combine(desde, datetime.min.time())
     fin = datetime.combine(hasta + timedelta(days=1), datetime.min.time())
     vistas, unicas = set(), []

@@ -76,6 +76,18 @@ def _con_aviso_de_copia(resultado: Any, vencidas: list[str]) -> Any:
     }
 
 
+def _con_procedencia(resultado: Any, leidas: list[cache.CopiaUsada]) -> Any:
+    """Agrega `procedencia`: qué copias del disco respaldan los números de esta respuesta.
+
+    Va acá y no en cada herramienta: una sola forma para todas, y el campo viaja en la salida (el
+    trinquete de las definiciones no se mueve). Sin copias leídas no se agrega nada: una lista vacía
+    en cada respuesta es ruido.
+    """
+    if not leidas or not isinstance(resultado, dict):
+        return resultado
+    return {**resultado, "procedencia": leidas}
+
+
 #: Cada cuántos segundos una herramienta lenta avisa que sigue trabajando. Con la caché fría una
 #: primera llamada tarda de 40 a 75 s (`leyes`, `compras_estado`, `clima`) y muchos clientes cortan
 #: cerca de los 60 s: sin ningún aviso en ese rato, no hay forma de distinguirla de una colgada.
@@ -114,9 +126,9 @@ def herramienta(titulo: str, anotaciones: ToolAnnotations) -> Callable:
         def llamar(args: tuple, kwargs: dict) -> Any:
             """El cuerpo, síncrono: corre en un hilo para que el aviso de progreso salga a tiempo."""
             try:
-                with cache.vigilar_copias() as vencidas:
+                with cache.vigilar_copias() as vencidas, cache.vigilar_procedencia() as leidas:
                     resultado = funcion(*args, **kwargs)
-                return _con_aviso_de_copia(resultado, vencidas)
+                return _con_procedencia(_con_aviso_de_copia(resultado, vencidas), leidas)
             except ValueError as e:
                 raise ToolError(str(e)) from e
             except (OSError, http.client.HTTPException) as e:

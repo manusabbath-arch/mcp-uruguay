@@ -74,6 +74,16 @@ Cada respuesta trae dos campos para citar el dato:
 Si para responder hubo que usar una copia que ya debía refrescarse y la fuente no respondió, la respuesta
 trae además `copia_vencida: true` y un `aviso`: el dato puede estar desactualizado.
 
+Y las herramientas que leen un archivo de la caché agregan `procedencia`: por cada copia que se usó, su
+`archivo` (relativo a la caché), `sha256`, `bajado`, `bytes` y la `url` cuando se conoce. Con eso el número
+se verifica contra los bytes exactos que leyó el servidor, sin tener que creerle.
+
+```json
+"procedencia": [
+  {"archivo": "bcu/2225_2026-10.xml", "url": null, "sha256": "9f2c…", "bajado": "2026-10-09T20:45-03:00", "bytes": 41233}
+]
+```
+
 ```json
 {
   "moneda": "USD",
@@ -117,8 +127,9 @@ difícil auditar los resultados de un servidor MCP». Este servidor está hecho 
 - **Rechaza en vez de arreglar.** Cada lector de `uydatos` conoce las trampas de su fuente: columnas
   invertidas, separadores decimales que cambian por localidad, una serie con meses de atraso, un id que lee
   otra red. Ante algo que no cumple, devuelve el motivo y no un número.
-- **Cada respuesta dice de dónde y de cuándo** (`fuente` y `bajado`), y `diagnostico` muestra qué copia de
-  cada fuente se usó.
+- **Cada respuesta dice de dónde y de cuándo** (`fuente` y `bajado`), `diagnostico` muestra qué copia de
+  cada fuente se usa, y `procedencia` da el sha256 de cada copia leída: el número se verifica contra los
+  bytes, no contra la palabra del servidor.
 - **La exactitud se mide**: `evals/` tiene preguntas con respuesta oficial y trampas donde lo correcto es
   avisar, y las corre con y sin el servidor (ver [evals/README.md](evals/README.md)).
 - **Las fuentes se miden cada semana** contra una línea de base versionada en `uydatos`: si una cambia de

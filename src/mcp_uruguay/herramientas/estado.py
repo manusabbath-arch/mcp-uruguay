@@ -40,7 +40,7 @@ class VotosOpcion(TypedDict):
     pct_sobre_emitidos: Optional[float]
 
 
-class ResultadoElectoral(TypedDict):
+class ResultadoElectoral(cache.Procedencia, TypedDict):
     """La respuesta de `resultados_electorales()`."""
 
     eleccion: str
@@ -144,7 +144,7 @@ class ItemMayor(TypedDict):
     pct_del_total: float
 
 
-class ComprasEstado(TypedDict):
+class ComprasEstado(cache.Procedencia, TypedDict):
     """La respuesta de `compras_estado()`."""
 
     anio: int
@@ -352,7 +352,7 @@ class PedidoInforme(TypedDict):
     url_contestacion: Optional[str]
 
 
-class PedidosDeInformes(TypedDict):
+class PedidosDeInformes(cache.Procedencia, TypedDict):
     """La respuesta de `pedidos_de_informes()`."""
 
     desde: str
@@ -374,7 +374,7 @@ class PedidosDeInformes(TypedDict):
     aviso: NotRequired[str]
 
 
-class AsistenciaParlamentaria(TypedDict):
+class AsistenciaParlamentaria(cache.Procedencia, TypedDict):
     """La respuesta de `asistencia_parlamentaria()`."""
 
     camara: str
@@ -405,7 +405,7 @@ class Ley(TypedDict):
     cantidad_que_la_citan: Optional[int]
 
 
-class Leyes(TypedDict):
+class Leyes(cache.Procedencia, TypedDict):
     """La respuesta de `leyes()`."""
 
     total: int
@@ -427,7 +427,7 @@ class Proyecto(TypedDict):
     legislaturas: list[int]
 
 
-class ProyectosParlamento(TypedDict):
+class ProyectosParlamento(cache.Procedencia, TypedDict):
     """La respuesta de `proyectos_parlamento()`."""
 
     total: int
