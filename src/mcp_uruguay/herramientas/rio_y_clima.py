@@ -23,6 +23,25 @@ FUENTE_INUMET = "INUMET, observaciones meteorologicas de siete estaciones, catal
 FUENTE_CTM = "Comisión Técnica Mixta de Salto Grande, web service www.saltogrande.org/ws.php"
 
 
+class Marcada(TypedDict):
+    """Una lectura (o un día) que no salió `ok`, con su marca. Lleva `instancia` o `fecha`, según la fuente."""
+
+    instancia: NotRequired[str]
+    fecha: NotRequired[str]
+    valor: Optional[float]
+    marca: str
+
+
+class CalidadSerie(TypedDict):
+    """Qué pruebas de calidad se hicieron sobre una serie y qué marcaron. Marca, no descarta."""
+
+    pruebas: list[str]
+    lecturas: int
+    marcas: dict[str, int]
+    marcadas: list[Marcada]
+    marcadas_omitidas: NotRequired[int]
+
+
 class DiaClima(TypedDict):
     """Un dia del clima de Salto Grande. Las claves `anomalia_*` en None = sin dato, nunca cero."""
 
@@ -55,6 +74,7 @@ class Clima(cache.Procedencia, TypedDict, total=False):
     ultimo_dato: str
     periodo: str
     tendencia_c_por_decada: dict[str, TendenciaTemperatura]
+    calidad: dict[str, CalidadSerie]
     nota: str
     fuente: str
     bajado: str
@@ -92,6 +112,7 @@ class SerieInumet(TypedDict):
     columna: str
     agregacion: str
     dias: list[DiaInumet]
+    calidad: NotRequired[CalidadSerie]
 
 
 class ObservacionesInumet(cache.Procedencia, TypedDict, total=False):
@@ -165,6 +186,12 @@ def clima_salto(desde: str, hasta: str) -> dict:
     serie, bajado = _clima()
     filas = [f for f in inia.clima_diario(serie) if ini <= f["fecha"] <= fin]
     r = lambda v: None if v is None else round(v, 1)  # noqa: E731
+    rotulos = [{"fecha": f["fecha"].isoformat()} for f in filas]
+    columnas = {"tmax": "temperaturaMaxima", "tmin": "temperaturaMinima", "lluvia_mm": "pluviometro"}
+    calidad_ = {
+        nombre: _calidad_serie([f[col] for f in filas], rotulos, *CALIDAD_CLIMA[nombre])
+        for nombre, col in columnas.items()
+    }
     return {
         "estacion": "INIA Salto Grande (-31,27 / -57,89)",
         "dias": [
@@ -179,9 +206,12 @@ def clima_salto(desde: str, hasta: str) -> dict:
             for f in filas
         ],
         "ultimo_dato": serie[-1]["fecha"].isoformat(),
+        "calidad": calidad_,
         "nota": (
             "El día de INIA va de 9:00 a 9:00. Anomalía = observado menos la normal 1971-2025 de ese día "
-            "del año (ventana de ±7 días). null = sin dato, no cero. La fuente se actualiza cada quincena."
+            "del año (ventana de ±7 días). null = sin dato, no cero. La fuente se actualiza cada quincena. "
+            "`calidad` marca, sin descartar, los días fuera de rango o sin dato y, en las temperaturas, "
+            "las rachas de 6 días iguales; la lluvia no lleva `plano` porque los días secos seguidos son normales."
         ),
         "fuente": FUENTE_INIA,
         "bajado": bajado,
@@ -266,7 +296,8 @@ def observaciones_inumet(
         "nota": (
             "La fuente publica la hora en UTC; los dias se cuentan en hora local de Uruguay (UTC-3). "
             "Un dia al que le falta alguna observacion devuelve valor null, no cero. "
-            "El viento se publica cada dos horas (12 por dia)."
+            "El viento se publica cada dos horas (12 por dia). Las series con cotas medidas traen `calidad` "
+            "(rango, sin_dato y, donde repetir el valor no es normal, plano); las demas no la traen."
         ),
         "fuente": FUENTE_INUMET,
         "bajado": cache.sello(ruta),
@@ -312,23 +343,27 @@ def observaciones_inumet(
     nombre = candidatas[0]
     series: list[SerieInumet] = []
     for columna in inumet.DATASETS[variable][1]:
-        dias = inumet.serie_diaria(serie, nombre, columna, agregacion)
-        series.append(
-            {
-                "columna": columna,
-                "agregacion": agregacion,
-                "dias": [
-                    {
-                        "fecha": d["fecha"].isoformat(),
-                        "valor": d["valor"],
-                        "observaciones": d["horas"],
-                        "nulos": d["nulos"],
-                    }
-                    for d in dias
-                    if ini <= d["fecha"] <= fin
-                ],
-            }
-        )
+        dias = [d for d in inumet.serie_diaria(serie, nombre, columna, agregacion) if ini <= d["fecha"] <= fin]
+        una: SerieInumet = {
+            "columna": columna,
+            "agregacion": agregacion,
+            "dias": [
+                {
+                    "fecha": d["fecha"].isoformat(),
+                    "valor": d["valor"],
+                    "observaciones": d["horas"],
+                    "nulos": d["nulos"],
+                }
+                for d in dias
+            ],
+        }
+        if (columna, agregacion) in CALIDAD_INUMET:
+            una["calidad"] = _calidad_serie(
+                [d["valor"] for d in dias],
+                [{"fecha": d["fecha"].isoformat()} for d in dias],
+                *CALIDAD_INUMET[(columna, agregacion)],
+            )
+        series.append(una)
     return {**base, "estacion": nombre, "series": series}
 
 
@@ -583,24 +618,6 @@ class NivelesIna(TypedDict):
     aguas_bajas: Optional[float]
 
 
-class LecturaMarcada(TypedDict):
-    """Una lectura cruda que no salió `ok`, con su marca."""
-
-    instancia: str
-    valor: float
-    marca: str
-
-
-class CalidadIna(TypedDict):
-    """Qué pruebas de calidad se hicieron sobre las lecturas crudas y qué marcaron."""
-
-    pruebas: list[str]
-    lecturas: int
-    marcas: dict[str, int]
-    marcadas: list[LecturaMarcada]
-    marcadas_omitidas: NotRequired[int]
-
-
 class NivelRioIna(cache.Procedencia, TypedDict):
     """La respuesta de `nivel_rio_ina()`."""
 
@@ -614,7 +631,7 @@ class NivelRioIna(cache.Procedencia, TypedDict):
     ultima_carga: str
     dias_de_atraso: int
     niveles: NivelesIna
-    calidad: CalidadIna
+    calidad: CalidadSerie
     nota: str
     fuente: str
     bajado: str
@@ -642,7 +659,7 @@ LIMITES_INA: dict[tuple[str, str], tuple[float, float]] = {
     ("Salto Grande Abajo", "Q"): (0.0, 50000.0),
 }
 
-MAX_MARCADAS_INA = 20  # tope de lecturas marcadas en la respuesta; el conteo es de todas
+MAX_MARCADAS = 20  # tope de lecturas marcadas por serie en la respuesta; el conteo es de todas
 PRUEBAS_INA = ["rango", "plano"]  # sin_dato no aplica (el lector rechaza filas vacías); el salto, ver la nota
 
 
@@ -676,26 +693,77 @@ def _niveles_ina(serie: int) -> dict:
     return datos
 
 
-def _calidad_ina(filas: list[dict], escala: str, variable: str) -> CalidadIna:
+PRUEBAS_COMPLETAS = ("rango", "plano", "sin_dato")
+PRUEBAS_SIN_PLANO = ("rango", "sin_dato")  # donde repetir el valor es normal: ver CALIDAD_CLIMA y CALIDAD_INUMET
+
+# INIA Salto Grande, diario. Cotas de sensatez sobre la serie completa (medido 2026-11-21, 20.587 días
+# desde 1970): tmax 4,9 a 41,8; tmin -5,8 a 29,0; lluvia 0 a 257,5 mm. `plano` solo en temperaturas: en 56
+# años la tmax y la tmin nunca repitieron el valor más de 3 días seguidos, y la lluvia tiene 1.028 rachas de
+# 6 o más días en 0 mm (el 53% de los días): es el clima, no un sensor trabado.
+CALIDAD_CLIMA: dict[str, tuple[float, float, tuple[str, ...]]] = {
+    "tmax": (-5.0, 47.0, PRUEBAS_COMPLETAS),
+    "tmin": (-15.0, 35.0, PRUEBAS_COMPLETAS),
+    "lluvia_mm": (0.0, 400.0, PRUEBAS_SIN_PLANO),
+}
+
+# INUMET, valor diario por (columna, agregación). Medido 2026-11-21 sobre 7 estaciones desde 2020: temperatura
+# horaria -6,3 a 41,9; presión 990,3 a 1037,4; lluvia diaria hasta 152,5 mm. `plano` solo donde en el historial
+# no hubo ninguna racha de 6 días iguales (temperatura y presión en las tres agregaciones; humedad promedio y
+# mínima). Humedad máxima y lluvia no: la humedad máxima estuvo en 100 durante 27 días seguidos (saturación) y
+# la lluvia tiene rachas de ceros de hasta 42 días. Sin entrada = sin cotas medidas = sin `calidad` (el viento
+# no está: la fuente trae hoy dos recursos de datos y el lector la rechaza; la dirección es circular).
+_TEMPERATURA = (-15.0, 47.0, PRUEBAS_COMPLETAS)
+_PRESION = (950.0, 1060.0, PRUEBAS_COMPLETAS)
+CALIDAD_INUMET: dict[tuple[str, str], tuple[float, float, tuple[str, ...]]] = {
+    ("temp_aire", "max"): _TEMPERATURA,
+    ("temp_aire", "min"): _TEMPERATURA,
+    ("temp_aire", "promedio"): _TEMPERATURA,
+    ("pres_atm_mar", "max"): _PRESION,
+    ("pres_atm_mar", "min"): _PRESION,
+    ("pres_atm_mar", "promedio"): _PRESION,
+    ("hum_relativa", "promedio"): (0.0, 100.0, PRUEBAS_COMPLETAS),
+    ("hum_relativa", "min"): (0.0, 100.0, PRUEBAS_COMPLETAS),
+    ("hum_relativa", "max"): (0.0, 100.0, PRUEBAS_SIN_PLANO),
+    ("precip_horario", "suma"): (0.0, 400.0, PRUEBAS_SIN_PLANO),
+}
+
+
+def _calidad_serie(
+    valores: list[Optional[float]], rotulos: list[dict], minimo: float, maximo: float, pruebas: tuple[str, ...]
+) -> CalidadSerie:
+    """Marca una serie con `uydatos.calidad`: una marca por valor, alineada con su rótulo (`fecha` o `instancia`).
+
+    Si `plano` no está en `pruebas`, se pide una racha más larga que la serie: nunca se alcanza. Las marcas
+    que no se probaron no figuran en el conteo, para que un cero signifique "se probó y no hubo".
+    """
+    repeticiones = 6 if "plano" in pruebas else max(2, len(valores) + 1)
+    marcas = calidad.marcar(valores, minimo=minimo, maximo=maximo, repeticiones=repeticiones)
+    conteo = {k: v for k, v in calidad.resumen(marcas).items() if k == calidad.OK or k in pruebas}
+    marcadas: list[Marcada] = [
+        {**rotulo, "valor": v, "marca": m} for rotulo, v, m in zip(rotulos, valores, marcas) if m != calidad.OK
+    ]
+    resultado: CalidadSerie = {
+        "pruebas": list(pruebas),
+        "lecturas": len(valores),
+        "marcas": conteo,
+        "marcadas": marcadas[:MAX_MARCADAS],
+    }
+    if len(marcadas) > MAX_MARCADAS:
+        resultado["marcadas_omitidas"] = len(marcadas) - MAX_MARCADAS
+    return resultado
+
+
+def _calidad_ina(filas: list[dict], escala: str, variable: str) -> CalidadSerie:
     """Marca las lecturas crudas (en orden de instancia) con las pruebas de `uydatos.calidad`."""
     minimo, maximo = LIMITES_INA[(escala, variable)]
     ordenadas = sorted(filas, key=lambda f: f["instancia"])
-    marcas = calidad.marcar([f["valor"] for f in ordenadas], minimo=minimo, maximo=maximo)
-    conteo = {k: v for k, v in calidad.resumen(marcas).items() if k == calidad.OK or k in PRUEBAS_INA}
-    marcadas: list[LecturaMarcada] = [
-        {"instancia": f["instancia"].strftime("%Y-%m-%d %H:%MZ"), "valor": f["valor"], "marca": m}
-        for f, m in zip(ordenadas, marcas)
-        if m != calidad.OK
-    ]
-    resultado: CalidadIna = {
-        "pruebas": list(PRUEBAS_INA),
-        "lecturas": len(ordenadas),
-        "marcas": conteo,
-        "marcadas": marcadas[:MAX_MARCADAS_INA],
-    }
-    if len(marcadas) > MAX_MARCADAS_INA:
-        resultado["marcadas_omitidas"] = len(marcadas) - MAX_MARCADAS_INA
-    return resultado
+    return _calidad_serie(
+        [f["valor"] for f in ordenadas],
+        [{"instancia": f["instancia"].strftime("%Y-%m-%d %H:%MZ")} for f in ordenadas],
+        minimo,
+        maximo,
+        tuple(PRUEBAS_INA),
+    )
 
 
 def nivel_rio_ina(
