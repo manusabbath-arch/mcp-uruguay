@@ -4,11 +4,12 @@ from __future__ import annotations
 
 import os
 import time
+from concurrent.futures import ThreadPoolExecutor
 from datetime import date
 
 import pytest
 from conftest import BcuFalso
-from uydatos import bcu
+from uydatos import bcu, salto_grande
 
 from mcp_uruguay import cache
 
@@ -255,3 +256,68 @@ class TestLaHoraEsLaDeUruguay:
         ruta.write_text("dato", encoding="utf-8")
         assert cache.sello(ruta).endswith("-03:00")
         assert cache.ahora().utcoffset().total_seconds() == -3 * 3600
+
+
+class TestUnTemporalPorDescarga:
+    """R1: `cache.archivo`, `cache.sg_lecturas` y `agua._archivo_ose` escribían el mismo `<archivo>.nuevo`.
+
+    Dos clientes MCP que comparten `~/.cache/mcp-uruguay` bajaban al mismo temporal: uno publicaba
+    el archivo a medio escribir del otro.
+    """
+
+    def test_dos_bajadas_a_la_vez_no_publican_una_copia_a_medias(self, tmp_path):
+        import threading
+
+        ruta = tmp_path / "x.txt"
+        barrera = threading.Barrier(2, timeout=10)
+        enteras = {"A" * 800, "B" * 800}
+
+        def bajar_en_dos_tandas(letra):
+            def bajar(destino):
+                with destino.open("wb") as f:
+                    f.write((letra * 400).encode())
+                    f.flush()
+                    barrera.wait()  # el otro escribe la suya en el mismo temporal
+                    f.write((letra * 400).encode())
+
+            return bajar
+
+        def leer(p):
+            texto = p.read_text(encoding="utf-8")
+            if texto not in enteras:  # la copia mezclada: no es ninguna de las dos versiones
+                raise ValueError(f"copia a medias ({len(texto)} bytes)")
+            return texto
+
+        def bajar_y_leer(letra):
+            try:
+                return cache.archivo(ruta, bajar_en_dos_tandas(letra), leer, ttl=3600)[0]
+            except Exception as e:  # noqa: BLE001 - el fallo es lo que se está midiendo
+                return e
+
+        with ThreadPoolExecutor(max_workers=2) as pool:
+            resultados = list(pool.map(bajar_y_leer, "AB"))
+
+        assert all(isinstance(r, str) for r in resultados), resultados
+        assert ruta.read_text(encoding="utf-8") in enteras
+
+    def test_el_temporal_es_propio_de_cada_bajada(self, tmp_path):
+        ruta = tmp_path / "x.txt"
+        una, otra = cache._temporal(ruta), cache._temporal(ruta)
+        assert una != otra
+        assert una.parent == otra.parent == ruta.parent
+        # el sufijo lo sigue ignorando `diagnostico`; el prefijo no choca con la copia buena
+        assert una.name.endswith(".nuevo") and una.name != "x.txt.nuevo"
+
+    def test_salto_grande_baja_a_un_temporal_propio(self, monkeypatch, cache_temporal):
+        destinos = []
+
+        def sin_red(estacion, desde, hasta, destino):
+            destinos.append(destino)
+            raise OSError("sin red")
+
+        monkeypatch.setattr(salto_grande, "descargar_datos", sin_red)
+        for _ in range(2):
+            with pytest.raises(OSError, match="sin red"):
+                cache.sg_lecturas("salto", date(2026, 10, 1), date(2026, 10, 31), hoy=date(2026, 11, 5))
+        assert len(destinos) == 2 and destinos[0] != destinos[1]
+        assert all(d.name != "salto_2026-10.xml.nuevo" for d in destinos)

@@ -430,11 +430,12 @@ def diagnostico() -> Diagnostico:
     d = cache.directorio()
     archivos = []
     for ruta in sorted(d.rglob("*")):
-        if not ruta.is_file() or ruta.name.endswith(".nuevo"):
+        relativa = ruta.relative_to(d)
+        if not ruta.is_file() or cache.es_temporal(relativa):
             continue
         archivos.append(
             {
-                "archivo": str(ruta.relative_to(d)).replace("\\", "/"),
+                "archivo": str(relativa).replace("\\", "/"),
                 "bajado": cache.sello(ruta),
                 "bytes": ruta.stat().st_size,
             }
@@ -445,6 +446,6 @@ def diagnostico() -> Diagnostico:
         "nota": (
             "`bajado` es cuando se obtuvo la copia que se esta usando, en hora local. "
             "Si una fuente no aparece, todavia no se pidio en esta maquina: no es un error. "
-            "Los archivos `.nuevo` son descargas en curso y se omiten."
+            "Los archivos `.nuevo` y las carpetas `.nuevo-*` son descargas en curso y se omiten."
         ),
     }
