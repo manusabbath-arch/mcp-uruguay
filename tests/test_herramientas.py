@@ -258,6 +258,28 @@ class TestIndicadorSocial:
         r = h.buscar_indicador_social("empleo")
         assert r["descartados_ilegibles"] == 0 and len(r["indicadores"]) == 2
 
+    def test_dos_lecturas_concurrentes_no_pierden_marcas(self, monkeypatch):
+        from concurrent.futures import ThreadPoolExecutor
+        from pathlib import Path
+        from threading import Barrier
+
+        from mcp_uruguay.herramientas import sinred
+
+        barrera = Barrier(2)
+        escribir = Path.write_text
+
+        def simultanea(ruta, *args, **kwargs):
+            resultado = escribir(ruta, *args, **kwargs)
+            if ruta.name.endswith(".nuevo"):
+                barrera.wait(timeout=5)
+            return resultado
+
+        monkeypatch.setattr(Path, "write_text", simultanea)
+        slugs = ["tasa-empleo-total-pais", "tasa-empleo-segun-departamento-total-pais"]
+        with ThreadPoolExecutor(max_workers=2) as grupo:
+            list(grupo.map(sinred._marcar_ilegible, slugs))
+        assert sinred._ilegibles() == set(slugs)
+
     def test_la_marca_de_ilegible_vence(self):
         from datetime import date, timedelta
 

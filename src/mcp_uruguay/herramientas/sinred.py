@@ -2,8 +2,8 @@
 
 from __future__ import annotations
 
+import hashlib
 import json
-import os
 from datetime import date, timedelta
 from pathlib import Path
 from typing import Literal, Optional, Union
@@ -264,11 +264,17 @@ def _ruta_ilegibles() -> Path:
 
 
 def _leer_marcas() -> dict[str, str]:
-    try:
-        marcas = json.loads(_ruta_ilegibles().read_text(encoding="utf-8"))
-    except (OSError, ValueError):
-        return {}
-    return marcas if isinstance(marcas, dict) else {}
+    # Leer también el registro anterior; las marcas nuevas son independientes por indicador.
+    ruta = _ruta_ilegibles()
+    marcas = {}
+    for archivo in (ruta, *sorted(ruta.with_suffix("").glob("*.json"))):
+        try:
+            contenido = json.loads(archivo.read_text(encoding="utf-8"))
+        except (OSError, ValueError):
+            continue
+        if isinstance(contenido, dict):
+            marcas.update(contenido)
+    return marcas
 
 
 def _ilegibles() -> set[str]:
@@ -281,14 +287,16 @@ def _ilegibles() -> set[str]:
 
 
 def _marcar_ilegible(slug: str) -> None:
-    ruta = _ruta_ilegibles()
-    ruta.parent.mkdir(parents=True, exist_ok=True)
-    marcas = _leer_marcas()
-    marcas[slug] = date.today().isoformat()
-    # Escritura atómica: en modo remoto varios clientes comparten la caché.
-    nueva = ruta.with_name(f"{ruta.name}.{os.getpid()}.nuevo")
-    nueva.write_text(json.dumps(marcas, sort_keys=True), encoding="utf-8")
-    os.replace(nueva, ruta)
+    carpeta = _ruta_ilegibles().with_suffix("")
+    carpeta.mkdir(parents=True, exist_ok=True)
+    # Un archivo por indicador evita perder marcas entre procesos; el hash no admite rutas.
+    ruta = carpeta / f"{hashlib.sha256(slug.encode('utf-8')).hexdigest()}.json"
+    nueva = cache._temporal(ruta)
+    try:
+        nueva.write_text(json.dumps({slug: date.today().isoformat()}), encoding="utf-8")
+        cache._poner_en_su_lugar(nueva, ruta)
+    finally:
+        nueva.unlink(missing_ok=True)
 
 
 def buscar_indicador_social(texto: str, cantidad: int = 20) -> IndicadoresEncontrados:
