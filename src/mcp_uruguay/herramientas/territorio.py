@@ -98,6 +98,7 @@ def _capa(capa: str) -> tuple[list[dict], str]:
     if clave not in _capas:
         _capas.clear() if len(_capas) > 4 else None
         _capas[clave] = limites.leer(capa, ruta)
+    cache.anotar_lectura(ruta)
     return _capas[clave], cache.sello(ruta)
 
 
@@ -116,6 +117,7 @@ def _tabulado_censo(cuadro: str) -> dict[str, int]:
         lambda p: censo.descargar(cuadro, p),
         leer,
         30 * cache.DIA,
+        url=censo.URLS[cuadro],
     )
     if cuadro == "departamentos":
         return {_sin_tildes(f["departamento"]): f["poblacion"] for f in filas}

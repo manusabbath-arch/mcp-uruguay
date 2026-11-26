@@ -210,6 +210,20 @@ def censo_en_cache(cache_temporal):
 
 
 class TestPoblacionOficial:
+    def test_procedencia_incluye_la_capa_y_ambos_tabulados(self, capas, censo_en_cache):
+        from mcp_uruguay import cache
+
+        # También la capa ya leída en memoria tiene que figurar como respaldo.
+        h.localidad("Salto", "Salto")
+        with cache.vigilar_procedencia() as leidas:
+            h.localidad("Salto", "Salto")
+        assert {c["archivo"] for c in leidas} == {
+            "limites/localidades.geojson",
+            "censo/localidades.xlsx",
+            "censo/departamentos.xlsx",
+        }
+        assert all(c["url"] for c in leidas if c["archivo"].startswith("censo/"))
+
     def test_cada_localidad_trae_la_cifra_oficial_del_ine(self, capas, censo_en_cache):
         r = h.localidad("Salto", "Salto")
         loc = r["localidades"][0]
