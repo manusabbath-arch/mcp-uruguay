@@ -94,7 +94,10 @@
         "url": "https://www5.ine.gub.uy/documents/CENSO%202023/Infografias/Salto.pdf",
         "cita": "la ciudad de Salto tiene 112.527 habitantes",
         "via": "organismo",
-        "confirmada_en_fuente": false
+        "nota": "Medido el 2026-11-26 en el PDF vigente («POR LOCALIDAD | Salto 112.527 - Rural 7.543»): coincide con el cuadro 13 del tabulado.",
+        "confirmada_en_fuente": true,
+        "confirmada_el": "2026-11-26",
+        "confirmada_en": "https://www5.ine.gub.uy/documents/CENSO%202023/Infografias/Salto.pdf"
       }
     },
     {
@@ -111,9 +114,12 @@
       "fuente": {
         "organismo": "INE, infografía departamental del Censo 2023",
         "url": "https://www5.ine.gub.uy/documents/CENSO%202023/Infografias/Salto.pdf",
-        "cita": "Salto tiene 136.195 habitantes en 2023, frente a 128.803 en 2011",
+        "cita": "PERFIL DEPARTAMENTAL SALTO 2011 128.803 2023 136.195",
         "via": "organismo",
-        "confirmada_en_fuente": false
+        "nota": "Medido el 2026-11-26 en el PDF vigente: coincide con el cuadro 12 del tabulado.",
+        "confirmada_en_fuente": true,
+        "confirmada_el": "2026-11-26",
+        "confirmada_en": "https://www5.ine.gub.uy/documents/CENSO%202023/Infografias/Salto.pdf"
       }
     },
     {
@@ -357,18 +363,21 @@
       "conjunto": "desarrollo",
       "pregunta": "¿Cuántos habitantes tiene el departamento de Paysandú según el Censo 2023?",
       "tipo": "numero",
-      "esperado": 121843,
+      "esperado": 121838,
       "tolerancia": 0,
       "unidad": "personas",
       "herramientas_esperadas": [
         "localidad"
       ],
       "fuente": {
-        "organismo": "INE, infografía departamental del Censo 2023 (el INE las actualizó en mayo de 2026: confirmar contra la versión vigente)",
+        "organismo": "INE, infografía departamental del Censo 2023 (versión vigente al 2026-11-26; la de antes de mayo de 2026 decía 121.843)",
         "url": "https://www5.ine.gub.uy/documents/CENSO%202023/Infografias/Paysandu.pdf",
-        "cita": "la población total pasó de 117.023 habitantes en 2011 a 121.843 en 2023",
+        "cita": "PERFIL DEPARTAMENTAL PAYSANDÚ 2011 117.023 2023 121.838",
         "via": "organismo",
-        "confirmada_en_fuente": false
+        "nota": "Medido el 2026-11-26 sobre el PDF vigente: coincide con el cuadro 12 del tabulado del Censo 2023 (121.838). Hasta esa fecha el esperado era 121.843, la versión anterior de la infografía, que marcaba como fallo una respuesta correcta.",
+        "confirmada_en_fuente": true,
+        "confirmada_el": "2026-11-26",
+        "confirmada_en": "https://www5.ine.gub.uy/documents/CENSO%202023/Infografias/Paysandu.pdf"
       }
     },
     {
