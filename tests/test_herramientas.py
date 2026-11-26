@@ -265,9 +265,7 @@ class TestIndicadorSocial:
         with pytest.raises(observatorio.ObservatorioInvalido):
             h.indicador_social(slug)
         assert slug not in h.buscar_indicador_social("empleo")["indicadores"]
-        monkeypatch.setattr(
-            observatorio.red, "bajar", lambda url, ruta: ruta.write_text(self.PAGINA, encoding="utf-8")
-        )
+        monkeypatch.setattr(observatorio.red, "bajar", lambda url, ruta: ruta.write_text(self.PAGINA, encoding="utf-8"))
         assert h.indicador_social(slug)["filas"]
         r = h.buscar_indicador_social("empleo")
         assert slug in r["indicadores"]
