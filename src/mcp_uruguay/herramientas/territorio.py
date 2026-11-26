@@ -33,6 +33,7 @@ class LocalidadDelPunto(TypedDict):
     distancia_km: float
     poblacion_2023: Optional[int]
     viviendas_2023: Optional[int]
+    poblacion_oficial_2023: Optional[int]
 
 
 class DireccionCercana(TypedDict):
@@ -124,6 +125,23 @@ def _tabulado_censo(cuadro: str) -> dict[str, int]:
     return {f["codigo"]: f["poblacion"] for f in filas}
 
 
+def _poblacion_oficial(area: dict) -> tuple[Optional[int], str]:
+    """Población oficial del Censo 2023 de una localidad de la capa, y el aviso si no se pudo leer.
+
+    El código INE de la localidad es la llave del cuadro 13: la capa lo trae como número y el tabulado
+    como texto de 5 dígitos. Un tabulado que no se puede bajar no invalida el polígono, así que la
+    respuesta sale igual, con la cifra en `None` y el motivo en la nota."""
+    codigo = area.get("codigo")
+    if not isinstance(codigo, int):
+        return None, ""
+    try:
+        return _tabulado_censo("localidades").get(f"{codigo:05d}"), ""
+    except (OSError, DatosInvalidos) as e:
+        return None, (
+            f" No se pudo leer el tabulado oficial de localidades del INE ({e}): poblacion_oficial_2023 queda sin dato."
+        )
+
+
 def ubicar_punto(lat: float, lon: float) -> Ubicacion:
     if not -90 <= lat <= 90 or not -180 <= lon <= 180:
         raise ValueError(f"latitud {lat} / longitud {lon}: coordenadas imposibles (se esperan grados, lat primero)")
@@ -152,6 +170,7 @@ def ubicar_punto(lat: float, lon: float) -> Ubicacion:
     km_loc = 0.0
     if loc is None:
         loc, km_loc = limites.mas_cercana(locs, lat, lon)
+    oficial, aviso_censo = _poblacion_oficial(loc)
     localidad: LocalidadDelPunto = {
         "nombre": loc["nombre"],
         "departamento": loc["departamento"],
@@ -159,10 +178,14 @@ def ubicar_punto(lat: float, lon: float) -> Ubicacion:
         "distancia_km": round(km_loc, 1),
         "poblacion_2023": loc["datos"].get("poblacion_2023"),
         "viviendas_2023": loc["datos"].get("viviendas_2023"),
+        "poblacion_oficial_2023": oficial,
     }
     notas = [
         "departamento y localidad salen de los polígonos oficiales del INE. Si el punto no está adentro de una "
-        "localidad (campo, ruta), se da la más cercana con su distancia hasta el borde, aproximada."
+        "localidad (campo, ruta), se da la más cercana con su distancia hasta el borde, aproximada.",
+        "poblacion_oficial_2023 es la cifra que publica el INE y la que se cita; poblacion_2023 y viviendas_2023 "
+        "son los campos pob_tot_23 y viv_tot_23 de la capa cartográfica, que difieren (ciudad de Salto: 114.043 "
+        "en la capa, 112.527 oficial)." + aviso_censo,
     ]
     direccion = None
     try:
@@ -178,6 +201,9 @@ def ubicar_punto(lat: float, lon: float) -> Ubicacion:
         notas.append(f"IDE.uy no respondió para la dirección más cercana ({e}); departamento y localidad igual valen.")
     if dep is None:
         notas.append("El punto está fuera de todo departamento: en el mar, en un río limítrofe o fuera de Uruguay.")
+    fuente = FUENTE_LIMITES + "; " + FUENTE_IDE
+    if not aviso_censo:
+        fuente = FUENTE_LIMITES + "; " + FUENTE_CENSO + "; " + FUENTE_IDE
     return {
         "lat": lat,
         "lon": lon,
@@ -185,7 +211,7 @@ def ubicar_punto(lat: float, lon: float) -> Ubicacion:
         "localidad": localidad,
         "direccion_mas_cercana": direccion,
         "nota": " ".join(notas),
-        "fuente": FUENTE_LIMITES + "; " + FUENTE_IDE,
+        "fuente": fuente,
         "bajado": bajado,
     }
 

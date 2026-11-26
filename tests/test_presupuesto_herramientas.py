@@ -13,7 +13,7 @@ from mcp import Client
 
 from mcp_uruguay.servidor import servidor
 
-TOPE_CARACTERES = 19_771  # 2026-11-21: 19.713 + 58 de `localidad` (población oficial del INE)
+TOPE_CARACTERES = 19_849  # 2026-11-26: 19.771 + 78 de `ubicar_punto` (población oficial del Censo 2023)
 TOPE_HERRAMIENTAS = 31
 
 

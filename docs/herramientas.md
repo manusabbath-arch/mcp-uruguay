@@ -356,9 +356,10 @@ Semana ISO 8601 (W1, W2...) de una fecha AAAA-MM-DD, con su lunes y su domingo.
 ## `ubicar_punto` — En qué departamento y localidad cae un punto
 
 Dado un punto (latitud y longitud en grados), en qué departamento y en qué localidad de Uruguay cae,
-según los polígonos oficiales del INE, con la población 2023 de la localidad. Si cae en el campo, la
-localidad más cercana y a qué distancia. Suma la dirección más cercana de IDE.uy con su distancia.
-Combinar con geocodificar_direccion para pasar de una dirección a su departamento.
+según los polígonos oficiales del INE, con la población 2023 de la localidad y la oficial del Censo 2023
+(`poblacion_oficial_2023`, que es la que se cita). Si cae en el campo, la localidad más cercana y a qué
+distancia. Suma la dirección más cercana de IDE.uy con su distancia. Combinar con geocodificar_direccion
+para pasar de una dirección a su departamento.
 
 | parametro | tipo | obligatorio |
 |---|---|---|

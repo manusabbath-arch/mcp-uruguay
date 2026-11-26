@@ -259,3 +259,18 @@ class TestPoblacionOficial:
         r = h.localidad("Salto", "Salto")
         assert r["localidades"][0]["poblacion_oficial_2023"] is None
         assert "no se pudo" in r["nota"].lower()
+
+    def test_ubicar_punto_trae_la_cifra_oficial_de_la_localidad(self, capas, censo_en_cache, sin_ide):
+        """El punto cae en Salto: la capa dice 114.043 y el INE publica 112.527. La respuesta lleva las dos
+        y la nota dice cuál se cita; antes llevaba solo la de la capa, que no es la oficial."""
+        r = h.ubicar_punto(-31.42, -58.17)
+        loc = r["localidad"]
+        assert loc["nombre"] == "SALTO" and loc["poblacion_2023"] == 114043
+        assert loc["poblacion_oficial_2023"] == 112527
+        assert "112.527 oficial" in r["nota"] and "Censo" in r["fuente"]
+
+    def test_sin_el_tabulado_ubicar_punto_igual_responde(self, capas, sin_ide):
+        r = h.ubicar_punto(-31.42, -58.17)
+        assert r["localidad"]["poblacion_2023"] == 114043
+        assert r["localidad"]["poblacion_oficial_2023"] is None
+        assert "no se pudo" in r["nota"].lower()

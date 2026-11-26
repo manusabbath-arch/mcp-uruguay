@@ -43,6 +43,13 @@
   cartográfica: ciudad de Salto 114.043 en la capa y 112.527 oficial. Si el tabulado no se puede bajar,
   la herramienta responde igual y lo dice en la nota. Se conserva `uydatos>=0.18,<0.19` y se agrega
   el extra `hojas` para leer los tabulados publicados.
+- **`ubicar_punto` trae la población oficial del Censo 2023 de la localidad.** Antes la respuesta
+  llevaba solo `poblacion_2023`, la de la capa cartográfica, así que el servidor daba dos cifras para
+  la misma ciudad según la herramienta: 114.043 en `ubicar_punto` y 112.527 en `localidad`. Ahora la
+  localidad del punto trae también `poblacion_oficial_2023` (el tabulado del INE, la que se cita) y la
+  nota dice cuál es cuál; la `fuente` suma el Censo cuando se pudo leer. Si el tabulado no se puede
+  bajar, la herramienta responde igual, con la cifra en `null` y el motivo en la nota. Medido el
+  2026-11-26 en el centro de Salto: 114.043 en la capa y 112.527 oficial, igual que `localidad`.
 - **`herramientas.py` (2.680 líneas) pasa a ser un paquete con un módulo por dominio** (`monedas`,
   `combustibles`, `rio_y_clima`, `territorio`, `estado`, `agua`, `sinred` y `comun`; el más grande tiene 717
   líneas). **Sin cambios para quien usa el servidor ni para quien importa `herramientas`**: el paquete
