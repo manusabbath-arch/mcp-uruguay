@@ -241,6 +241,19 @@ def test_un_modo_mal_escrito_no_corre_como_sin_servidor(capsys):
     assert "guidao" in capsys.readouterr().err
 
 
+def test_un_modelo_con_dos_puntos_o_barra_guarda_el_detalle(tmp_path, monkeypatch):
+    """`deepseek-v4.1-flash:cloud`: en Windows el `:` dejaba un archivo vacío y el detalle se perdía."""
+    import json
+
+    falso = NS(AsyncAnthropic=lambda: ClienteFalso([_fin()]))
+    monkeypatch.setitem(sys.modules, "anthropic", falso)
+    argumentos = ["--id", "ipca-brasil-2024", "--conjunto", "todos", "--modo", "sin"]
+    assert evaluar.main([*argumentos, "--modelo", "org/modelo:cloud", "--salida", str(tmp_path)]) == 0
+    (archivo,) = tmp_path.iterdir()
+    assert archivo.name.endswith("-org-modelo-cloud-todos.json")
+    assert json.loads(archivo.read_text(encoding="utf-8"))["modelo"] == "org/modelo:cloud"
+
+
 # --- La confirmación contra la fuente ----------------------------------------------------------------
 
 import confirmar  # noqa: E402

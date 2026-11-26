@@ -353,7 +353,10 @@ def main(argv: Optional[list[str]] = None) -> int:
     )
     sello = datetime.now(timezone.utc).strftime("%Y%m%dT%H%M%SZ")
     args.salida.mkdir(parents=True, exist_ok=True)
-    destino = args.salida / f"{sello}-{args.modelo}-{args.conjunto}.json"
+    # `modelo:cloud` o `org/modelo` no sirven en un nombre de archivo: en NTFS el `:` abre un flujo
+    # alternativo y queda un archivo vacío. El nombre exacto va dentro del JSON.
+    nombre = re.sub(r"[^\w.-]", "-", args.modelo)
+    destino = args.salida / f"{sello}-{nombre}-{args.conjunto}.json"
     destino.write_text(
         json.dumps(
             {"modelo": args.modelo, "esfuerzo": args.esfuerzo, "conjunto": args.conjunto, "filas": filas},
