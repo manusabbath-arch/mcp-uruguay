@@ -102,6 +102,8 @@ def test_integrar_exige_verificacion_previa(repo, vinculada):
 
 def test_integrar_hace_fast_forward_sin_borrar_la_rama(repo, vinculada, monkeypatch):
     sesiones = cargar()
+    (repo / ".git" / "info" / "exclude").write_text("local.txt\n", encoding="utf-8")
+    (repo / "local.txt").write_text("ignorado ajeno sin colisión\n", encoding="utf-8")
     (vinculada / "dato.txt").write_text("cambio\n", encoding="utf-8")
     git(vinculada, "add", "dato.txt")
     git(vinculada, "commit", "-m", "cambio")
@@ -111,6 +113,7 @@ def test_integrar_hace_fast_forward_sin_borrar_la_rama(repo, vinculada, monkeypa
     assert git(repo, "rev-parse", "HEAD") == esperado
     assert git(repo, "status", "--porcelain") == ""
     assert git(vinculada, "branch", "--show-current") == "agente/tarea"
+    assert (repo / "local.txt").read_text(encoding="utf-8") == "ignorado ajeno sin colisión\n"
 
 
 @pytest.mark.parametrize("cambio", ["main", "rama", "sucio_principal", "sucio_propio"])
@@ -204,6 +207,32 @@ def test_fast_forward_imposible_no_deja_merge_pendiente(repo, vinculada, monkeyp
     assert git(repo, "rev-parse", "HEAD") == antes
     assert not (repo / ".git" / "MERGE_HEAD").exists()
     assert (repo / "dato.txt").read_text(encoding="utf-8") == "main"
+
+
+@pytest.mark.parametrize("nombre", ["ignorado.txt", "ignorado/sub.txt"])
+def test_integrar_no_sobrescribe_archivos_ignorados_ajenos(repo, vinculada, monkeypatch, nombre):
+    sesiones = cargar()
+    (repo / ".gitignore").write_text("ignorado.txt\nignorado/\n", encoding="utf-8")
+    git(repo, "add", ".gitignore")
+    git(repo, "commit", "-m", "ignorar archivos locales")
+    git(vinculada, "merge", "--ff-only", "main")
+    propio = vinculada / nombre
+    propio.parent.mkdir(parents=True, exist_ok=True)
+    propio.write_text("contenido-rama\n", encoding="utf-8")
+    git(vinculada, "add", "-f", nombre)
+    git(vinculada, "commit", "-m", "incorporar ruta antes ignorada")
+    ajeno = repo / nombre
+    ajeno.parent.mkdir(parents=True, exist_ok=True)
+    ajeno.write_text("trabajo-ajeno\n", encoding="utf-8")
+    assert git(repo, "status", "--porcelain", "--untracked-files=all") == ""
+    antes = git(repo, "rev-parse", "HEAD")
+    monkeypatch.setattr(sesiones, "_validar", lambda raiz: None)
+    sesiones.verificar(vinculada)
+    with pytest.raises(sesiones.SesionInvalida):
+        sesiones.integrar(vinculada)
+    assert ajeno.read_text(encoding="utf-8") == "trabajo-ajeno\n"
+    assert git(repo, "rev-parse", "HEAD") == antes
+    assert not (repo / ".git" / "MERGE_HEAD").exists()
 
 
 def test_comprobar_rechaza_el_arbol_compartido(repo):

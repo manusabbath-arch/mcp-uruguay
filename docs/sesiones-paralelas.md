@@ -48,7 +48,9 @@ fallida borra el recibo anterior. Si `HEAD` o `main` cambian durante las pruebas
 Un commit posterior, incluso de documentación, obliga a verificar de nuevo.
 
 `integrar` adquiere el bloqueo común, exige ese recibo vigente y ambos árboles limpios y hace
-`git merge --ff-only` al SHA verificado. No rebasea, no hace stash, no aborta operaciones ajenas,
+`git merge --ff-only --no-overwrite-ignore` al SHA verificado. Así una ruta nueva versionada no
+sobrescribe archivos locales ignorados que `git status` no muestra; los ignorados sin colisión no
+impiden integrar. No rebasea, no hace stash, no aborta operaciones ajenas,
 no borra ramas ni worktrees y no hace push. Los tests de este coordinador entran en el `pytest`
 habitual y, por lo tanto, en el CI existente.
 

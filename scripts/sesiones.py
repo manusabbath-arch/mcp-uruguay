@@ -123,7 +123,8 @@ def integrar(raiz: Path) -> str:
         if git(destino, "branch", "--show-current") != "main" or git(destino, "rev-parse", "HEAD") != esperado["main"]:
             raise SesionInvalida("El árbol de integración cambió: no se toca")
         # Un SHA, no una rama móvil. --ff-only no deja una resolución de merge pendiente.
-        git(destino, "merge", "--ff-only", "--no-edit", esperado["head"])
+        # --no-overwrite-ignore también protege archivos locales que status no muestra.
+        git(destino, "merge", "--ff-only", "--no-overwrite-ignore", "--no-edit", esperado["head"])
         _limpio(destino)
         if git(destino, "rev-parse", "HEAD") != esperado["head"]:
             raise SesionInvalida("HEAD de integración inesperado: inspeccionar sin resetear trabajo ajeno")
