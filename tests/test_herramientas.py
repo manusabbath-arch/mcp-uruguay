@@ -252,7 +252,26 @@ class TestIndicadorSocial:
         r = h.buscar_indicador_social("empleo")
         assert "tasa-empleo-total-pais" not in r["indicadores"]
         assert r["descartados_ilegibles"] == 1 and r["encontrados"] == 1
-        assert "formato viejo" in r["nota"]
+        assert "última lectura fue rechazada" in r["nota"]
+        assert "30 días" in r["nota"]
+
+    def test_un_indicador_recuperado_vuelve_a_la_busqueda(self, monkeypatch):
+        from uydatos import observatorio
+
+        slug = "tasa-empleo-total-pais"
+        monkeypatch.setattr(
+            observatorio.red, "bajar", lambda url, ruta: ruta.write_text(self.PAGINA_VIEJA, encoding="utf-8")
+        )
+        with pytest.raises(observatorio.ObservatorioInvalido):
+            h.indicador_social(slug)
+        assert slug not in h.buscar_indicador_social("empleo")["indicadores"]
+        monkeypatch.setattr(
+            observatorio.red, "bajar", lambda url, ruta: ruta.write_text(self.PAGINA, encoding="utf-8")
+        )
+        assert h.indicador_social(slug)["filas"]
+        r = h.buscar_indicador_social("empleo")
+        assert slug in r["indicadores"]
+        assert r["descartados_ilegibles"] == 0
 
     def test_sin_ilegibles_no_descarta_nada(self):
         r = h.buscar_indicador_social("empleo")
@@ -291,14 +310,25 @@ class TestIndicadorSocial:
         assert sinred._leer_marcas()["tasa-empleo-total-pais"] == "2026-10-31"
         assert "tasa-empleo-total-pais" in sinred._ilegibles()
 
+    def test_una_lectura_valida_retira_tambien_una_marca_del_registro_anterior(self, cache_temporal):
+        from mcp_uruguay import cache
+
+        slug = "tasa-empleo-total-pais"
+        ruta = cache_temporal / "observatorio" / "ilegibles.json"
+        ruta.parent.mkdir(parents=True, exist_ok=True)
+        ruta.write_text(self.json.dumps({slug: cache.hoy().isoformat()}), encoding="utf-8")
+        assert h.buscar_indicador_social("empleo")["descartados_ilegibles"] == 1
+        assert h.indicador_social(slug)["filas"]
+        assert h.buscar_indicador_social("empleo")["descartados_ilegibles"] == 0
+
     def test_la_marca_de_ilegible_vence(self):
-        from datetime import date, timedelta
+        from datetime import timedelta
 
         from mcp_uruguay import cache
 
         ruta = cache.directorio() / "observatorio" / "ilegibles.json"
         ruta.parent.mkdir(parents=True, exist_ok=True)
-        vieja = (date.today() - timedelta(days=31)).isoformat()
+        vieja = (cache.hoy() - timedelta(days=31)).isoformat()
         ruta.write_text(self.json.dumps({"tasa-empleo-total-pais": vieja}), encoding="utf-8")
         assert h.buscar_indicador_social("empleo")["descartados_ilegibles"] == 0
 

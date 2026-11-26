@@ -286,17 +286,22 @@ def _ilegibles() -> set[str]:
     return {slug for slug, dia in _leer_marcas().items() if str(dia) >= limite}
 
 
-def _marcar_ilegible(slug: str) -> None:
+def _guardar_marca(slug: str, dia: str) -> None:
+    """Una fecha marca el rechazo; una cadena vacía lo retira, incluso del registro anterior."""
     carpeta = _ruta_ilegibles().with_suffix("")
     carpeta.mkdir(parents=True, exist_ok=True)
     # Un archivo por indicador evita perder marcas entre procesos; el hash no admite rutas.
     ruta = carpeta / f"{hashlib.sha256(slug.encode('utf-8')).hexdigest()}.json"
     nueva = cache._temporal(ruta)
     try:
-        nueva.write_text(json.dumps({slug: cache.hoy().isoformat()}), encoding="utf-8")
+        nueva.write_text(json.dumps({slug: dia}), encoding="utf-8")
         cache._poner_en_su_lugar(nueva, ruta)
     finally:
         nueva.unlink(missing_ok=True)
+
+
+def _marcar_ilegible(slug: str) -> None:
+    _guardar_marca(slug, cache.hoy().isoformat())
 
 
 def buscar_indicador_social(texto: str, cantidad: int = 20) -> IndicadoresEncontrados:
@@ -316,7 +321,8 @@ def buscar_indicador_social(texto: str, cantidad: int = 20) -> IndicadoresEncont
             "es del país entero. Los más cortos primero."
             + ("" if encontrados else " Sin resultados: probar con menos palabras o con su raíz.")
             + (
-                f" Se omitieron {descartados} con la página en formato viejo, que indicador_social no puede leer."
+                f" Se omitieron {descartados} indicadores cuya última lectura fue rechazada. "
+                "La marca vence a los 30 días y se retira si una lectura posterior tiene éxito."
                 if descartados
                 else ""
             )
@@ -348,6 +354,9 @@ def indicador_social(indicador: str, filtro: str = "") -> IndicadorSocial:
     except observatorio.ObservatorioInvalido:
         _marcar_ilegible(nombre)
         raise
+    # Una lectura válida recupera el indicador inmediatamente, aunque la marca no haya vencido.
+    if nombre in _ilegibles():
+        _guardar_marca(nombre, "")
     filas = r["filas"]
     if filtro:
         palabras = [_sin_tildes(p) for p in filtro.split(",") if p.strip()]
