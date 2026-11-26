@@ -67,8 +67,39 @@ Montevideo se contrastó con el tabulado oficial, no con una segunda publicació
 
 El usuario pidió expresamente excluir dos commits de evaluación que aparecieron durante la
 integración. Se revirtieron sin reescribir historia. `evals/preguntas.json` y `tests/test_evals.py`
-quedan idénticos a la base remota. Esto preserva el benchmark, pero no resuelve las ambigüedades de
-sus preguntas electorales ni actualiza cifras históricas del conjunto de desarrollo.
+quedan idénticos a la base remota **en esa tanda**; la tanda siguiente (abajo) mueve una cifra del
+conjunto de desarrollo, con la fuente medida. Esto preserva el benchmark, pero no resuelve las
+ambigüedades de sus preguntas electorales ni actualiza cifras históricas del conjunto de desarrollo.
+
+## Tanda siguiente: la población del país y la cifra vigente de Paysandú
+
+Integrada sobre la versión 0.15.0 preparada, sin Release:
+
+- **`ubicar_punto` trae la población oficial del Censo 2023.** Antes el mismo punto daba dos
+  poblaciones en el servidor: 114.043 para Salto (capa, `pob_tot_23`) en `ubicar_punto` y 112.527
+  (tabulado del INE) en `localidad`, y quien citaba la primera citaba la que no es oficial. La
+  localidad del punto lleva ahora `poblacion_oficial_2023`, la nota dice cuál es cuál y la `fuente`
+  suma el Censo; si el tabulado no baja, responde igual con la cifra en `null` y el motivo.
+- **`localidad()` sin argumentos responde por el país:** `poblacion_oficial_total` (3.499.451), los
+  19 departamentos y las localidades más pobladas. Antes era un `ValueError`, así que «población de
+  Uruguay según el Censo 2023» —una pregunta del conjunto de desarrollo de la eval— no tenía
+  herramienta que la respondiera. El total es la suma de los departamentos, no la de las localidades
+  (3.499.215: 236 personas en filas sin localidad), y va en `null` si el cuadro 12 no trae todos los
+  departamentos de la capa.
+- **`uru://trampas`:** la trampa de `localidad` pasa a ser que `pob_tot_23` no es la cifra oficial y
+  que las localidades no suman el departamento ni el país.
+- **`evals/preguntas.json`:** `censo-2023-departamento-paysandu` esperaba 121.843 con tolerancia 0,
+  la infografía anterior a mayo de 2026; el PDF vigente, bajado el 2026-11-26, dice
+  «PERFIL DEPARTAMENTAL PAYSANDÚ 2011 117.023 2023 121.838», igual que el cuadro 12. El esperado pasa
+  a 121.838 y la cita, fecha y URL quedan registradas. De la misma fuente se marcan confirmadas
+  Salto ciudad (112.527) y Salto departamento (136.195). **Ninguna pregunta de balotaje se toca:** su
+  esperado depende de qué escrutinio se cuenta y esa decisión sigue abierta.
+
+Verificación de esta tanda en `main`: `pytest -q` **268 passed, 22 deselected**; `ruff check` y
+`ruff format --check` limpios; llamada real por MCP con `localidad()` (3.499.451, 19 departamentos) y
+`ubicar_punto` en el centro de Salto (114.043 de la capa, 112.527 oficial), con `procedencia` que
+declara `censo/localidades.xlsx` y `censo/departamentos.xlsx` con sus sha256. Trinquete de
+definiciones de herramientas: 19.771 → 19.954 caracteres, en dos pasos (+78 y +105).
 
 No se afirma una mejora de puntuación. No se repitió toda la suite de fuentes reales; se verificaron
 las consultas indicadas. La Release, el despliegue remoto y la instalación permanente del usuario
