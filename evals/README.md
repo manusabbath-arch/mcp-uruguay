@@ -34,6 +34,21 @@ propio servidor sería circular.
 Hay dos conjuntos. `desarrollo` es el que se mira para mejorar las herramientas. `reservado` **no se
 mira** al ajustar: es el número que se publica.
 
+## Los modos
+
+| `--modo` | qué recibe el agente |
+|---|---|
+| `sin` | solo el modelo |
+| `con` | las herramientas del servidor |
+| `guiado` | las herramientas, las instrucciones del servidor en el prompt de sistema y `leer_recurso` para sus recursos |
+
+`guiado` imita a un cliente que muestra las instrucciones y deja leer recursos; cuánto de eso hace un
+cliente real depende de cada uno. Cada intento guarda `recursos_leidos`, y `leer_recurso` cuenta en
+`llamadas`. **Los 5 prompts no se evalúan**: los elige el usuario, no el modelo.
+
+Contra `con`, `guiado` mide las dos cosas juntas. Para medir un cambio en las instrucciones o en un
+recurso, correr `guiado` antes y después del cambio.
+
 ## Antes de publicar un resultado
 
 1. **Confirmar cada respuesta en la fuente.** Las cifras se buscaron el 2026-11-04 desde una máquina sin

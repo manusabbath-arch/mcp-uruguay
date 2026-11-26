@@ -180,6 +180,67 @@ async def test_la_corrida_marca_el_refusal_como_fallo():
     assert "| sin | **todas** | 0/1 (0%)" in evaluar.resumen([fila])
 
 
+# --- El modo guiado: instrucciones y recursos del servidor -------------------------------------------
+
+
+def _fin():
+    return _respuesta([NS(type="text", text="RESPUESTA: SIN DATO")], "end_turn")
+
+
+async def test_guiado_entrega_las_instrucciones_y_deja_leer_recursos():
+    from mcp_uruguay import guias
+    from mcp_uruguay.servidor import INSTRUCCIONES
+
+    llamada = NS(type="tool_use", id="r1", name="leer_recurso", input={"uri": "uru://trampas"})
+    cliente = ClienteFalso([_respuesta([llamada], "tool_use"), _fin()])
+    p = next(q for q in evaluar.cargar() if q["id"] == "ipca-brasil-2024")
+    (fila,) = await evaluar.correr(cliente, [p], ["guiado"])
+
+    primero = cliente.pedidos[0]
+    assert primero["system"].startswith(evaluar.SISTEMA) and INSTRUCCIONES in primero["system"]
+    lector = next(t for t in primero["tools"] if t["name"] == "leer_recurso")
+    assert lector["input_schema"]["properties"]["uri"]["enum"] == sorted(guias.RECURSOS)
+    assert "validar_documento" in {t["name"] for t in primero["tools"]}
+    (resultado,) = cliente.pedidos[1]["messages"][-1]["content"]
+    assert not resultado["is_error"] and resultado["content"] == guias.trampas()
+    assert (fila["modo"], fila["llamadas"], fila["recursos_leidos"]) == ("guiado", ["leer_recurso"], ["uru://trampas"])
+
+
+async def test_guiado_un_recurso_inexistente_es_un_error_que_el_agente_ve():
+    llamada = NS(type="tool_use", id="r1", name="leer_recurso", input={"uri": "uru://no-existe"})
+    cliente = ClienteFalso([_respuesta([llamada], "tool_use"), _fin()])
+    p = next(q for q in evaluar.cargar() if q["id"] == "ipca-brasil-2024")
+    (fila,) = await evaluar.correr(cliente, [p], ["guiado"])
+    assert (fila["errores_herramienta"], fila["recursos_leidos"]) == (1, [])
+    assert cliente.pedidos[1]["messages"][-1]["content"][0]["is_error"] is True
+
+
+async def test_el_modo_con_no_cambia_ni_ve_instrucciones_ni_recursos():
+    """Los números ya medidos en `con` tienen que seguir siendo comparables."""
+    cliente = ClienteFalso([_fin()])
+    p = next(q for q in evaluar.cargar() if q["id"] == "ipca-brasil-2024")
+    await evaluar.correr(cliente, [p], ["con"])
+    assert cliente.pedidos[0]["system"] == evaluar.SISTEMA
+    assert "leer_recurso" not in {t["name"] for t in cliente.pedidos[0]["tools"]}
+
+
+async def test_en_el_modo_con_pedir_el_lector_igual_no_lee_el_recurso():
+    llamada = NS(type="tool_use", id="r1", name="leer_recurso", input={"uri": "uru://trampas"})
+    cliente = ClienteFalso([_respuesta([llamada], "tool_use"), _fin()])
+    p = next(q for q in evaluar.cargar() if q["id"] == "ipca-brasil-2024")
+    (fila,) = await evaluar.correr(cliente, [p], ["con"])
+    assert (fila["errores_herramienta"], fila["recursos_leidos"]) == (1, [])
+    assert cliente.pedidos[1]["messages"][-1]["content"][0]["is_error"] is True
+
+
+def test_un_modo_mal_escrito_no_corre_como_sin_servidor(capsys):
+    """Antes, cualquier modo distinto de `con` se corría sin el servidor, y se pagaba igual."""
+    with pytest.raises(SystemExit) as salida:
+        evaluar.main(["--modo", "con,guidao"])
+    assert salida.value.code == 2
+    assert "guidao" in capsys.readouterr().err
+
+
 # --- La confirmación contra la fuente ----------------------------------------------------------------
 
 import confirmar  # noqa: E402

@@ -5,6 +5,9 @@
 - **Las instrucciones del servidor nombran `uru://trampas`.** El recurso existía, pero nada le decía al
   cliente que lo consultara. Un test lo cubre. No se midió si mejora las respuestas: `evals/evaluar.py`
   no entregaba al modelo las instrucciones ni los recursos del servidor.
+- **La evaluación tiene un modo `guiado`.** Suma a las herramientas las instrucciones del servidor y la
+  lectura de sus recursos; `con` y `sin` no cambian. Un `--modo` mal escrito ahora se rechaza: antes se
+  corría sin el servidor. Probado con un cliente falso; no se ejecutaron evaluaciones pagas.
 - **Correcciones de exactitud verificadas al integrar las PR #13 y #14.** La búsqueda del MIDES
   cuenta y omite por 30 días los indicadores cuya lectura fue rechazada. Las marcas se guardan por
   indicador con temporales únicos, para no perder actualizaciones concurrentes, y usan la fecha de
