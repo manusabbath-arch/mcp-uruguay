@@ -18,7 +18,9 @@
         "url": "https://www.ambito.com/uruguay/yamandu-orsi-le-gano-alvaro-delgado-mas-95000-votos-segun-los-datos-oficiales-n6085556",
         "cita": "Orsi acumuló 1.196.798 votos (49,84%), contra 1.101.296 (45,87%) de Delgado",
         "via": "prensa",
-        "confirmada_en_fuente": false
+        "confirmada_en_fuente": true,
+        "confirmada_el": "2026-11-26",
+        "confirmada_en": "https://www.ambito.com/uruguay/yamandu-orsi-le-gano-alvaro-delgado-mas-95000-votos-segun-los-datos-oficiales-n6085556"
       }
     },
     {
@@ -56,7 +58,9 @@
         "url": "https://www.telenoche.com.uy/escrutinio-a14787",
         "cita": "un 43,85% para el Frente Amplio y un 26,81% para el Partido Nacional",
         "via": "prensa",
-        "confirmada_en_fuente": false
+        "confirmada_en_fuente": true,
+        "confirmada_el": "2026-11-26",
+        "confirmada_en": "https://www.telenoche.com.uy/escrutinio-a14787"
       }
     },
     {
@@ -75,7 +79,9 @@
         "url": "https://www.gub.uy/presidencia/comunicacion/noticias/censo-nacional-2023-contabilizo-3499451-habitantes-uruguay",
         "cita": "El INE fijó la población de Uruguay en 3.499.451 personas al 31 de mayo de 2023 (reemplazó a la preliminar de 3.444.263)",
         "via": "organismo",
-        "confirmada_en_fuente": false
+        "confirmada_en_fuente": true,
+        "confirmada_el": "2026-11-26",
+        "confirmada_en": "https://www.gub.uy/presidencia/comunicacion/noticias/censo-nacional-2023-contabilizo-3499451-habitantes-uruguay"
       }
     },
     {
@@ -138,7 +144,9 @@
         "url": "https://www.bloomberglinea.com/latinoamerica/argentina/inflacion-de-2024-en-argentina-fue-de-1178/",
         "cita": "la inflación de diciembre de 2024 fue de 2,7% y el acumulado anual cerró en 117,8%",
         "via": "prensa",
-        "confirmada_en_fuente": false
+        "confirmada_en_fuente": true,
+        "confirmada_el": "2026-11-26",
+        "confirmada_en": "https://www.bloomberglinea.com/latinoamerica/argentina/inflacion-de-2024-en-argentina-fue-de-1178/"
       }
     },
     {
@@ -176,7 +184,9 @@
         "url": "https://www5.ine.gub.uy/documents/Estadísticaseconómicas/PDF/UI/2024/UI_Diciembre%202024.pdf",
         "cita": "01/1/2025 6,1697",
         "via": "organismo",
-        "confirmada_en_fuente": false
+        "confirmada_en_fuente": true,
+        "confirmada_el": "2026-11-26",
+        "confirmada_en": "https://www5.ine.gub.uy/documents/Estadísticaseconómicas/PDF/UI/2024/UI_Diciembre%202024.pdf"
       }
     },
     {
@@ -193,7 +203,9 @@
         "url": "https://impo.com.uy/bases/leyes/19889-2020/83",
         "cita": "Promulgación: 09/07/2020 Publicación: 14/07/2020",
         "via": "organismo",
-        "confirmada_en_fuente": false
+        "confirmada_en_fuente": true,
+        "confirmada_el": "2026-11-26",
+        "confirmada_en": "https://impo.com.uy/bases/leyes/19889-2020/83"
       }
     },
     {
@@ -289,10 +301,12 @@
         "url": "https://www.impo.com.uy/bases/decretos/355-2024",
         "cita": "pasó de $75,052 a $78,54 por litro, desde el 1 de enero de 2025",
         "via": "organismo",
-        "confirmada_en_fuente": false,
+        "confirmada_en_fuente": true,
         "otras_fuentes": [
           "https://www.elobservador.com.uy/economia-y-empresas/combustibles-el-gobierno-definio-los-precios-nafta-gasoil-y-supergas-enero-2025-n5977260"
-        ]
+        ],
+        "confirmada_el": "2026-11-26",
+        "confirmada_en": "https://www.impo.com.uy/bases/decretos/355-2024"
       }
     },
     {
@@ -355,7 +369,9 @@
         "url": "https://www.telenoche.com.uy/escrutinio-a14787",
         "cita": "un 43,85% para el Frente Amplio y un 26,81% para el Partido Nacional",
         "via": "prensa",
-        "confirmada_en_fuente": false
+        "confirmada_en_fuente": true,
+        "confirmada_el": "2026-11-26",
+        "confirmada_en": "https://www.telenoche.com.uy/escrutinio-a14787"
       }
     },
     {
@@ -396,10 +412,12 @@
         "url": "https://investnews.com.br/economia/ipca-sobe-em-056-em-dezembro-e-acumula-alta-de-462-diz-ibge/amp/",
         "cita": "IPCA sobe 0,56% em dezembro e acumula alta de 4,62%, diz IBGE",
         "via": "prensa",
-        "confirmada_en_fuente": false,
+        "confirmada_en_fuente": true,
         "otras_fuentes": [
           "https://www.thestar.com.my/news/world/2024/01/12/brazil-sees-three-year-low-inflation-of-462-pct-in-2023"
-        ]
+        ],
+        "confirmada_el": "2026-11-26",
+        "confirmada_en": "https://investnews.com.br/economia/ipca-sobe-em-056-em-dezembro-e-acumula-alta-de-462-diz-ibge/amp/"
       }
     },
     {
@@ -418,7 +436,9 @@
         "url": "https://agenciadenoticias.ibge.gov.br/agencia-noticias/42416-ipca-em-dezembro-vai-a-0-52-e-acumula-4-83-em-2024.html",
         "cita": "IPCA em dezembro vai a 0,52%",
         "via": "organismo",
-        "confirmada_en_fuente": false
+        "confirmada_en_fuente": true,
+        "confirmada_el": "2026-11-26",
+        "confirmada_en": "https://agenciadenoticias.ibge.gov.br/agencia-noticias/42416-ipca-em-dezembro-vai-a-0-52-e-acumula-4-83-em-2024.html"
       }
     },
     {
@@ -459,10 +479,12 @@
         "url": "https://www.bloomberglinea.com/latinoamerica/argentina/inflacion-de-2024-en-argentina-fue-de-1178/",
         "cita": "la inflación de diciembre de 2024 fue de 2,7%",
         "via": "prensa",
-        "confirmada_en_fuente": false,
+        "confirmada_en_fuente": true,
         "otras_fuentes": [
           "https://www.cronista.com/economia-politica/la-inflacion-de-diciembre-fue-del-2-7-y-cerro-el-ano-con-una-variacion-del-117-8"
-        ]
+        ],
+        "confirmada_el": "2026-11-26",
+        "confirmada_en": "https://www.bloomberglinea.com/latinoamerica/argentina/inflacion-de-2024-en-argentina-fue-de-1178/"
       }
     },
     {
@@ -496,10 +518,12 @@
         "url": "https://www.elobservador.com.uy/nacional/la-coalicion-republicana-dio-el-golpe-y-se-quedo-la-intendencia-salto-n5998916",
         "cita": "La Coalición Republicana dio el golpe y se quedó con la Intendencia de Salto",
         "via": "prensa",
-        "confirmada_en_fuente": false,
+        "confirmada_en_fuente": true,
         "otras_fuentes": [
           "https://www.as-coa.org/articles/uruguays-2025-departmental-and-municipal-elections-results"
-        ]
+        ],
+        "confirmada_el": "2026-11-26",
+        "confirmada_en": "https://www.elobservador.com.uy/nacional/la-coalicion-republicana-dio-el-golpe-y-se-quedo-la-intendencia-salto-n5998916"
       }
     },
     {

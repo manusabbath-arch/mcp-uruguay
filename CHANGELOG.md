@@ -8,6 +8,17 @@
 - **La evaluación tiene un modo `guiado`.** Suma a las herramientas las instrucciones del servidor y la
   lectura de sus recursos; `con` y `sin` no cambian. Un `--modo` mal escrito ahora se rechaza: antes se
   corría sin el servidor. Probado con un cliente falso; no se ejecutaron evaluaciones pagas.
+- **La frase sobre `uru://trampas` no mostró efecto medible.** Conjunto de desarrollo en `guiado` con
+  `deepseek-v4.1-flash` (Ollama), 3 repeticiones, 114 corridas el 2026-11-26: 53/57 aciertos sin la
+  frase y 54/57 con ella; leyeron algún recurso 51/57 y 53/57. Sin la frase el modelo ya leía el
+  recurso. No dice nada sobre otros modelos ni clientes. La frase se mantiene.
+- **Las 19 preguntas de desarrollo quedan confirmadas o resueltas por cálculo y reglas.** Las 12 que
+  faltaban se buscaron en la fuente citada (varias son prensa); la del Frente Amplio se revisó a mano
+  (la fuente dice 43,85, dentro de la tolerancia). `balotaje-2024-orsi-pct` falló 6/6: el servidor
+  responde 49,77 (definitivo con observados) y la pregunta espera 49,84. Esa decisión sigue abierta.
+- **La evaluación guarda el detalle también con modelos como `nombre:cloud`.** En Windows quedaba un
+  archivo vacío.
+- **`opentelemetry-api` 1.45.2** (dependencia de `mcp`) en `uv.lock`, por CVE-2026-126360.
 - **Correcciones de exactitud verificadas al integrar las PR #13 y #14.** La búsqueda del MIDES
   cuenta y omite por 30 días los indicadores cuya lectura fue rechazada. Las marcas se guardan por
   indicador con temporales únicos, para no perder actualizaciones concurrentes, y usan la fecha de
