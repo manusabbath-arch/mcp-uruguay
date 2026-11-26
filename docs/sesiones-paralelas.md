@@ -3,9 +3,10 @@
 ## Estado de esta entrega
 
 Hay un coordinador local en `scripts/sesiones.py`, probado contra repos Git temporales.
-No se instalaron hooks ni se creó `AGENTS.md`: ambas escrituras encontraron protecciones de la
-máquina que requieren intervención humana. La protección no se esquivó. Este documento describe
-el comando disponible; no implica que todos los clientes lo ejecuten automáticamente.
+Las instrucciones comunes viven en `AGENTS.md`, creado con autorización del dueño. No se
+instalaron hooks: su edición sigue requiriendo habilitación humana por la protección local de la
+máquina. Este documento describe el comando disponible; no implica que todos los clientes lean
+`AGENTS.md` o lo ejecuten automáticamente.
 
 ## Motivo y diseño
 
@@ -71,6 +72,7 @@ integración o ejecute Git directamente puede ignorarla. Un hook de commit tampo
 un merge fast-forward ni todas las escrituras. Los recibos locales son comprobantes operativos,
 no firmas contra un actor malicioso. El bloqueo no se recupera automáticamente si el proceso muere.
 
-El siguiente paso de endurecimiento depende de una persona: autorizar y revisar las instrucciones
-comunes para agentes y el hook local. No se declara que esas dos piezas estén instaladas.
+El siguiente paso de endurecimiento depende de una persona: habilitar y revisar la creación del
+hook local. No hay un hook de commit instalado por esta entrega. La cobertura de cada cliente
+requiere comprobar que efectivamente lee `AGENTS.md`; no se atribuye esa lectura a todos los clientes.
 No se tocó la configuración global de Git ni de ningún cliente de agentes.
