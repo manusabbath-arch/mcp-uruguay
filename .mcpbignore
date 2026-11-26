@@ -11,6 +11,7 @@ build/
 tests/
 docs/
 scripts/
+skills/
 .github/
 .privacidad-local
 *.mcpb

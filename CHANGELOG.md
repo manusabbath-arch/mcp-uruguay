@@ -99,6 +99,11 @@
   reexporta las mismas funciones, tipos y constantes. El código se movió textualmente con un script, y se
   verificó que los esquemas de entrada y salida de las 31 herramientas, `docs/herramientas.md` y
   `manifest.json` quedaron idénticos.
+- **Las guías se publican también como Agent Skills.** `scripts/generar_skills.py` escribe
+  `skills/<nombre>/SKILL.md` desde `guias.PROMPTS`: el mismo texto, con marcadores (`<producto>`,
+  `<desde>`) en vez de valores de ejemplo y la trampa de cada herramienta que nombra. `--check` falla
+  si una skill falta, quedó vieja o sobra, y un test compara los archivos con la salida del generador.
+  No cambia el servidor ni los prompts.
 
 ## 0.14.0 — 2026-11-16
 
