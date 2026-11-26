@@ -199,7 +199,8 @@ por número. Devuelve el enlace al texto actualizado en IMPO.
 Población oficial del Censo 2023 (INE) y viviendas de una localidad uruguaya, y la población
 oficial de su departamento. Por nombre (sin importar tildes); si existe en más de un departamento,
 devuelve todas y `departamento` desambigua. Solo con `departamento`, lista sus localidades de mayor
-a menor población (hasta `cantidad`).
+a menor población (hasta `cantidad`). Sin argumentos, el país: `poblacion_oficial_total`, los 19
+departamentos y las localidades más pobladas.
 
 | parametro | tipo | obligatorio |
 |---|---|---|

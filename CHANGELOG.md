@@ -50,6 +50,14 @@
   nota dice cuál es cuál; la `fuente` suma el Censo cuando se pudo leer. Si el tabulado no se puede
   bajar, la herramienta responde igual, con la cifra en `null` y el motivo en la nota. Medido el
   2026-11-26 en el centro de Salto: 114.043 en la capa y 112.527 oficial, igual que `localidad`.
+- **`localidad` sin argumentos responde por el país: `poblacion_oficial_total`, los 19 departamentos y
+  las localidades más pobladas.** Antes una llamada vacía era un error, así que «¿cuál es la población
+  de Uruguay según el Censo 2023?» no tenía herramienta que la respondiera: la pregunta está en el
+  conjunto de desarrollo de la eval (`censo-2023-total`) esperando `localidad`. El total es la suma de
+  los 19 departamentos del cuadro 12 (3.499.451), **no** la de las localidades (3.499.215): 236
+  personas están en filas sin localidad (situación de calle y hogares). Si el cuadro 12 no trae todos
+  los departamentos de la capa, el total va en `null` en vez de publicar una suma parcial. Medido el
+  2026-11-26 contra los tabulados reales.
 - **`herramientas.py` (2.680 líneas) pasa a ser un paquete con un módulo por dominio** (`monedas`,
   `combustibles`, `rio_y_clima`, `territorio`, `estado`, `agua`, `sinred` y `comun`; el más grande tiene 717
   líneas). **Sin cambios para quien usa el servidor ni para quien importa `herramientas`**: el paquete

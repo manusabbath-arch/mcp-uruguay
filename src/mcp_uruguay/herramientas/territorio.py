@@ -79,6 +79,7 @@ class Localidades(cache.Procedencia, TypedDict):
 
     localidades: list[DatosLocalidad]
     departamentos: list[PoblacionDepartamento]
+    poblacion_oficial_total: Optional[int]
     total: int
     nota: str
     fuente: str
@@ -217,8 +218,7 @@ def ubicar_punto(lat: float, lon: float) -> Ubicacion:
 
 
 def localidad(nombre: str = "", departamento: str = "", cantidad: int = 20) -> Localidades:
-    if not nombre.strip() and not departamento.strip():
-        raise ValueError("pasar el nombre de una localidad, un departamento, o los dos")
+    """Sin nombre ni departamento, el país: el total, los 19 departamentos y las localidades más pobladas."""
     locs, bajado = _capa("localidades")
     nom, dep = _sin_tildes(nombre), _sin_tildes(departamento)
     elegidas = [
@@ -263,11 +263,17 @@ def localidad(nombre: str = "", departamento: str = "", cantidad: int = 20) -> L
     ]
     departamentos: list[PoblacionDepartamento] = [
         {"departamento": nombre_dep, "poblacion_oficial_2023": oficial_dep.get(_sin_tildes(nombre_dep))}
-        for nombre_dep in sorted({a["departamento"] for a in elegidas[: max(1, min(cantidad, 100))]})
+        for nombre_dep in sorted({a["departamento"] for a in elegidas})
     ]
+    # La suma de los departamentos es el total del país; la de las localidades no (hay gente sin localidad).
+    # El total solo si el cuadro 12 trae todos los departamentos de la capa: con filas faltantes, la suma
+    # sería un número plausible y falso, que es justo lo que este servidor no emite.
+    del_capa = {_sin_tildes(a["departamento"]) for a in locs}
+    total_pais = sum(oficial_dep.values()) if oficial_dep and del_capa <= oficial_dep.keys() else None
     return {
         "localidades": salida,
         "departamentos": departamentos,
+        "poblacion_oficial_total": total_pais,
         "total": len(elegidas),
         "nota": (
             "poblacion_oficial_2023 es la cifra que publica el INE (tabulados del Censo 2023, datos "
@@ -275,7 +281,10 @@ def localidad(nombre: str = "", departamento: str = "", cantidad: int = 20) -> L
             "poblacion_2023 y viviendas_2023 son los campos pob_tot_23 y viv_tot_23 de la capa "
             "cartográfica, que no están ponderados y difieren (ciudad de Salto: 114.043 en la capa, "
             "112.527 oficial). La población de un departamento está en departamentos, no en la suma de "
-            "sus localidades. 11 de las 652 localidades de la capa no están en el tabulado (medido el "
+            "sus localidades, y el total del país en poblacion_oficial_total (la suma de los 19 "
+            "departamentos del cuadro 12), que tampoco es la de las localidades: 236 personas están en "
+            "filas sin localidad (situación de calle y hogares). 11 de las 652 localidades de la capa no "
+            "están en el tabulado (medido el "
             "2026-11-21): ahí poblacion_oficial_2023 es null. Ordenadas de mayor a menor población. "
             "centro_aproximado es el centro del rectángulo que la contiene, no un centroide." + aviso_censo
         ),

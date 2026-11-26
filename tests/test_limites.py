@@ -160,9 +160,30 @@ class TestLocalidad:
         with pytest.raises(ValueError, match="GARIBALDI"):
             h.localidad("Garibaldy")
 
-    def test_sin_nada(self, capas):
-        with pytest.raises(ValueError):
-            h.localidad("", "")
+    def test_sin_nada_es_el_pais(self, capas):
+        """Sin nombre ni departamento: las localidades más pobladas y los departamentos de todas ellas.
+        Antes era un error, y no había forma de preguntar el total del país ni la población de cada
+        departamento sin una llamada por departamento."""
+        r = h.localidad()
+        assert r["total"] == 5 and len(r["localidades"]) == 5
+        assert [x["nombre"] for x in r["localidades"]][:2] == ["SALTO", "SAN ANTONIO"]
+        assert {d["departamento"] for d in r["departamentos"]} == {"SALTO", "CANELONES"}
+
+    def test_sin_nada_trae_el_total_del_pais(self, capas, censo_en_cache):
+        """El total es la suma de los departamentos del cuadro 12, no la de las localidades."""
+        r = h.localidad()
+        assert r["poblacion_oficial_total"] == 608960 + 136195
+        assert [(d["departamento"], d["poblacion_oficial_2023"]) for d in r["departamentos"]] == [
+            ("CANELONES", 608960),
+            ("SALTO", 136195),
+        ]
+
+    def test_el_total_no_sale_de_un_cuadro_a_medias(self, capas, censo_en_cache):
+        """Con el cuadro 12 caído el total queda en null: una suma parcial es un número plausible y falso."""
+        (censo_en_cache / "departamentos.xlsx").unlink()
+        r = h.localidad("Salto", "Salto")
+        assert r["poblacion_oficial_total"] is None
+        assert r["localidades"][0]["poblacion_oficial_2023"] == 112527
 
     def test_avisa_que_la_poblacion_de_la_capa_no_es_la_oficial(self, capas):
         nota = h.localidad("garibaldi")["nota"]
