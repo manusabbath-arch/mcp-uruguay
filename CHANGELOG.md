@@ -1,6 +1,19 @@
 # Cambios
 
-## Sin publicar
+## 0.15.0 — sin publicar
+
+- **Correcciones de exactitud verificadas al integrar las PR #13 y #14.** La búsqueda del MIDES
+  cuenta y omite por 30 días los indicadores cuya lectura fue rechazada. Las marcas se guardan por
+  indicador con temporales únicos, para no perder actualizaciones concurrentes, y usan la fecha de
+  Uruguay. Los resultados electorales explican la diferencia entre el escrutinio primario y el
+  definitivo con observados. Las descripciones de herramientas se normalizan también en Python
+  anterior a 3.13; un test limita su tamaño para que no crezca sin decisión explícita.
+- **Degradación y procedencia del censo.** Si falla uno de los dos tabulados, se conserva el otro;
+  cada ausencia se avisa por separado. Los tabulados llevan su URL en `procedencia`, y las capas
+  cartográficas ya cargadas en memoria también quedan registradas como respaldo.
+- **Evaluación reservada intacta.** Esta tanda no modifica `evals/preguntas.json`: los cambios de
+  criterio electoral propuestos en la rama original quedan fuera de la integración. No se declara
+  una mejora de puntuación ni se ejecutan evaluaciones pagas.
 
 - **`clima` (INIA) y `observaciones_inumet` marcan los días dudosos, sin descartar ninguno.** Misma forma que
   `nivel_rio_ina`: por serie, `pruebas`, `marcas`, `marcadas` (hasta 20) y `marcadas_omitidas`. `clima` marca

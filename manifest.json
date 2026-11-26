@@ -2,7 +2,7 @@
   "manifest_version": "0.4",
   "name": "mcp-uruguay",
   "display_name": "Uruguay: datos públicos",
-  "version": "0.14.0",
+  "version": "0.15.0",
   "description": "Datos públicos de Uruguay y la región, de la fuente primaria y con la fecha de la copia: BCU, ANCAP, INIA, INUMET, el río Uruguay, OSE, Corte Electoral, Parlamento, compras del Estado.",
   "long_description": "Servidor MCP construido sobre [uydatos](https://github.com/manusabbath-arch/uy-datos-abiertos), lectores estrictos que **rechazan en vez de arreglar**: ante un dato que no cumple, devuelven el motivo y no un número plausible pero falso. Cada respuesta trae `fuente` y `bajado` para citar el dato. Es de solo lectura y no es un servicio oficial: si una cifra no coincide con la del organismo, vale la del organismo.",
   "author": {

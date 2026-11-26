@@ -42,7 +42,7 @@ decirlo; uno que recibe un número plausible pero falso lo repite.
 | `estaciones_cercanas` | Estaciones hidrometeorológicas de la cuenca del río Uruguay cerca de un punto | CTM Salto Grande |
 | `geocodificar_direccion` | Coordenadas de una dirección o esquina, con su calidad; descarta otra calle o el centro de la localidad | IDE.uy |
 | `ubicar_punto` | En qué departamento y localidad cae un punto, con la población 2023 de la localidad | INE, IDE.uy |
-| `localidad` | Población y viviendas 2023 de una localidad, o las de un departamento ordenadas | INE |
+| `localidad` | Población oficial del Censo 2023 por localidad y departamento, separada de población y viviendas de la capa cartográfica | INE |
 | `calidad_agua` | Análisis del agua potable de OSE por localidad y trimestre desde 2017 (coliformes, E. coli, pH, turbidez, color, olor), con los límites de detección aparte de las mediciones | OSE |
 | `resultados_electorales` | Nacionales 2024, balotaje 2024 y departamentales 2025: participación y votos por partido o candidato, del país o un departamento | Corte Electoral |
 | `compras_estado` | Cuánto adjudicó el Estado en un año, en pesos, por organismo o por texto, con los mayores ítems y un aviso si uno domina el total | ARCE (OCDS) |
