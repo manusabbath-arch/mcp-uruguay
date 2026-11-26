@@ -39,7 +39,9 @@
         "url": "https://www.ambito.com/uruguay/yamandu-orsi-le-gano-alvaro-delgado-mas-95000-votos-segun-los-datos-oficiales-n6085556",
         "cita": "contra 1.101.296 (45,87%) de Delgado",
         "via": "prensa",
-        "confirmada_en_fuente": false
+        "confirmada_en_fuente": true,
+        "confirmada_el": "2026-11-26",
+        "confirmada_en": "https://www.ambito.com/uruguay/yamandu-orsi-le-gano-alvaro-delgado-mas-95000-votos-segun-los-datos-oficiales-n6085556"
       }
     },
     {
@@ -165,7 +167,9 @@
         "url": "https://agenciadenoticias.ibge.gov.br/agencia-noticias/42416-ipca-em-dezembro-vai-a-0-52-e-acumula-4-83-em-2024.html",
         "cita": "IPCA em dezembro vai a 0,52% e acumula 4,83% em 2024",
         "via": "organismo",
-        "confirmada_en_fuente": false
+        "confirmada_en_fuente": true,
+        "confirmada_el": "2026-11-26",
+        "confirmada_en": "https://agenciadenoticias.ibge.gov.br/agencia-noticias/42416-ipca-em-dezembro-vai-a-0-52-e-acumula-4-83-em-2024.html"
       }
     },
     {
@@ -325,10 +329,12 @@
         "url": "https://www.elobservador.com.uy/economia-y-empresas/combustibles-el-gobierno-definio-los-precios-nafta-gasoil-y-supergas-enero-2025-n5977260",
         "cita": "El gasoil 50S se mantuvo en $49,92 por litro",
         "via": "prensa",
-        "confirmada_en_fuente": false,
+        "confirmada_en_fuente": true,
         "otras_fuentes": [
           "https://www.impo.com.uy/bases/decretos/355-2024"
-        ]
+        ],
+        "confirmada_el": "2026-11-26",
+        "confirmada_en": "https://www.elobservador.com.uy/economia-y-empresas/combustibles-el-gobierno-definio-los-precios-nafta-gasoil-y-supergas-enero-2025-n5977260"
       }
     },
     {
@@ -347,10 +353,12 @@
         "url": "https://www.ambito.com/uruguay/yamandu-orsi-le-gano-alvaro-delgado-mas-95000-votos-segun-los-datos-oficiales-n6085556",
         "cita": "contra 1.101.296 (45,87%) de Delgado",
         "via": "prensa",
-        "confirmada_en_fuente": false,
+        "confirmada_en_fuente": true,
         "otras_fuentes": [
           "https://chequeado.com/?p=88355"
-        ]
+        ],
+        "confirmada_el": "2026-11-26",
+        "confirmada_en": "https://www.ambito.com/uruguay/yamandu-orsi-le-gano-alvaro-delgado-mas-95000-votos-segun-los-datos-oficiales-n6085556"
       }
     },
     {
@@ -457,10 +465,12 @@
         "url": "https://www.cronista.com/economia-politica/la-inflacion-en-diciembre-fue-del-255-y-durante-todo-2023-alcanzo-el-2114",
         "cita": "La inflación en diciembre fue del 25,5% y durante todo 2023 alcanzó el 211,4%",
         "via": "prensa",
-        "confirmada_en_fuente": false,
+        "confirmada_en_fuente": true,
         "otras_fuentes": [
           "https://en.mercopress.com/2024/01/12/cpi-goes-up-25.5-in-december-in-argentina"
-        ]
+        ],
+        "confirmada_el": "2026-11-26",
+        "confirmada_en": "https://www.cronista.com/economia-politica/la-inflacion-en-diciembre-fue-del-255-y-durante-todo-2023-alcanzo-el-2114"
       }
     },
     {
@@ -501,7 +511,9 @@
         "url": "https://impo.com.uy/bases/leyes/19172-2013/43",
         "cita": "Promulgación: 20/12/2013, Publicación: 07/01/2014",
         "via": "organismo",
-        "confirmada_en_fuente": false
+        "confirmada_en_fuente": true,
+        "confirmada_el": "2026-11-26",
+        "confirmada_en": "https://impo.com.uy/bases/leyes/19172-2013/43"
       }
     },
     {
@@ -540,10 +552,12 @@
         "url": "https://www.elobservador.com.uy/nacional/montevideo-inexpugnable-el-frente-lo-hizo-nuevo-y-bergara-completara-40-anos-gestion-n5998914/amp",
         "cita": "Montevideo inexpugnable: el Frente lo hizo de nuevo y Bergara completará 40 años de gestión",
         "via": "prensa",
-        "confirmada_en_fuente": false,
+        "confirmada_en_fuente": true,
         "otras_fuentes": [
           "https://www.forbesargentina.com/today/elecciones-departamentales-frente-amplio-gana-sorpresas-montevideo-canelones-partido-nacional-pisa-fuerte-maldonado-n72064"
-        ]
+        ],
+        "confirmada_el": "2026-11-26",
+        "confirmada_en": "https://www.elobservador.com.uy/nacional/montevideo-inexpugnable-el-frente-lo-hizo-nuevo-y-bergara-completara-40-anos-gestion-n5998914/amp"
       }
     },
     {

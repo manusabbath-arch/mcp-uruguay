@@ -19,6 +19,10 @@
 - **La evaluación guarda el detalle también con modelos como `nombre:cloud`.** En Windows quedaba un
   archivo vacío.
 - **`opentelemetry-api` 1.45.2** (dependencia de `mcp`) en `uv.lock`, por CVE-2026-126360.
+- **Se confirmaron en la fuente 7 respuestas del conjunto reservado**, sin cambiar preguntas, esperados
+  ni herramientas. Queda sin confirmar `trampa-pobreza-metodologia`, que no tiene una cifra que buscar.
+  Las dos del balotaje usan, como la de desarrollo, cifras de prensa distintas del escrutinio
+  definitivo con observados.
 - **Correcciones de exactitud verificadas al integrar las PR #13 y #14.** La búsqueda del MIDES
   cuenta y omite por 30 días los indicadores cuya lectura fue rechazada. Las marcas se guardan por
   indicador con temporales únicos, para no perder actualizaciones concurrentes, y usan la fecha de
