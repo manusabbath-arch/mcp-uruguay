@@ -126,6 +126,19 @@ def _tabulado_censo(cuadro: str) -> dict[str, int]:
     return {f["codigo"]: f["poblacion"] for f in filas}
 
 
+def _aviso_censo(cuadro: str, error: Exception) -> str:
+    """Motivo público de la ausencia: el error crudo puede contener rutas del servidor."""
+    motivo = (
+        "el tabulado no cumple el formato esperado"
+        if isinstance(error, DatosInvalidos)
+        else "no se pudo acceder a la fuente o a la copia local"
+    )
+    return (
+        f" No se pudo leer el tabulado oficial de {cuadro} del INE ({motivo}): "
+        "su poblacion_oficial_2023 queda sin dato."
+    )
+
+
 def _poblacion_oficial(area: dict) -> tuple[Optional[int], str]:
     """Población oficial del Censo 2023 de una localidad de la capa, y el aviso si no se pudo leer.
 
@@ -138,9 +151,7 @@ def _poblacion_oficial(area: dict) -> tuple[Optional[int], str]:
     try:
         return _tabulado_censo("localidades").get(f"{codigo:05d}"), ""
     except (OSError, DatosInvalidos) as e:
-        return None, (
-            f" No se pudo leer el tabulado oficial de localidades del INE ({e}): poblacion_oficial_2023 queda sin dato."
-        )
+        return None, _aviso_censo("localidades", e)
 
 
 def ubicar_punto(lat: float, lon: float) -> Ubicacion:
@@ -239,10 +250,7 @@ def localidad(nombre: str = "", departamento: str = "", cantidad: int = 20) -> L
             tabulados[cuadro] = _tabulado_censo(cuadro)
         except (OSError, DatosInvalidos) as e:
             tabulados[cuadro] = {}
-            avisos_censo.append(
-                f" No se pudo leer el tabulado oficial de {cuadro} del INE ({e}): "
-                "su poblacion_oficial_2023 queda sin dato."
-            )
+            avisos_censo.append(_aviso_censo(cuadro, e))
     oficial_loc, oficial_dep = tabulados["localidades"], tabulados["departamentos"]
     aviso_censo = "".join(avisos_censo)
     salida: list[DatosLocalidad] = [

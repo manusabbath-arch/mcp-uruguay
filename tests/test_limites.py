@@ -270,6 +270,29 @@ class TestPoblacionOficial:
             assert r["departamentos"][0]["poblacion_oficial_2023"] is None
         assert faltante in r["nota"]
 
+    @pytest.mark.parametrize("herramienta", ["localidad", "ubicar_punto"])
+    @pytest.mark.parametrize("tipo_error", ["archivo", "datos"])
+    def test_error_del_censo_no_expone_rutas_locales(
+        self, capas, sin_ide, monkeypatch, cache_temporal, herramienta, tipo_error
+    ):
+        from uydatos.errores import DatosInvalidos
+
+        from mcp_uruguay.herramientas import territorio
+
+        ruta_privada = str(cache_temporal / "privado" / "tabulado.xlsx")
+
+        def caida(cuadro):
+            if tipo_error == "archivo":
+                raise FileNotFoundError(2, "no existe", ruta_privada)
+            raise DatosInvalidos(f"{ruta_privada}: formato inválido")
+
+        monkeypatch.setattr(territorio, "_tabulado_censo", caida)
+        r = h.localidad("Salto", "Salto") if herramienta == "localidad" else h.ubicar_punto(-31.42, -58.17)
+        assert ruta_privada not in r["nota"]
+        assert "tabulado.xlsx" not in r["nota"]
+        assert "No se pudo leer el tabulado oficial" in r["nota"]
+        assert "sin dato" in r["nota"]
+
     def test_sin_el_tabulado_la_herramienta_igual_responde(self, capas, monkeypatch):
         from uydatos import censo
 
