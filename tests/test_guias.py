@@ -37,6 +37,14 @@ async def test_las_caidas_son_herramientas_reales_y_humo_lleva_la_misma_lista():
     assert humo.clasificar("semana", ok=True) == "OK" and humo.clasificar("semana", ok=False) == "ERROR"
 
 
+async def test_las_instrucciones_del_servidor_nombran_el_recurso_de_trampas():
+    """Un cliente solo descubre solo lo que el servidor le dice al conectarse."""
+    async with Client(servidor) as cliente:
+        instrucciones = cliente.instructions or ""
+    assert "uru://trampas" in instrucciones
+    assert "uru://trampas" in guias.RECURSOS
+
+
 async def test_el_recurso_de_trampas_dice_que_fuentes_no_responden():
     async with Client(servidor) as cliente:
         texto = (await cliente.read_resource("uru://trampas")).contents[0].text

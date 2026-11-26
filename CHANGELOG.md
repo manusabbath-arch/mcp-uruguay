@@ -2,6 +2,9 @@
 
 ## 0.15.0 — sin publicar
 
+- **Las instrucciones del servidor nombran `uru://trampas`.** El recurso existía, pero nada le decía al
+  cliente que lo consultara. Un test lo cubre. No se midió si mejora las respuestas: `evals/evaluar.py`
+  no entregaba al modelo las instrucciones ni los recursos del servidor.
 - **Correcciones de exactitud verificadas al integrar las PR #13 y #14.** La búsqueda del MIDES
   cuenta y omite por 30 días los indicadores cuya lectura fue rechazada. Las marcas se guardan por
   indicador con temporales únicos, para no perder actualizaciones concurrentes, y usan la fecha de
