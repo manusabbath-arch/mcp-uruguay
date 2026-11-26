@@ -204,12 +204,19 @@ def localidad(nombre: str = "", departamento: str = "", cantidad: int = 20) -> L
         donde = f" en {departamento}" if departamento else ""
         raise ValueError(f"no hay una localidad {nombre!r}{donde}. Parecidas: {parecidas[:10] or 'ninguna'}")
     elegidas.sort(key=lambda a: -(a["datos"].get("poblacion_2023") or 0))
-    try:
-        oficial_loc, oficial_dep = _tabulado_censo("localidades"), _tabulado_censo("departamentos")
-        aviso_censo = ""
-    except (OSError, DatosInvalidos) as e:
-        oficial_loc, oficial_dep = {}, {}
-        aviso_censo = f" No se pudo leer el tabulado oficial del INE ({e}): poblacion_oficial_2023 queda sin dato."
+    tabulados: dict[str, dict[str, int]] = {}
+    avisos_censo = []
+    for cuadro in ("localidades", "departamentos"):
+        try:
+            tabulados[cuadro] = _tabulado_censo(cuadro)
+        except (OSError, DatosInvalidos) as e:
+            tabulados[cuadro] = {}
+            avisos_censo.append(
+                f" No se pudo leer el tabulado oficial de {cuadro} del INE ({e}): "
+                "su poblacion_oficial_2023 queda sin dato."
+            )
+    oficial_loc, oficial_dep = tabulados["localidades"], tabulados["departamentos"]
+    aviso_censo = "".join(avisos_censo)
     salida: list[DatosLocalidad] = [
         {
             "nombre": a["nombre"],

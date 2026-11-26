@@ -19,6 +19,16 @@ def _escribir(ruta, features):
     ruta.write_text(json.dumps({"type": "FeatureCollection", "features": features}), encoding="utf-8")
 
 
+@pytest.fixture(autouse=True)
+def sin_descargas_censo(monkeypatch):
+    from uydatos import censo
+
+    def sin_red(cuadro, destino):
+        raise OSError("sin red en los tests de unidad")
+
+    monkeypatch.setattr(censo, "descargar", sin_red)
+
+
 @pytest.fixture
 def capas(cache_temporal):
     deps = [
@@ -212,6 +222,18 @@ class TestPoblacionOficial:
     def test_el_departamento_trae_su_poblacion_oficial(self, capas, censo_en_cache):
         r = h.localidad("", "salto")
         assert r["departamentos"] == [{"departamento": "SALTO", "poblacion_oficial_2023": 136195}]
+
+    @pytest.mark.parametrize("faltante", ["localidades", "departamentos"])
+    def test_un_tabulado_caido_no_borra_el_otro(self, capas, censo_en_cache, faltante):
+        (censo_en_cache / f"{faltante}.xlsx").unlink()
+        r = h.localidad("Salto", "Salto")
+        if faltante == "localidades":
+            assert r["departamentos"][0]["poblacion_oficial_2023"] == 136195
+            assert r["localidades"][0]["poblacion_oficial_2023"] is None
+        else:
+            assert r["localidades"][0]["poblacion_oficial_2023"] == 112527
+            assert r["departamentos"][0]["poblacion_oficial_2023"] is None
+        assert faltante in r["nota"]
 
     def test_sin_el_tabulado_la_herramienta_igual_responde(self, capas, monkeypatch):
         from uydatos import censo
