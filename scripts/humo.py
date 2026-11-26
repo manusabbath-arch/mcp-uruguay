@@ -68,11 +68,17 @@ CAIDAS_CONOCIDAS = {
 }
 
 
-def clasificar(nombre: str, ok: bool) -> str:
-    """`OK` o `ERROR`; para una caída conocida, `CAIDA` si sigue caída y `VOLVIO` si ya responde."""
+def clasificar(nombre: str, ok: bool, vencida: bool = False) -> str:
+    """`OK` o `ERROR`; para una caída conocida, `CAIDA` si sigue caída y `VOLVIO` si ya responde.
+
+    `vencida`: la respuesta salió de una copia guardada porque la fuente no respondió
+    (`copia_vencida`). No cuenta como respuesta de la fuente: es `VENCIDA`, o `CAIDA` si ya se sabía.
+    """
     if nombre in CAIDAS_CONOCIDAS:
-        return "VOLVIO" if ok else "CAIDA"
-    return "OK" if ok else "ERROR"
+        return "VOLVIO" if ok and not vencida else "CAIDA"
+    if not ok:
+        return "ERROR"
+    return "VENCIDA" if vencida else "OK"
 
 
 def _version_del_repo() -> str:
@@ -120,7 +126,8 @@ async def main():
                 r = await c.call_tool(nombre, args)
                 ok = not r.is_error and r.structured_content is not None
                 txt = json.dumps(r.structured_content, ensure_ascii=False)[:110] if ok else str(r.content)[:200]
-                resultados.append((nombre, clasificar(nombre, ok), time.time() - t0, txt))
+                vencida = ok and bool(r.structured_content.get("copia_vencida"))
+                resultados.append((nombre, clasificar(nombre, ok, vencida), time.time() - t0, txt))
             except Exception as e:  # noqa: BLE001
                 resultados.append((nombre, "EXCEPCION", time.time() - t0, repr(e)[:200]))
     for n, estado, s, txt in resultados:

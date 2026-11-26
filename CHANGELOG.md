@@ -2,6 +2,10 @@
 
 ## 0.15.0 — sin publicar
 
+- **La prueba de humo ya no da por recuperada una fuente que respondió desde la caché.** En una máquina
+  con copias guardadas informaba `VOLVIO` para las tres herramientas del Parlamento, que sigue en 403.
+  Una respuesta con `copia_vencida` es `VENCIDA` (cuenta como falla), o `CAIDA` si ya se conocía.
+
 - **Las instrucciones del servidor nombran `uru://trampas`.** El recurso existía, pero nada le decía al
   cliente que lo consultara. Un test lo cubre. No se midió si mejora las respuestas: `evals/evaluar.py`
   no entregaba al modelo las instrucciones ni los recursos del servidor.
