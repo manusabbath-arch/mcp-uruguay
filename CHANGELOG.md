@@ -1,11 +1,27 @@
 # Cambios
 
-## 0.15.0 — sin publicar
+## 0.15.0 — 2026-11-26
 
+- **Correcciones de exactitud verificadas al integrar las PR #13 y #14.** La búsqueda del MIDES
+  cuenta y omite por 30 días los indicadores cuya lectura fue rechazada. Las marcas se guardan por
+  indicador con temporales únicos, para no perder actualizaciones concurrentes, y usan la fecha de
+  Uruguay. Los resultados electorales explican la diferencia entre el escrutinio primario y el
+  definitivo con observados. Las descripciones de herramientas se normalizan también en Python
+  anterior a 3.13; un test limita su tamaño para que no crezca sin decisión explícita.
+- **Degradación y procedencia del censo.** Si falla uno de los dos tabulados, se conserva el otro;
+  cada ausencia se avisa por separado. Los tabulados llevan su URL en `procedencia`, y las capas
+  cartográficas ya cargadas en memoria también quedan registradas como respaldo.
+- **Evaluación reservada intacta.** No se modifican preguntas de balotaje ni el conjunto reservado.
+  La tanda posterior de población corrige la cifra de Paysandú del conjunto de desarrollo, con la
+  publicación vigente del INE como respaldo. No se declara una mejora de puntuación ni se ejecutan
+  evaluaciones pagas.
+- **Revisión de seguridad y recuperación.** Los avisos de tabulados ausentes no interpolan errores
+  crudos que pueden contener rutas locales: informan un motivo controlado (acceso o formato). Una
+  lectura válida del MIDES retira inmediatamente la marca de rechazo, también para el registro
+  anterior; la búsqueda no afirma que todo rechazo sea un formato viejo permanente.
 - **La prueba de humo ya no da por recuperada una fuente que respondió desde la caché.** En una máquina
   con copias guardadas informaba `VOLVIO` para las tres herramientas del Parlamento, que sigue en 403.
   Una respuesta con `copia_vencida` es `VENCIDA` (cuenta como falla), o `CAIDA` si ya se conocía.
-
 - **Las instrucciones del servidor nombran `uru://trampas`.** El recurso existía, pero nada le decía al
   cliente que lo consultara. Un test lo cubre. No se midió si mejora las respuestas: `evals/evaluar.py`
   no entregaba al modelo las instrucciones ni los recursos del servidor.
@@ -32,24 +48,6 @@
   ni herramientas. Queda sin confirmar `trampa-pobreza-metodologia`, que no tiene una cifra que buscar.
   Las dos del balotaje usan, como la de desarrollo, cifras de prensa distintas del escrutinio
   definitivo con observados.
-- **Correcciones de exactitud verificadas al integrar las PR #13 y #14.** La búsqueda del MIDES
-  cuenta y omite por 30 días los indicadores cuya lectura fue rechazada. Las marcas se guardan por
-  indicador con temporales únicos, para no perder actualizaciones concurrentes, y usan la fecha de
-  Uruguay. Los resultados electorales explican la diferencia entre el escrutinio primario y el
-  definitivo con observados. Las descripciones de herramientas se normalizan también en Python
-  anterior a 3.13; un test limita su tamaño para que no crezca sin decisión explícita.
-- **Degradación y procedencia del censo.** Si falla uno de los dos tabulados, se conserva el otro;
-  cada ausencia se avisa por separado. Los tabulados llevan su URL en `procedencia`, y las capas
-  cartográficas ya cargadas en memoria también quedan registradas como respaldo.
-- **Evaluación reservada intacta.** No se modifican preguntas de balotaje ni el conjunto reservado.
-  La tanda posterior de población corrige la cifra de Paysandú del conjunto de desarrollo, con la
-  publicación vigente del INE como respaldo. No se declara una mejora de puntuación ni se ejecutan
-  evaluaciones pagas.
-- **Revisión de seguridad y recuperación.** Los avisos de tabulados ausentes no interpolan errores
-  crudos que pueden contener rutas locales: informan un motivo controlado (acceso o formato). Una
-  lectura válida del MIDES retira inmediatamente la marca de rechazo, también para el registro
-  anterior; la búsqueda no afirma que todo rechazo sea un formato viejo permanente.
-
 - **`clima` (INIA) y `observaciones_inumet` marcan los días dudosos, sin descartar ninguno.** Misma forma que
   `nivel_rio_ina`: por serie, `pruebas`, `marcas`, `marcadas` (hasta 20) y `marcadas_omitidas`. `clima` marca
   `tmax`, `tmin` y `lluvia_mm`; `observaciones_inumet` marca temperatura y presión (rango, plano, sin_dato),
