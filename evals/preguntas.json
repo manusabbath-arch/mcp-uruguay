@@ -18,9 +18,7 @@
         "url": "https://www.ambito.com/uruguay/yamandu-orsi-le-gano-alvaro-delgado-mas-95000-votos-segun-los-datos-oficiales-n6085556",
         "cita": "Orsi acumuló 1.196.798 votos (49,84%), contra 1.101.296 (45,87%) de Delgado",
         "via": "prensa",
-        "confirmada_en_fuente": true,
-        "confirmada_el": "2026-11-21",
-        "confirmada_en": "https://www.ambito.com/uruguay/yamandu-orsi-le-gano-alvaro-delgado-mas-95000-votos-segun-los-datos-oficiales-n6085556"
+        "confirmada_en_fuente": false
       }
     },
     {
@@ -96,9 +94,7 @@
         "url": "https://www5.ine.gub.uy/documents/CENSO%202023/Infografias/Salto.pdf",
         "cita": "la ciudad de Salto tiene 112.527 habitantes",
         "via": "organismo",
-        "confirmada_en_fuente": true,
-        "confirmada_el": "2026-11-21",
-        "confirmada_en": "https://www5.ine.gub.uy/documents/CENSO%202023/Infografias/Salto.pdf"
+        "confirmada_en_fuente": false
       }
     },
     {
@@ -361,20 +357,18 @@
       "conjunto": "desarrollo",
       "pregunta": "¿Cuántos habitantes tiene el departamento de Paysandú según el Censo 2023?",
       "tipo": "numero",
-      "esperado": 121838,
+      "esperado": 121843,
       "tolerancia": 0,
       "unidad": "personas",
       "herramientas_esperadas": [
         "localidad"
       ],
       "fuente": {
-        "organismo": "INE, infografía departamental del Censo 2023 (versión vigente al 2026-11-21; la anterior decía 121.843)",
+        "organismo": "INE, infografía departamental del Censo 2023 (el INE las actualizó en mayo de 2026: confirmar contra la versión vigente)",
         "url": "https://www5.ine.gub.uy/documents/CENSO%202023/Infografias/Paysandu.pdf",
-        "cita": "PERFIL DEPARTAMENTAL PAYSANDÚ 2011 117.023 2023 121.838",
+        "cita": "la población total pasó de 117.023 habitantes en 2011 a 121.843 en 2023",
         "via": "organismo",
-        "confirmada_en_fuente": true,
-        "confirmada_el": "2026-11-21",
-        "confirmada_en": "https://www5.ine.gub.uy/documents/CENSO%202023/Infografias/Paysandu.pdf"
+        "confirmada_en_fuente": false
       }
     },
     {
