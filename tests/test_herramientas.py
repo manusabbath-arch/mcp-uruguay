@@ -280,6 +280,17 @@ class TestIndicadorSocial:
             list(grupo.map(sinred._marcar_ilegible, slugs))
         assert sinred._ilegibles() == set(slugs)
 
+    def test_la_marca_usa_el_reloj_de_uruguay(self, monkeypatch):
+        from datetime import date
+
+        from mcp_uruguay import cache
+        from mcp_uruguay.herramientas import sinred
+
+        monkeypatch.setattr(cache, "hoy", lambda: date(2026, 10, 31))
+        sinred._marcar_ilegible("tasa-empleo-total-pais")
+        assert sinred._leer_marcas()["tasa-empleo-total-pais"] == "2026-10-31"
+        assert "tasa-empleo-total-pais" in sinred._ilegibles()
+
     def test_la_marca_de_ilegible_vence(self):
         from datetime import date, timedelta
 

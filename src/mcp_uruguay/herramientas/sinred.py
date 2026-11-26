@@ -4,7 +4,7 @@ from __future__ import annotations
 
 import hashlib
 import json
-from datetime import date, timedelta
+from datetime import timedelta
 from pathlib import Path
 from typing import Literal, Optional, Union
 
@@ -282,7 +282,7 @@ def _ilegibles() -> set[str]:
 
     La búsqueda no los ofrece: sugerir un nombre que la lectura va a rechazar lleva al agente a un
     callejón (medido en la eval del 2026-11-21: cuatro llamadas perdidas)."""
-    limite = (date.today() - timedelta(days=_DIAS_ILEGIBLE)).isoformat()
+    limite = (cache.hoy() - timedelta(days=_DIAS_ILEGIBLE)).isoformat()
     return {slug for slug, dia in _leer_marcas().items() if str(dia) >= limite}
 
 
@@ -293,7 +293,7 @@ def _marcar_ilegible(slug: str) -> None:
     ruta = carpeta / f"{hashlib.sha256(slug.encode('utf-8')).hexdigest()}.json"
     nueva = cache._temporal(ruta)
     try:
-        nueva.write_text(json.dumps({slug: date.today().isoformat()}), encoding="utf-8")
+        nueva.write_text(json.dumps({slug: cache.hoy().isoformat()}), encoding="utf-8")
         cache._poner_en_su_lugar(nueva, ruta)
     finally:
         nueva.unlink(missing_ok=True)
