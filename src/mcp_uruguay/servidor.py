@@ -22,7 +22,9 @@ Datos públicos de Uruguay y la región, leídos de la fuente primaria.
 Cada respuesta trae `fuente` y `bajado` (cuándo se obtuvo la copia usada): citalos junto con el
 número. Los lectores rechazan en vez de arreglar: un error con motivo es preferible a un número
 plausible pero falso. Los índices de precios se devuelven como índices, no como inflación.
-Un null es "sin dato", nunca cero."""
+Un null es "sin dato", nunca cero.
+Antes de citar una cifra, si podés leer recursos, consultá `uru://trampas`: qué desconfiar de cada
+herramienta y qué fuentes hoy no responden."""
 
 servidor = MCPServer(name="mcp-uruguay", version=__version__, instructions=INSTRUCCIONES)
 

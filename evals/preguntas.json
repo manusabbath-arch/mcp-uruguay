@@ -18,7 +18,9 @@
         "url": "https://www.ambito.com/uruguay/yamandu-orsi-le-gano-alvaro-delgado-mas-95000-votos-segun-los-datos-oficiales-n6085556",
         "cita": "Orsi acumuló 1.196.798 votos (49,84%), contra 1.101.296 (45,87%) de Delgado",
         "via": "prensa",
-        "confirmada_en_fuente": false
+        "confirmada_en_fuente": true,
+        "confirmada_el": "2026-11-26",
+        "confirmada_en": "https://www.ambito.com/uruguay/yamandu-orsi-le-gano-alvaro-delgado-mas-95000-votos-segun-los-datos-oficiales-n6085556"
       }
     },
     {
@@ -37,7 +39,9 @@
         "url": "https://www.ambito.com/uruguay/yamandu-orsi-le-gano-alvaro-delgado-mas-95000-votos-segun-los-datos-oficiales-n6085556",
         "cita": "contra 1.101.296 (45,87%) de Delgado",
         "via": "prensa",
-        "confirmada_en_fuente": false
+        "confirmada_en_fuente": true,
+        "confirmada_el": "2026-11-26",
+        "confirmada_en": "https://www.ambito.com/uruguay/yamandu-orsi-le-gano-alvaro-delgado-mas-95000-votos-segun-los-datos-oficiales-n6085556"
       }
     },
     {
@@ -56,7 +60,9 @@
         "url": "https://www.telenoche.com.uy/escrutinio-a14787",
         "cita": "un 43,85% para el Frente Amplio y un 26,81% para el Partido Nacional",
         "via": "prensa",
-        "confirmada_en_fuente": false
+        "confirmada_en_fuente": true,
+        "confirmada_el": "2026-11-26",
+        "confirmada_en": "https://www.telenoche.com.uy/escrutinio-a14787"
       }
     },
     {
@@ -75,7 +81,9 @@
         "url": "https://www.gub.uy/presidencia/comunicacion/noticias/censo-nacional-2023-contabilizo-3499451-habitantes-uruguay",
         "cita": "El INE fijó la población de Uruguay en 3.499.451 personas al 31 de mayo de 2023 (reemplazó a la preliminar de 3.444.263)",
         "via": "organismo",
-        "confirmada_en_fuente": false
+        "confirmada_en_fuente": true,
+        "confirmada_el": "2026-11-26",
+        "confirmada_en": "https://www.gub.uy/presidencia/comunicacion/noticias/censo-nacional-2023-contabilizo-3499451-habitantes-uruguay"
       }
     },
     {
@@ -138,7 +146,9 @@
         "url": "https://www.bloomberglinea.com/latinoamerica/argentina/inflacion-de-2024-en-argentina-fue-de-1178/",
         "cita": "la inflación de diciembre de 2024 fue de 2,7% y el acumulado anual cerró en 117,8%",
         "via": "prensa",
-        "confirmada_en_fuente": false
+        "confirmada_en_fuente": true,
+        "confirmada_el": "2026-11-26",
+        "confirmada_en": "https://www.bloomberglinea.com/latinoamerica/argentina/inflacion-de-2024-en-argentina-fue-de-1178/"
       }
     },
     {
@@ -157,7 +167,9 @@
         "url": "https://agenciadenoticias.ibge.gov.br/agencia-noticias/42416-ipca-em-dezembro-vai-a-0-52-e-acumula-4-83-em-2024.html",
         "cita": "IPCA em dezembro vai a 0,52% e acumula 4,83% em 2024",
         "via": "organismo",
-        "confirmada_en_fuente": false
+        "confirmada_en_fuente": true,
+        "confirmada_el": "2026-11-26",
+        "confirmada_en": "https://agenciadenoticias.ibge.gov.br/agencia-noticias/42416-ipca-em-dezembro-vai-a-0-52-e-acumula-4-83-em-2024.html"
       }
     },
     {
@@ -176,7 +188,9 @@
         "url": "https://www5.ine.gub.uy/documents/Estadísticaseconómicas/PDF/UI/2024/UI_Diciembre%202024.pdf",
         "cita": "01/1/2025 6,1697",
         "via": "organismo",
-        "confirmada_en_fuente": false
+        "confirmada_en_fuente": true,
+        "confirmada_el": "2026-11-26",
+        "confirmada_en": "https://www5.ine.gub.uy/documents/Estadísticaseconómicas/PDF/UI/2024/UI_Diciembre%202024.pdf"
       }
     },
     {
@@ -193,7 +207,9 @@
         "url": "https://impo.com.uy/bases/leyes/19889-2020/83",
         "cita": "Promulgación: 09/07/2020 Publicación: 14/07/2020",
         "via": "organismo",
-        "confirmada_en_fuente": false
+        "confirmada_en_fuente": true,
+        "confirmada_el": "2026-11-26",
+        "confirmada_en": "https://impo.com.uy/bases/leyes/19889-2020/83"
       }
     },
     {
@@ -289,10 +305,12 @@
         "url": "https://www.impo.com.uy/bases/decretos/355-2024",
         "cita": "pasó de $75,052 a $78,54 por litro, desde el 1 de enero de 2025",
         "via": "organismo",
-        "confirmada_en_fuente": false,
+        "confirmada_en_fuente": true,
         "otras_fuentes": [
           "https://www.elobservador.com.uy/economia-y-empresas/combustibles-el-gobierno-definio-los-precios-nafta-gasoil-y-supergas-enero-2025-n5977260"
-        ]
+        ],
+        "confirmada_el": "2026-11-26",
+        "confirmada_en": "https://www.impo.com.uy/bases/decretos/355-2024"
       }
     },
     {
@@ -311,10 +329,12 @@
         "url": "https://www.elobservador.com.uy/economia-y-empresas/combustibles-el-gobierno-definio-los-precios-nafta-gasoil-y-supergas-enero-2025-n5977260",
         "cita": "El gasoil 50S se mantuvo en $49,92 por litro",
         "via": "prensa",
-        "confirmada_en_fuente": false,
+        "confirmada_en_fuente": true,
         "otras_fuentes": [
           "https://www.impo.com.uy/bases/decretos/355-2024"
-        ]
+        ],
+        "confirmada_el": "2026-11-26",
+        "confirmada_en": "https://www.elobservador.com.uy/economia-y-empresas/combustibles-el-gobierno-definio-los-precios-nafta-gasoil-y-supergas-enero-2025-n5977260"
       }
     },
     {
@@ -333,10 +353,12 @@
         "url": "https://www.ambito.com/uruguay/yamandu-orsi-le-gano-alvaro-delgado-mas-95000-votos-segun-los-datos-oficiales-n6085556",
         "cita": "contra 1.101.296 (45,87%) de Delgado",
         "via": "prensa",
-        "confirmada_en_fuente": false,
+        "confirmada_en_fuente": true,
         "otras_fuentes": [
           "https://chequeado.com/?p=88355"
-        ]
+        ],
+        "confirmada_el": "2026-11-26",
+        "confirmada_en": "https://www.ambito.com/uruguay/yamandu-orsi-le-gano-alvaro-delgado-mas-95000-votos-segun-los-datos-oficiales-n6085556"
       }
     },
     {
@@ -355,7 +377,9 @@
         "url": "https://www.telenoche.com.uy/escrutinio-a14787",
         "cita": "un 43,85% para el Frente Amplio y un 26,81% para el Partido Nacional",
         "via": "prensa",
-        "confirmada_en_fuente": false
+        "confirmada_en_fuente": true,
+        "confirmada_el": "2026-11-26",
+        "confirmada_en": "https://www.telenoche.com.uy/escrutinio-a14787"
       }
     },
     {
@@ -396,10 +420,12 @@
         "url": "https://investnews.com.br/economia/ipca-sobe-em-056-em-dezembro-e-acumula-alta-de-462-diz-ibge/amp/",
         "cita": "IPCA sobe 0,56% em dezembro e acumula alta de 4,62%, diz IBGE",
         "via": "prensa",
-        "confirmada_en_fuente": false,
+        "confirmada_en_fuente": true,
         "otras_fuentes": [
           "https://www.thestar.com.my/news/world/2024/01/12/brazil-sees-three-year-low-inflation-of-462-pct-in-2023"
-        ]
+        ],
+        "confirmada_el": "2026-11-26",
+        "confirmada_en": "https://investnews.com.br/economia/ipca-sobe-em-056-em-dezembro-e-acumula-alta-de-462-diz-ibge/amp/"
       }
     },
     {
@@ -418,7 +444,9 @@
         "url": "https://agenciadenoticias.ibge.gov.br/agencia-noticias/42416-ipca-em-dezembro-vai-a-0-52-e-acumula-4-83-em-2024.html",
         "cita": "IPCA em dezembro vai a 0,52%",
         "via": "organismo",
-        "confirmada_en_fuente": false
+        "confirmada_en_fuente": true,
+        "confirmada_el": "2026-11-26",
+        "confirmada_en": "https://agenciadenoticias.ibge.gov.br/agencia-noticias/42416-ipca-em-dezembro-vai-a-0-52-e-acumula-4-83-em-2024.html"
       }
     },
     {
@@ -437,10 +465,12 @@
         "url": "https://www.cronista.com/economia-politica/la-inflacion-en-diciembre-fue-del-255-y-durante-todo-2023-alcanzo-el-2114",
         "cita": "La inflación en diciembre fue del 25,5% y durante todo 2023 alcanzó el 211,4%",
         "via": "prensa",
-        "confirmada_en_fuente": false,
+        "confirmada_en_fuente": true,
         "otras_fuentes": [
           "https://en.mercopress.com/2024/01/12/cpi-goes-up-25.5-in-december-in-argentina"
-        ]
+        ],
+        "confirmada_el": "2026-11-26",
+        "confirmada_en": "https://www.cronista.com/economia-politica/la-inflacion-en-diciembre-fue-del-255-y-durante-todo-2023-alcanzo-el-2114"
       }
     },
     {
@@ -459,10 +489,12 @@
         "url": "https://www.bloomberglinea.com/latinoamerica/argentina/inflacion-de-2024-en-argentina-fue-de-1178/",
         "cita": "la inflación de diciembre de 2024 fue de 2,7%",
         "via": "prensa",
-        "confirmada_en_fuente": false,
+        "confirmada_en_fuente": true,
         "otras_fuentes": [
           "https://www.cronista.com/economia-politica/la-inflacion-de-diciembre-fue-del-2-7-y-cerro-el-ano-con-una-variacion-del-117-8"
-        ]
+        ],
+        "confirmada_el": "2026-11-26",
+        "confirmada_en": "https://www.bloomberglinea.com/latinoamerica/argentina/inflacion-de-2024-en-argentina-fue-de-1178/"
       }
     },
     {
@@ -479,7 +511,9 @@
         "url": "https://impo.com.uy/bases/leyes/19172-2013/43",
         "cita": "Promulgación: 20/12/2013, Publicación: 07/01/2014",
         "via": "organismo",
-        "confirmada_en_fuente": false
+        "confirmada_en_fuente": true,
+        "confirmada_el": "2026-11-26",
+        "confirmada_en": "https://impo.com.uy/bases/leyes/19172-2013/43"
       }
     },
     {
@@ -496,10 +530,12 @@
         "url": "https://www.elobservador.com.uy/nacional/la-coalicion-republicana-dio-el-golpe-y-se-quedo-la-intendencia-salto-n5998916",
         "cita": "La Coalición Republicana dio el golpe y se quedó con la Intendencia de Salto",
         "via": "prensa",
-        "confirmada_en_fuente": false,
+        "confirmada_en_fuente": true,
         "otras_fuentes": [
           "https://www.as-coa.org/articles/uruguays-2025-departmental-and-municipal-elections-results"
-        ]
+        ],
+        "confirmada_el": "2026-11-26",
+        "confirmada_en": "https://www.elobservador.com.uy/nacional/la-coalicion-republicana-dio-el-golpe-y-se-quedo-la-intendencia-salto-n5998916"
       }
     },
     {
@@ -516,10 +552,12 @@
         "url": "https://www.elobservador.com.uy/nacional/montevideo-inexpugnable-el-frente-lo-hizo-nuevo-y-bergara-completara-40-anos-gestion-n5998914/amp",
         "cita": "Montevideo inexpugnable: el Frente lo hizo de nuevo y Bergara completará 40 años de gestión",
         "via": "prensa",
-        "confirmada_en_fuente": false,
+        "confirmada_en_fuente": true,
         "otras_fuentes": [
           "https://www.forbesargentina.com/today/elecciones-departamentales-frente-amplio-gana-sorpresas-montevideo-canelones-partido-nacional-pisa-fuerte-maldonado-n72064"
-        ]
+        ],
+        "confirmada_el": "2026-11-26",
+        "confirmada_en": "https://www.elobservador.com.uy/nacional/montevideo-inexpugnable-el-frente-lo-hizo-nuevo-y-bergara-completara-40-anos-gestion-n5998914/amp"
       }
     },
     {
@@ -590,6 +628,114 @@
         "cita": "Lo correcto es dar el total avisando que un ítem lo domina, o darlo con y sin ese ítem.",
         "via": "medición en uydatos (compras)",
         "confirmada_en_fuente": true
+      }
+    },
+    {
+      "id": "censo-2023-canelones-peso-capital",
+      "conjunto": "desarrollo",
+      "pregunta": "Según el Censo 2023, ¿qué porcentaje de la población del departamento de Canelones vive en la ciudad de Canelones? Usá la población oficial de esa localidad y la población oficial del departamento, y redondeá a dos decimales.",
+      "tipo": "numero",
+      "esperado": 3.97,
+      "tolerancia": 0.05,
+      "unidad": "%",
+      "herramientas_esperadas": [
+        "localidad"
+      ],
+      "fuente": {
+        "organismo": "INE, Censo 2023, tabulados de población (cuadros 12 y 13)",
+        "url": "https://www5.ine.gub.uy/documents/CENSO%202023/Tabulados/Personas/Cuadro_13_CAR_2023.xlsx",
+        "cita": "03320 CANELONES CANELONES 24159",
+        "via": "organismo",
+        "insumos": [
+          {
+            "url": "https://www5.ine.gub.uy/documents/CENSO%202023/Tabulados/Personas/Cuadro_12_CAR_2023.xlsx",
+            "cita": "03 CANELONES 608960"
+          },
+          {
+            "url": "https://www5.ine.gub.uy/documents/CENSO%202023/Tabulados/Personas/Cuadro_13_CAR_2023.xlsx",
+            "cita": "03320 CANELONES CANELONES 24159"
+          }
+        ],
+        "calculo": "24.159 / 608.960 x 100 = 3,967 % -> 3,97 %",
+        "nota": "La población del departamento sale del cuadro 12, no de sumar las localidades del cuadro 13.",
+        "confirmada_en_fuente": true,
+        "confirmada_el": "2026-11-26",
+        "confirmada_en": "https://www5.ine.gub.uy/documents/CENSO%202023/Tabulados/Personas/Cuadro_13_CAR_2023.xlsx"
+      }
+    },
+    {
+      "id": "trampa-paridad-ppi-contra-pvp",
+      "conjunto": "desarrollo",
+      "pregunta": "Para julio de 2026, ¿cuánto más caro está el gasoil 50-S al público que su precio de paridad de importación? Quiero la diferencia en pesos por litro entre el precio máximo al público y la paridad.",
+      "tipo": "comportamiento",
+      "debe_mencionar": [
+        "ex[ -]?planta|sin (impuestos|tasas|iva)|no (se pueden?|es|son) .{0,20}compar"
+      ],
+      "herramientas_esperadas": [
+        "paridad_combustibles",
+        "combustible_ancap"
+      ],
+      "fuente": {
+        "organismo": "MIEM, «Evolución de los precios de los combustibles líquidos»; PVP de julio de 2026 por Decreto 146/026",
+        "url": "https://www.gub.uy/ministerio-industria-energia-mineria/politicas-y-gestion/evolucion-precios-combustibles-liquidos",
+        "cita": "se presenta el Subtotal 3 del informe de la Unidad Reguladora de Servicios de Energía y Agua (URSEA) (PPI sin tasas ni impuestos), que constituye la base para el cálculo de los precios de venta al público de los combustibles líquidos.",
+        "via": "organismo",
+        "insumos": [
+          {
+            "url": "https://www.gub.uy/ministerio-industria-energia-mineria/politicas-y-gestion/evolucion-precios-combustibles-liquidos",
+            "cita": "Precio de Venta al Público de referencia (PVP de referencia): corresponde al precio calculado por la URSEA, que incorpora, sobre el PPI (subtotal 3), los componentes previstos en la metodología vigente, incluidos los márgenes de distribución, el factor de ajuste o estabilización (Decreto n.° 130/025) y los impuestos correspondientes."
+          },
+          {
+            "url": "https://www.impo.com.uy/bases/decretos/146-2026",
+            "cita": "Gas Oil 50S\n58,68"
+          }
+        ],
+        "calculo": "No hay una resta válida entre el PVP (con IVA e IMESI y con márgenes de distribución) y el PPI (Subtotal 3, sin tasas ni impuestos): lo que se compara es el precio ex planta de ANCAP contra el PPI, los dos sin impuestos.",
+        "nota": "Es la trampa que declara `paridad_combustibles`: la comparación es sin impuestos contra sin impuestos. Una respuesta correcta avisa que el PVP y el PPI no son comparables directamente y, si da una brecha, la da entre el precio ex planta y el PPI, o aclara que la diferencia contra el surtidor incluye impuestos y márgenes.",
+        "confirmada_en_fuente": true,
+        "confirmada_el": "2026-11-26",
+        "confirmada_en": "https://www.gub.uy/ministerio-industria-energia-mineria/politicas-y-gestion/evolucion-precios-combustibles-liquidos"
+      }
+    },
+    {
+      "id": "censo-2023-tres-departamentos-peso",
+      "conjunto": "desarrollo",
+      "pregunta": "Según el Censo 2023, ¿qué porcentaje de la población total del país vive en los tres departamentos más poblados? Usá la población oficial de cada departamento, sumá los tres más poblados y dividí por el total del país; redondeá a dos decimales.",
+      "tipo": "numero",
+      "esperado": 60.71,
+      "tolerancia": 0.05,
+      "unidad": "%",
+      "herramientas_esperadas": [
+        "localidad"
+      ],
+      "fuente": {
+        "organismo": "INE, Censo 2023, tabulados de población (cuadro 12, datos ponderados)",
+        "url": "https://www5.ine.gub.uy/documents/CENSO%202023/Tabulados/Personas/Cuadro_12_CAR_2023.xlsx",
+        "cita": "01 MONTEVIDEO 1302721",
+        "via": "organismo",
+        "insumos": [
+          {
+            "url": "https://www5.ine.gub.uy/documents/CENSO%202023/Tabulados/Personas/Cuadro_12_CAR_2023.xlsx",
+            "cita": "01 MONTEVIDEO 1302721"
+          },
+          {
+            "url": "https://www5.ine.gub.uy/documents/CENSO%202023/Tabulados/Personas/Cuadro_12_CAR_2023.xlsx",
+            "cita": "03 CANELONES 608960"
+          },
+          {
+            "url": "https://www5.ine.gub.uy/documents/CENSO%202023/Tabulados/Personas/Cuadro_12_CAR_2023.xlsx",
+            "cita": "10 MALDONADO 212954"
+          },
+          {
+            "url": "https://www5.ine.gub.uy/documents/CENSO%202023/Tabulados/Personas/Cuadro_13_CAR_2023.xlsx",
+            "cita": "Total 3499451"
+          }
+        ],
+        "calculo": "(1.302.721 + 608.960 + 212.954) / 3.499.451 x 100 = 2.124.635 / 3.499.451 x 100 = 60,714 % -> 60,71 %.",
+        "nota": "Los tres más poblados son Montevideo, Canelones y Maldonado. La trampa es sumar localidades en vez de departamentos: la población de un departamento está en el cuadro 12 y no es la suma de sus localidades (el servidor lo advierte en `localidad`). El total del país es la suma de los 19 departamentos, no la de las localidades. Tolerancia de 0,05: cubre el redondeo a dos decimales y una diferencia de una o dos personas en las cifras ponderadas.",
+        "confirmada_en_fuente": true,
+        "confirmada_el": "2026-11-26",
+        "confirmada_en": "https://www5.ine.gub.uy/documents/CENSO%202023/Tabulados/Personas/Cuadro_12_CAR_2023.xlsx"
       }
     }
   ]

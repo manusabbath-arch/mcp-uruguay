@@ -1,6 +1,6 @@
 # Cambios
 
-## 0.15.0 — sin publicar
+## 0.15.0 — 2026-11-26
 
 - **Correcciones de exactitud verificadas al integrar las PR #13 y #14.** La búsqueda del MIDES
   cuenta y omite por 30 días los indicadores cuya lectura fue rechazada. Las marcas se guardan por
@@ -19,7 +19,35 @@
   crudos que pueden contener rutas locales: informan un motivo controlado (acceso o formato). Una
   lectura válida del MIDES retira inmediatamente la marca de rechazo, también para el registro
   anterior; la búsqueda no afirma que todo rechazo sea un formato viejo permanente.
-
+- **La prueba de humo ya no da por recuperada una fuente que respondió desde la caché.** En una máquina
+  con copias guardadas informaba `VOLVIO` para las tres herramientas del Parlamento, que sigue en 403.
+  Una respuesta con `copia_vencida` es `VENCIDA` (cuenta como falla), o `CAIDA` si ya se conocía.
+- **Las instrucciones del servidor nombran `uru://trampas`.** El recurso existía, pero nada le decía al
+  cliente que lo consultara. Un test lo cubre. No se midió si mejora las respuestas: `evals/evaluar.py`
+  no entregaba al modelo las instrucciones ni los recursos del servidor.
+- **La evaluación tiene un modo `guiado`.** Suma a las herramientas las instrucciones del servidor y la
+  lectura de sus recursos; `con` y `sin` no cambian. Un `--modo` mal escrito ahora se rechaza: antes se
+  corría sin el servidor. Probado con un cliente falso; no se ejecutaron evaluaciones pagas.
+- **La frase sobre `uru://trampas` no mostró efecto medible.** Conjunto de desarrollo en `guiado` con
+  `deepseek-v4.1-flash` (Ollama), 3 repeticiones, 114 corridas el 2026-11-26: 53/57 aciertos sin la
+  frase y 54/57 con ella; leyeron algún recurso 51/57 y 53/57. Sin la frase el modelo ya leía el
+  recurso. No dice nada sobre otros modelos ni clientes. La frase se mantiene.
+- **Las 19 preguntas de desarrollo quedan confirmadas o resueltas por cálculo y reglas.** Las 12 que
+  faltaban se buscaron en la fuente citada (varias son prensa); la del Frente Amplio se revisó a mano
+  (la fuente dice 43,85, dentro de la tolerancia). `balotaje-2024-orsi-pct` falló 6/6: el servidor
+  responde 49,77 (definitivo con observados) y la pregunta espera 49,84. Esa decisión sigue abierta.
+- **La evaluación guarda el detalle también con modelos como `nombre:cloud`.** En Windows quedaba un
+  archivo vacío.
+- **`opentelemetry-api` 1.45.2** (dependencia de `mcp`) en `uv.lock`, por CVE-2026-126360.
+- **Tres preguntas de desarrollo más:** el peso de la ciudad de Canelones en su departamento, el de los
+  tres departamentos más poblados en el país y la comparación inválida entre el precio al público del
+  gasoil y su paridad de importación. Con `deepseek-v4.1-flash`, 3 repeticiones: 0/9 sin el servidor,
+  8/9 en `con` y 9/9 en `guiado`. Distinguen tener el servidor de no tenerlo; no alcanzan para medir
+  diferencias entre `con` y `guiado`. La tabla de la medición anterior es sobre las 19 de antes.
+- **Se confirmaron en la fuente 7 respuestas del conjunto reservado**, sin cambiar preguntas, esperados
+  ni herramientas. Queda sin confirmar `trampa-pobreza-metodologia`, que no tiene una cifra que buscar.
+  Las dos del balotaje usan, como la de desarrollo, cifras de prensa distintas del escrutinio
+  definitivo con observados.
 - **`clima` (INIA) y `observaciones_inumet` marcan los días dudosos, sin descartar ninguno.** Misma forma que
   `nivel_rio_ina`: por serie, `pruebas`, `marcas`, `marcadas` (hasta 20) y `marcadas_omitidas`. `clima` marca
   `tmax`, `tmin` y `lluvia_mm`; `observaciones_inumet` marca temperatura y presión (rango, plano, sin_dato),
@@ -82,6 +110,11 @@
   reexporta las mismas funciones, tipos y constantes. El código se movió textualmente con un script, y se
   verificó que los esquemas de entrada y salida de las 31 herramientas, `docs/herramientas.md` y
   `manifest.json` quedaron idénticos.
+- **Las guías se publican también como Agent Skills.** `scripts/generar_skills.py` escribe
+  `skills/<nombre>/SKILL.md` desde `guias.PROMPTS`: el mismo texto, con marcadores (`<producto>`,
+  `<desde>`) en vez de valores de ejemplo y la trampa de cada herramienta que nombra. `--check` falla
+  si una skill falta, quedó vieja o sobra, y un test compara los archivos con la salida del generador.
+  No cambia el servidor ni los prompts.
 
 ## 0.14.0 — 2026-11-16
 

@@ -37,6 +37,9 @@ AQUI = Path(__file__).resolve().parent
 PREGUNTAS = AQUI / "preguntas.json"
 MODELO = "claude-opus-5-5"
 MAX_TURNOS = 15
+#: sin = solo el modelo; con = las herramientas; guiado = además las instrucciones y los recursos.
+MODOS = ("con", "sin", "guiado")
+LECTOR = "leer_recurso"  # no es una herramienta del servidor: la agrega el modo guiado
 
 SISTEMA = """\
 Respondés preguntas sobre datos públicos de Uruguay y la región. Usá las herramientas cuando las \
@@ -142,15 +145,41 @@ async def herramientas_de(sesion) -> list[dict]:
     return [{"name": t.name, "description": t.description or "", "input_schema": t.input_schema} for t in lista]
 
 
-async def preguntar(cliente, pregunta: str, *, sesion=None, herramientas=None, modelo=MODELO, esfuerzo="medium"):
+async def lector_de_recursos(sesion) -> dict:
+    """La herramienta con la que el agente lee los recursos del servidor, como lo haría un cliente."""
+    recursos = sorted((await sesion.list_resources()).resources, key=lambda r: str(r.uri))
+    indice = "\n".join(f"- {r.uri}: {r.description or r.name}" for r in recursos)
+    return {
+        "name": LECTOR,
+        "description": f"Lee un recurso de referencia del servidor.\n{indice}",
+        "input_schema": {
+            "type": "object",
+            "properties": {"uri": {"type": "string", "enum": [str(r.uri) for r in recursos]}},
+            "required": ["uri"],
+        },
+    }
+
+
+async def preguntar(
+    cliente,
+    pregunta: str,
+    *,
+    sesion=None,
+    herramientas=None,
+    instrucciones: Optional[str] = None,
+    modelo=MODELO,
+    esfuerzo="medium",
+):
     """Corre el ciclo del agente sobre una pregunta y devuelve el texto final y las métricas.
 
     Con `sesion` (un cliente MCP conectado al servidor), las herramientas son las del servidor; sin
-    sesión, el agente responde solo con lo que sabe. Ciclo propio y no el tool runner del SDK porque
-    cada llamada se cuenta y se registra, y porque así se prueba con un cliente falso."""
+    sesión, el agente responde solo con lo que sabe. `instrucciones` se agrega al prompt de sistema.
+    Ciclo propio y no el tool runner del SDK porque cada llamada se cuenta y se registra, y porque así
+    se prueba con un cliente falso."""
     mensajes: list[dict] = [{"role": "user", "content": pregunta}]
     m = {
         "llamadas": [],
+        "recursos_leidos": [],
         "errores_herramienta": 0,
         "tokens_entrada": 0,
         "tokens_salida": 0,
@@ -160,7 +189,7 @@ async def preguntar(cliente, pregunta: str, *, sesion=None, herramientas=None, m
     parametros: dict[str, Any] = {
         "model": modelo,
         "max_tokens": 16000,
-        "system": SISTEMA,
+        "system": f"{SISTEMA}\n\nInstrucciones del servidor:\n{instrucciones}" if instrucciones else SISTEMA,
         "output_config": {"effort": esfuerzo},
         # Las definiciones de las herramientas (~7.400 tokens) y el sistema son iguales en cada turno y
         # en cada pregunta: la caché de prompts los cobra una vez y después a una fracción.
@@ -168,6 +197,8 @@ async def preguntar(cliente, pregunta: str, *, sesion=None, herramientas=None, m
     }
     if herramientas:
         parametros["tools"] = herramientas
+    # Solo se leen recursos si el lector se ofreció: en `con`, pedirlo es una herramienta desconocida.
+    con_lector = any(t["name"] == LECTOR for t in herramientas or [])
     inicio = time.monotonic()
     texto, motivo_fin = "", ""
     while m["turnos"] < MAX_TURNOS:
@@ -190,9 +221,15 @@ async def preguntar(cliente, pregunta: str, *, sesion=None, herramientas=None, m
                 continue
             m["llamadas"].append(b.name)
             try:
-                res = await sesion.call_tool(b.name, b.input)
-                es_error = bool(getattr(res, "is_error", False))
-                contenido = _texto_de(res)
+                if con_lector and b.name == LECTOR:
+                    uri = b.input["uri"]
+                    res = await sesion.read_resource(uri)
+                    es_error, contenido = False, "\n".join(getattr(c, "text", "") for c in res.contents)
+                    m["recursos_leidos"].append(uri)
+                else:
+                    res = await sesion.call_tool(b.name, b.input)
+                    es_error = bool(getattr(res, "is_error", False))
+                    contenido = _texto_de(res)
             except Exception as e:  # la herramienta falló: el agente lo ve como error, la corrida sigue
                 es_error, contenido = True, f"{type(e).__name__}: {e}"
             m["errores_herramienta"] += es_error
@@ -215,15 +252,24 @@ async def correr(cliente, preguntas: list[dict], modos: list[str], *, modelo=MOD
     filas = []
     async with Client(servidor) as sesion:
         herramientas = await herramientas_de(sesion)
+        # Lo que recibe el agente en cada modo.
+        servidor_en = {
+            "sin": {},
+            "con": {"sesion": sesion, "herramientas": herramientas},
+        }
+        if "guiado" in modos:
+            servidor_en["guiado"] = {
+                "sesion": sesion,
+                "herramientas": [*herramientas, await lector_de_recursos(sesion)],
+                "instrucciones": sesion.instructions,
+            }
         for p in preguntas:
             for modo in modos:
                 for n in range(repeticiones):
-                    con = modo == "con"
                     texto, m = await preguntar(
                         cliente,
                         p["pregunta"],
-                        sesion=sesion if con else None,
-                        herramientas=herramientas if con else None,
+                        **servidor_en[modo],
                         modelo=modelo,
                         esfuerzo=esfuerzo,
                     )
@@ -244,7 +290,7 @@ async def correr(cliente, preguntas: list[dict], modos: list[str], *, modelo=MOD
                             "respuesta": texto,
                         }
                     )
-                    print(f"{p['id']:<34} {modo:<4} {'OK' if v['correcta'] else '--'}  {v['motivo']}", file=sys.stderr)
+                    print(f"{p['id']:<34} {modo:<6} {'OK' if v['correcta'] else '--'}  {v['motivo']}", file=sys.stderr)
     return filas
 
 
@@ -273,7 +319,11 @@ def main(argv: Optional[list[str]] = None) -> int:
     import anyio
 
     ap = argparse.ArgumentParser(description=__doc__.splitlines()[0])
-    ap.add_argument("--modo", default="con,sin", help="con, sin o con,sin (con y sin el servidor)")
+    ap.add_argument(
+        "--modo",
+        default="con,sin",
+        help="separados por coma: con, sin (con y sin el servidor) o guiado (además instrucciones y recursos)",
+    )
     ap.add_argument("--conjunto", default="desarrollo", choices=["desarrollo", "reservado", "todos"])
     ap.add_argument("--id", action="append", help="solo esta pregunta (se puede repetir)")
     ap.add_argument("--modelo", default=MODELO)
@@ -281,6 +331,9 @@ def main(argv: Optional[list[str]] = None) -> int:
     ap.add_argument("--repeticiones", type=int, default=1)
     ap.add_argument("--salida", type=Path, default=AQUI / "resultados")
     args = ap.parse_args(argv)
+    modos = [m.strip() for m in args.modo.split(",") if m.strip()]
+    if not modos or set(modos) - set(MODOS):
+        ap.error(f"--modo {args.modo!r}: los modos válidos son {', '.join(MODOS)}")
 
     import anthropic  # solo para correr de verdad: los tests usan un cliente falso
 
@@ -288,7 +341,6 @@ def main(argv: Optional[list[str]] = None) -> int:
     if not preguntas:
         print("ninguna pregunta con esos filtros", file=sys.stderr)
         return 2
-    modos = [m.strip() for m in args.modo.split(",") if m.strip()]
     filas = anyio.run(
         lambda: correr(
             anthropic.AsyncAnthropic(),
@@ -301,7 +353,10 @@ def main(argv: Optional[list[str]] = None) -> int:
     )
     sello = datetime.now(timezone.utc).strftime("%Y%m%dT%H%M%SZ")
     args.salida.mkdir(parents=True, exist_ok=True)
-    destino = args.salida / f"{sello}-{args.modelo}-{args.conjunto}.json"
+    # `modelo:cloud` o `org/modelo` no sirven en un nombre de archivo: en NTFS el `:` abre un flujo
+    # alternativo y queda un archivo vacío. El nombre exacto va dentro del JSON.
+    nombre = re.sub(r"[^\w.-]", "-", args.modelo)
+    destino = args.salida / f"{sello}-{nombre}-{args.conjunto}.json"
     destino.write_text(
         json.dumps(
             {"modelo": args.modelo, "esfuerzo": args.esfuerzo, "conjunto": args.conjunto, "filas": filas},
