@@ -125,8 +125,12 @@ consultas reales: las seis anteriores más el país sin filtros y el punto del c
 país devolvió `3499451` y 19 departamentos; el punto devolvió `112527` como población oficial de
 Salto. Se contrastaron los hashes de todas las copias declaradas con sus bytes guardados.
 
-La segunda revisión de estas correcciones se solicitó antes de integrar; no se declara aprobación
-hasta recibir su resultado.
+La segunda revisión independiente confirmó ambas correcciones funcionales y la suite completa
+(`274 passed, 22 deselected`), sin hallazgos de seguridad restantes. Su único bloqueo fue el formato
+del test en `eedbe4e`; ya estaba corregido en `b38d9d3`, cuyo diff solo une esa llamada en una línea.
+Se volvió a ejecutar `ruff check scripts src tests` y `ruff format --check scripts src tests` sobre
+`6906fa4`: ambos pasaron (`40 files already formatted`). No se presenta el informe de `eedbe4e`
+como una aprobación global: el bloqueo señalado se cierra con el chequeo real del estado posterior.
 
 ## Siguiente paso
 
