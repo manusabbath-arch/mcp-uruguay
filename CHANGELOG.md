@@ -11,9 +11,14 @@
 - **Degradación y procedencia del censo.** Si falla uno de los dos tabulados, se conserva el otro;
   cada ausencia se avisa por separado. Los tabulados llevan su URL en `procedencia`, y las capas
   cartográficas ya cargadas en memoria también quedan registradas como respaldo.
-- **Evaluación reservada intacta.** Esta tanda no modifica `evals/preguntas.json`: los cambios de
-  criterio electoral propuestos en la rama original quedan fuera de la integración. No se declara
-  una mejora de puntuación ni se ejecutan evaluaciones pagas.
+- **Evaluación reservada intacta.** No se modifican preguntas de balotaje ni el conjunto reservado.
+  La tanda posterior de población corrige la cifra de Paysandú del conjunto de desarrollo, con la
+  publicación vigente del INE como respaldo. No se declara una mejora de puntuación ni se ejecutan
+  evaluaciones pagas.
+- **Revisión de seguridad y recuperación.** Los avisos de tabulados ausentes no interpolan errores
+  crudos que pueden contener rutas locales: informan un motivo controlado (acceso o formato). Una
+  lectura válida del MIDES retira inmediatamente la marca de rechazo, también para el registro
+  anterior; la búsqueda no afirma que todo rechazo sea un formato viejo permanente.
 
 - **`clima` (INIA) y `observaciones_inumet` marcan los días dudosos, sin descartar ninguno.** Misma forma que
   `nivel_rio_ina`: por serie, `pruebas`, `marcas`, `marcadas` (hasta 20) y `marcadas_omitidas`. `clima` marca

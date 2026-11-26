@@ -68,8 +68,9 @@ Montevideo se contrastó con el tabulado oficial, no con una segunda publicació
 El usuario pidió expresamente excluir dos commits de evaluación que aparecieron durante la
 integración. Se revirtieron sin reescribir historia. `evals/preguntas.json` y `tests/test_evals.py`
 quedan idénticos a la base remota **en esa tanda**; la tanda siguiente (abajo) mueve una cifra del
-conjunto de desarrollo, con la fuente medida. Esto preserva el benchmark, pero no resuelve las
-ambigüedades de sus preguntas electorales ni actualiza cifras históricas del conjunto de desarrollo.
+conjunto de desarrollo, con la fuente medida. El conjunto reservado queda intacto. Las ambigüedades
+de las preguntas electorales siguen pendientes; no se afirma que todo el conjunto sea comparable
+con resultados publicados antes de corregir Paysandú.
 
 ## Tanda siguiente: la población del país y la cifra vigente de Paysandú
 
@@ -104,6 +105,28 @@ definiciones de herramientas: 19.771 → 19.954 caracteres, en dos pasos (+78 y 
 No se afirma una mejora de puntuación. No se repitió toda la suite de fuentes reales; se verificaron
 las consultas indicadas. La Release, el despliegue remoto y la instalación permanente del usuario
 no forman parte de esta tanda.
+
+## Revisión independiente y correcciones
+
+La revisión de `e767835` rechazó la tanda por dos casos reproducibles. Se corrigieron en worktree
+propio, sin tocar los archivos de evaluación:
+
+- `c5de343`: los errores de acceso y formato del censo ya no exponen rutas locales en la nota de
+  `localidad` ni de `ubicar_punto`. Los cuatro casos parametrizados fallaron antes del arreglo y
+  pasaron después.
+- `eedbe4e`: después de una lectura válida, el indicador MIDES vuelve inmediatamente a la búsqueda.
+  El caso de HTML truncado seguido de HTML válido falló antes del arreglo y pasó después. Otro test
+  conserva la recuperación de marcas del registro anterior. La nota ya no identifica cualquier
+  rechazo como formato viejo; el test de vencimiento usa el mismo reloj que producción.
+
+Verificación propia posterior: Python 3.10 y 3.13, `274 passed, 22 deselected`; cobertura `93.23%`.
+Ruff lint y formato pasan. El wheel aislado, iniciado por stdio con caché nueva, respondió ocho
+consultas reales: las seis anteriores más el país sin filtros y el punto del centro de Salto. El
+país devolvió `3499451` y 19 departamentos; el punto devolvió `112527` como población oficial de
+Salto. Se contrastaron los hashes de todas las copias declaradas con sus bytes guardados.
+
+La segunda revisión de estas correcciones se solicitó antes de integrar; no se declara aprobación
+hasta recibir su resultado.
 
 ## Siguiente paso
 
