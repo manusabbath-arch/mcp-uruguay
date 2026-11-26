@@ -216,6 +216,10 @@ Dos cosas ayudan:
 
 ## Desarrollo
 
+Para trabajar con varias sesiones: [coordinación e integración segura](docs/sesiones-paralelas.md).
+`scripts/sesiones.py` verifica el SHA antes de integrar y serializa las integraciones cooperantes.
+No sustituye hooks ni impide que un programa ejecute Git directamente.
+
 ```sh
 git clone https://github.com/manusabbath-arch/mcp-uruguay && cd mcp-uruguay
 uv run --with pytest --with-editable . pytest            # sin red
