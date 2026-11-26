@@ -192,8 +192,8 @@ def _pregunta(id_):
 @pytest.mark.parametrize(
     "id_,esperadas",
     [
-        ("balotaje-2024-delgado-votos", {"1.119.537", "1,119,537", "1119537"}),
-        ("balotaje-2024-orsi-pct", {"49,77", "49.77"}),
+        ("balotaje-2024-delgado-votos", {"1.101.296", "1,101,296", "1101296"}),
+        ("balotaje-2024-orsi-pct", {"49,84", "49.84"}),
         ("ipc-argentina-2024", {"117,8", "117.8"}),
         ("ui-2025-01-01", {"6,1697", "6.1697"}),
         ("ley-19889-promulgacion", {"09/07/2020", "9/7/2020"}),
