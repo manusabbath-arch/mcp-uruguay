@@ -22,7 +22,9 @@ Datos públicos de Uruguay y la región, leídos de la fuente primaria.
 Cada respuesta trae `fuente` y `bajado` (cuándo se obtuvo la copia usada): citalos junto con el
 número. Los lectores rechazan en vez de arreglar: un error con motivo es preferible a un número
 plausible pero falso. Los índices de precios se devuelven como índices, no como inflación.
-Un null es "sin dato", nunca cero."""
+Un null es "sin dato", nunca cero.
+Antes de citar una cifra, si podés leer recursos, consultá `uru://trampas`: qué desconfiar de cada
+herramienta y qué fuentes hoy no responden."""
 
 servidor = MCPServer(name="mcp-uruguay", version=__version__, instructions=INSTRUCCIONES)
 
@@ -167,7 +169,9 @@ def herramienta(titulo: str, anotaciones: ToolAnnotations) -> Callable:
             "ctx": Context,
         }
 
-        return servidor.tool(title=titulo, annotations=anotaciones)(envuelta)
+        return servidor.tool(
+            title=titulo, annotations=anotaciones, description=inspect.cleandoc(funcion.__doc__ or "")
+        )(envuelta)
 
     return decorar
 
@@ -347,17 +351,20 @@ def variacion_real(
 @herramienta("En qué departamento y localidad cae un punto", EN_RED)
 def ubicar_punto(lat: float, lon: float) -> h.Ubicacion:
     """Dado un punto (latitud y longitud en grados), en qué departamento y en qué localidad de Uruguay cae,
-    según los polígonos oficiales del INE, con la población 2023 de la localidad. Si cae en el campo, la
-    localidad más cercana y a qué distancia. Suma la dirección más cercana de IDE.uy con su distancia.
-    Combinar con geocodificar_direccion para pasar de una dirección a su departamento."""
+    según los polígonos oficiales del INE, con la población 2023 de la localidad y la oficial del Censo 2023
+    (`poblacion_oficial_2023`, que es la que se cita). Si cae en el campo, la localidad más cercana y a qué
+    distancia. Suma la dirección más cercana de IDE.uy con su distancia. Combinar con geocodificar_direccion
+    para pasar de una dirección a su departamento."""
     return h.ubicar_punto(lat, lon)
 
 
 @herramienta("Población y viviendas de una localidad (INE)", EN_RED)
 def localidad(nombre: str = "", departamento: str = "", cantidad: int = 20) -> h.Localidades:
-    """Población y viviendas 2023 de una localidad uruguaya, por nombre (sin importar tildes). Si el nombre
-    existe en más de un departamento, devuelve todas; `departamento` desambigua. Solo con `departamento`,
-    lista sus localidades de mayor a menor población (hasta `cantidad`)."""
+    """Población oficial del Censo 2023 (INE) y viviendas de una localidad uruguaya, y la población
+    oficial de su departamento. Por nombre (sin importar tildes); si existe en más de un departamento,
+    devuelve todas y `departamento` desambigua. Solo con `departamento`, lista sus localidades de mayor
+    a menor población (hasta `cantidad`). Sin argumentos, el país: `poblacion_oficial_total`, los 19
+    departamentos y las localidades más pobladas."""
     return h.localidad(nombre, departamento, cantidad)
 
 

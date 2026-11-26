@@ -69,6 +69,17 @@ def test_localidad_con_nombre_repetido():
     assert len({x["departamento"] for x in r["localidades"]}) >= 2
 
 
+@pytest.mark.parametrize("departamento,esperado", [("Salto", 136195), ("Paysandu", 121838), ("Montevideo", 1302721)])
+def test_poblacion_oficial_del_censo_no_es_la_suma_de_localidades(departamento, esperado):
+    """Canarios de los tabulados del INE; si se corrigen, revisar la fuente antes del esperado."""
+    r = h.localidad(departamento=departamento, cantidad=1)
+    assert r["departamentos"][0]["poblacion_oficial_2023"] == esperado
+    assert "tabulados" in r["fuente"]
+    if departamento == "Salto":
+        assert r["localidades"][0]["poblacion_oficial_2023"] == 112527
+        assert r["localidades"][0]["poblacion_2023"] == 114043
+
+
 def test_resultados_del_balotaje_en_salto():
     r = h.resultados_electorales("balotaje-2024", "Salto")
     assert r["mesas"]["comunes"] > 200 and r["participacion_pct"] > 80

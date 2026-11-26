@@ -239,6 +239,97 @@ class TestIndicadorSocial:
         with pytest.raises(ValueError, match="Salto"):
             h.indicador_social("tasa-empleo-segun-departamento-total-pais", "Rivera")
 
+    PAGINA_VIEJA = "<html><head><title>X</title></head><body><table></table></body></html>"
+
+    def test_un_indicador_ilegible_sale_de_la_busqueda(self, monkeypatch):
+        from uydatos import observatorio
+
+        monkeypatch.setattr(
+            observatorio.red, "bajar", lambda url, ruta: ruta.write_text(self.PAGINA_VIEJA, encoding="utf-8") or ruta
+        )
+        with pytest.raises(observatorio.ObservatorioInvalido):
+            h.indicador_social("tasa-empleo-total-pais")
+        r = h.buscar_indicador_social("empleo")
+        assert "tasa-empleo-total-pais" not in r["indicadores"]
+        assert r["descartados_ilegibles"] == 1 and r["encontrados"] == 1
+        assert "última lectura fue rechazada" in r["nota"]
+        assert "30 días" in r["nota"]
+
+    def test_un_indicador_recuperado_vuelve_a_la_busqueda(self, monkeypatch):
+        from uydatos import observatorio
+
+        slug = "tasa-empleo-total-pais"
+        monkeypatch.setattr(
+            observatorio.red, "bajar", lambda url, ruta: ruta.write_text(self.PAGINA_VIEJA, encoding="utf-8")
+        )
+        with pytest.raises(observatorio.ObservatorioInvalido):
+            h.indicador_social(slug)
+        assert slug not in h.buscar_indicador_social("empleo")["indicadores"]
+        monkeypatch.setattr(observatorio.red, "bajar", lambda url, ruta: ruta.write_text(self.PAGINA, encoding="utf-8"))
+        assert h.indicador_social(slug)["filas"]
+        r = h.buscar_indicador_social("empleo")
+        assert slug in r["indicadores"]
+        assert r["descartados_ilegibles"] == 0
+
+    def test_sin_ilegibles_no_descarta_nada(self):
+        r = h.buscar_indicador_social("empleo")
+        assert r["descartados_ilegibles"] == 0 and len(r["indicadores"]) == 2
+
+    def test_dos_lecturas_concurrentes_no_pierden_marcas(self, monkeypatch):
+        from concurrent.futures import ThreadPoolExecutor
+        from pathlib import Path
+        from threading import Barrier
+
+        from mcp_uruguay.herramientas import sinred
+
+        barrera = Barrier(2)
+        escribir = Path.write_text
+
+        def simultanea(ruta, *args, **kwargs):
+            resultado = escribir(ruta, *args, **kwargs)
+            if ruta.name.endswith(".nuevo"):
+                barrera.wait(timeout=5)
+            return resultado
+
+        monkeypatch.setattr(Path, "write_text", simultanea)
+        slugs = ["tasa-empleo-total-pais", "tasa-empleo-segun-departamento-total-pais"]
+        with ThreadPoolExecutor(max_workers=2) as grupo:
+            list(grupo.map(sinred._marcar_ilegible, slugs))
+        assert sinred._ilegibles() == set(slugs)
+
+    def test_la_marca_usa_el_reloj_de_uruguay(self, monkeypatch):
+        from datetime import date
+
+        from mcp_uruguay import cache
+        from mcp_uruguay.herramientas import sinred
+
+        monkeypatch.setattr(cache, "hoy", lambda: date(2026, 10, 31))
+        sinred._marcar_ilegible("tasa-empleo-total-pais")
+        assert sinred._leer_marcas()["tasa-empleo-total-pais"] == "2026-10-31"
+        assert "tasa-empleo-total-pais" in sinred._ilegibles()
+
+    def test_una_lectura_valida_retira_tambien_una_marca_del_registro_anterior(self, cache_temporal):
+        from mcp_uruguay import cache
+
+        slug = "tasa-empleo-total-pais"
+        ruta = cache_temporal / "observatorio" / "ilegibles.json"
+        ruta.parent.mkdir(parents=True, exist_ok=True)
+        ruta.write_text(self.json.dumps({slug: cache.hoy().isoformat()}), encoding="utf-8")
+        assert h.buscar_indicador_social("empleo")["descartados_ilegibles"] == 1
+        assert h.indicador_social(slug)["filas"]
+        assert h.buscar_indicador_social("empleo")["descartados_ilegibles"] == 0
+
+    def test_la_marca_de_ilegible_vence(self):
+        from datetime import timedelta
+
+        from mcp_uruguay import cache
+
+        ruta = cache.directorio() / "observatorio" / "ilegibles.json"
+        ruta.parent.mkdir(parents=True, exist_ok=True)
+        vieja = (cache.hoy() - timedelta(days=31)).isoformat()
+        ruta.write_text(self.json.dumps({"tasa-empleo-total-pais": vieja}), encoding="utf-8")
+        assert h.buscar_indicador_social("empleo")["descartados_ilegibles"] == 0
+
 
 class TestParidadCombustibles:
     @pytest.fixture(autouse=True)

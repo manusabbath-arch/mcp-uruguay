@@ -2,6 +2,9 @@
 
 from __future__ import annotations
 
+import hashlib
+import json
+from datetime import timedelta
 from pathlib import Path
 from typing import Literal, Optional, Union
 
@@ -83,6 +86,7 @@ class IndicadoresEncontrados(cache.Procedencia, TypedDict):
     indicadores: list[str]
     encontrados: int
     total: int
+    descartados_ilegibles: int
     nota: str
     fuente: str
     bajado: str
@@ -252,18 +256,76 @@ def _indice_observatorio() -> tuple[list[str], Path]:
     )
 
 
+_DIAS_ILEGIBLE = 30
+
+
+def _ruta_ilegibles() -> Path:
+    return cache.directorio() / "observatorio" / "ilegibles.json"
+
+
+def _leer_marcas() -> dict[str, str]:
+    # Leer también el registro anterior; las marcas nuevas son independientes por indicador.
+    ruta = _ruta_ilegibles()
+    marcas = {}
+    for archivo in (ruta, *sorted(ruta.with_suffix("").glob("*.json"))):
+        try:
+            contenido = json.loads(archivo.read_text(encoding="utf-8"))
+        except (OSError, ValueError):
+            continue
+        if isinstance(contenido, dict):
+            marcas.update(contenido)
+    return marcas
+
+
+def _ilegibles() -> set[str]:
+    """Indicadores cuya página se intentó leer en los últimos 30 días y tenía un formato que no se lee.
+
+    La búsqueda no los ofrece: sugerir un nombre que la lectura va a rechazar lleva al agente a un
+    callejón (medido en la eval del 2026-11-21: cuatro llamadas perdidas)."""
+    limite = (cache.hoy() - timedelta(days=_DIAS_ILEGIBLE)).isoformat()
+    return {slug for slug, dia in _leer_marcas().items() if str(dia) >= limite}
+
+
+def _guardar_marca(slug: str, dia: str) -> None:
+    """Una fecha marca el rechazo; una cadena vacía lo retira, incluso del registro anterior."""
+    carpeta = _ruta_ilegibles().with_suffix("")
+    carpeta.mkdir(parents=True, exist_ok=True)
+    # Un archivo por indicador evita perder marcas entre procesos; el hash no admite rutas.
+    ruta = carpeta / f"{hashlib.sha256(slug.encode('utf-8')).hexdigest()}.json"
+    nueva = cache._temporal(ruta)
+    try:
+        nueva.write_text(json.dumps({slug: dia}), encoding="utf-8")
+        cache._poner_en_su_lugar(nueva, ruta)
+    finally:
+        nueva.unlink(missing_ok=True)
+
+
+def _marcar_ilegible(slug: str) -> None:
+    _guardar_marca(slug, cache.hoy().isoformat())
+
+
 def buscar_indicador_social(texto: str, cantidad: int = 20) -> IndicadoresEncontrados:
     slugs, ruta = _indice_observatorio()
-    encontrados = observatorio.buscar(slugs, texto, cantidad=len(slugs))
+    ilegibles = _ilegibles()
+    todos = observatorio.buscar(slugs, texto, cantidad=len(slugs))
+    encontrados = [s for s in todos if s not in ilegibles]
+    descartados = len(todos) - len(encontrados)
     return {
         "indicadores": encontrados[: max(1, min(cantidad, 100))],
         "encontrados": len(encontrados),
         "total": len(slugs),
+        "descartados_ilegibles": descartados,
         "nota": (
             "Pasar uno de estos nombres, tal cual, a indicador_social. Los nombres salen del título, sin "
             "tildes: 'segun-departamento' abre por departamento, 'segun-sexo' por sexo, y 'total-pais' "
             "es del país entero. Los más cortos primero."
             + ("" if encontrados else " Sin resultados: probar con menos palabras o con su raíz.")
+            + (
+                f" Se omitieron {descartados} indicadores cuya última lectura fue rechazada. "
+                "La marca vence a los 30 días y se retira si una lectura posterior tiene éxito."
+                if descartados
+                else ""
+            )
         ),
         "fuente": FUENTE_OBSERVATORIO + " (sitemap)",
         "bajado": cache.sello(ruta),
@@ -282,12 +344,19 @@ def indicador_social(indicador: str, filtro: str = "") -> IndicadorSocial:
             parecidos = []
         sugerencia = parecidos or "buscarlo con buscar_indicador_social"
         raise ValueError(f"{indicador!r} no es un indicador del MIDES. Parecidos: {sugerencia}")
-    r, ruta = cache.archivo(
-        cache.directorio() / "observatorio" / f"{nombre}.html",
-        lambda ruta: observatorio.red.bajar(url, ruta),
-        lambda ruta: observatorio.leer_pagina(ruta.read_text(encoding="utf-8"), url),
-        cache.DIA,
-    )
+    try:
+        r, ruta = cache.archivo(
+            cache.directorio() / "observatorio" / f"{nombre}.html",
+            lambda ruta: observatorio.red.bajar(url, ruta),
+            lambda ruta: observatorio.leer_pagina(ruta.read_text(encoding="utf-8"), url),
+            cache.DIA,
+        )
+    except observatorio.ObservatorioInvalido:
+        _marcar_ilegible(nombre)
+        raise
+    # Una lectura válida recupera el indicador inmediatamente, aunque la marca no haya vencido.
+    if nombre in _ilegibles():
+        _guardar_marca(nombre, "")
     filas = r["filas"]
     if filtro:
         palabras = [_sin_tildes(p) for p in filtro.split(",") if p.strip()]

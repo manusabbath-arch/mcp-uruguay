@@ -19,6 +19,16 @@ def _escribir(ruta, features):
     ruta.write_text(json.dumps({"type": "FeatureCollection", "features": features}), encoding="utf-8")
 
 
+@pytest.fixture(autouse=True)
+def sin_descargas_censo(monkeypatch):
+    from uydatos import censo
+
+    def sin_red(cuadro, destino):
+        raise OSError("sin red en los tests de unidad")
+
+    monkeypatch.setattr(censo, "descargar", sin_red)
+
+
 @pytest.fixture
 def capas(cache_temporal):
     deps = [
@@ -150,6 +160,161 @@ class TestLocalidad:
         with pytest.raises(ValueError, match="GARIBALDI"):
             h.localidad("Garibaldy")
 
-    def test_sin_nada(self, capas):
-        with pytest.raises(ValueError):
-            h.localidad("", "")
+    def test_sin_nada_es_el_pais(self, capas):
+        """Sin nombre ni departamento: las localidades más pobladas y los departamentos de todas ellas.
+        Antes era un error, y no había forma de preguntar el total del país ni la población de cada
+        departamento sin una llamada por departamento."""
+        r = h.localidad()
+        assert r["total"] == 5 and len(r["localidades"]) == 5
+        assert [x["nombre"] for x in r["localidades"]][:2] == ["SALTO", "SAN ANTONIO"]
+        assert {d["departamento"] for d in r["departamentos"]} == {"SALTO", "CANELONES"}
+
+    def test_sin_nada_trae_el_total_del_pais(self, capas, censo_en_cache):
+        """El total es la suma de los departamentos del cuadro 12, no la de las localidades."""
+        r = h.localidad()
+        assert r["poblacion_oficial_total"] == 608960 + 136195
+        assert [(d["departamento"], d["poblacion_oficial_2023"]) for d in r["departamentos"]] == [
+            ("CANELONES", 608960),
+            ("SALTO", 136195),
+        ]
+
+    def test_el_total_no_sale_de_un_cuadro_a_medias(self, capas, censo_en_cache):
+        """Con el cuadro 12 caído el total queda en null: una suma parcial es un número plausible y falso."""
+        (censo_en_cache / "departamentos.xlsx").unlink()
+        r = h.localidad("Salto", "Salto")
+        assert r["poblacion_oficial_total"] is None
+        assert r["localidades"][0]["poblacion_oficial_2023"] == 112527
+
+    def test_avisa_que_la_poblacion_de_la_capa_no_es_la_oficial(self, capas):
+        nota = h.localidad("garibaldi")["nota"]
+        assert "poblacion_oficial_2023" in nota and "difieren" in nota
+
+
+@pytest.fixture
+def censo_en_cache(cache_temporal):
+    """Los dos tabulados del INE ya en la caché, con la forma real (encabezado en la fila 4)."""
+    openpyxl = pytest.importorskip("openpyxl")
+    carpeta = cache_temporal / "censo"
+    carpeta.mkdir(parents=True, exist_ok=True)
+
+    def guardar(nombre, filas):
+        libro = openpyxl.Workbook()
+        for f in filas:
+            libro.active.append(list(f))
+        libro.save(carpeta / nombre)
+
+    guardar(
+        "departamentos.xlsx",
+        [
+            ("CUADRO 12",),
+            ("Población, área (km2) y densidad por departamento. Total País.",),
+            (None,),
+            ("Código Localidad INE 2023", "Departamento", "Población Total", "Área (Km2)", "Densidad (Hb/km2)"),
+            ("03", "CANELONES", 608960, 4536, 134.2),
+            ("15", "SALTO", 136195, 14163, 9.6),
+        ],
+    )
+    guardar(
+        "localidades.xlsx",
+        [
+            ("CUADRO 13",),
+            ("Población por departamento y localidad. Total País.",),
+            (None,),
+            ("Código localidad INE", "Nombre departamento", "Nombre localidad", "Población Total"),
+            (None,),
+            ("Total", None, None, 112527 + 545),
+            ("15020", "SALTO", "SALTO", 112527),
+            ("15939", "SALTO", "GARIBALDI", 545),
+        ],
+    )
+    return carpeta
+
+
+class TestPoblacionOficial:
+    def test_procedencia_incluye_la_capa_y_ambos_tabulados(self, capas, censo_en_cache):
+        from mcp_uruguay import cache
+
+        # También la capa ya leída en memoria tiene que figurar como respaldo.
+        h.localidad("Salto", "Salto")
+        with cache.vigilar_procedencia() as leidas:
+            h.localidad("Salto", "Salto")
+        assert {c["archivo"] for c in leidas} == {
+            "limites/localidades.geojson",
+            "censo/localidades.xlsx",
+            "censo/departamentos.xlsx",
+        }
+        assert all(c["url"] for c in leidas if c["archivo"].startswith("censo/"))
+
+    def test_cada_localidad_trae_la_cifra_oficial_del_ine(self, capas, censo_en_cache):
+        r = h.localidad("Salto", "Salto")
+        loc = r["localidades"][0]
+        assert loc["poblacion_2023"] == 114043 and loc["poblacion_oficial_2023"] == 112527
+
+    def test_una_localidad_que_no_esta_en_el_tabulado_queda_sin_dato(self, capas, censo_en_cache):
+        loc = h.localidad("Albisu")["localidades"][0]
+        assert loc["poblacion_oficial_2023"] is None
+
+    def test_el_departamento_trae_su_poblacion_oficial(self, capas, censo_en_cache):
+        r = h.localidad("", "salto")
+        assert r["departamentos"] == [{"departamento": "SALTO", "poblacion_oficial_2023": 136195}]
+
+    @pytest.mark.parametrize("faltante", ["localidades", "departamentos"])
+    def test_un_tabulado_caido_no_borra_el_otro(self, capas, censo_en_cache, faltante):
+        (censo_en_cache / f"{faltante}.xlsx").unlink()
+        r = h.localidad("Salto", "Salto")
+        if faltante == "localidades":
+            assert r["departamentos"][0]["poblacion_oficial_2023"] == 136195
+            assert r["localidades"][0]["poblacion_oficial_2023"] is None
+        else:
+            assert r["localidades"][0]["poblacion_oficial_2023"] == 112527
+            assert r["departamentos"][0]["poblacion_oficial_2023"] is None
+        assert faltante in r["nota"]
+
+    @pytest.mark.parametrize("herramienta", ["localidad", "ubicar_punto"])
+    @pytest.mark.parametrize("tipo_error", ["archivo", "datos"])
+    def test_error_del_censo_no_expone_rutas_locales(
+        self, capas, sin_ide, monkeypatch, cache_temporal, herramienta, tipo_error
+    ):
+        from uydatos.errores import DatosInvalidos
+
+        from mcp_uruguay.herramientas import territorio
+
+        ruta_privada = str(cache_temporal / "privado" / "tabulado.xlsx")
+
+        def caida(cuadro):
+            if tipo_error == "archivo":
+                raise FileNotFoundError(2, "no existe", ruta_privada)
+            raise DatosInvalidos(f"{ruta_privada}: formato inválido")
+
+        monkeypatch.setattr(territorio, "_tabulado_censo", caida)
+        r = h.localidad("Salto", "Salto") if herramienta == "localidad" else h.ubicar_punto(-31.42, -58.17)
+        assert ruta_privada not in r["nota"]
+        assert "tabulado.xlsx" not in r["nota"]
+        assert "No se pudo leer el tabulado oficial" in r["nota"]
+        assert "sin dato" in r["nota"]
+
+    def test_sin_el_tabulado_la_herramienta_igual_responde(self, capas, monkeypatch):
+        from uydatos import censo
+
+        def caida(cuadro, destino):
+            raise OSError("sin red")
+
+        monkeypatch.setattr(censo, "descargar", caida)
+        r = h.localidad("Salto", "Salto")
+        assert r["localidades"][0]["poblacion_oficial_2023"] is None
+        assert "no se pudo" in r["nota"].lower()
+
+    def test_ubicar_punto_trae_la_cifra_oficial_de_la_localidad(self, capas, censo_en_cache, sin_ide):
+        """El punto cae en Salto: la capa dice 114.043 y el INE publica 112.527. La respuesta lleva las dos
+        y la nota dice cuál se cita; antes llevaba solo la de la capa, que no es la oficial."""
+        r = h.ubicar_punto(-31.42, -58.17)
+        loc = r["localidad"]
+        assert loc["nombre"] == "SALTO" and loc["poblacion_2023"] == 114043
+        assert loc["poblacion_oficial_2023"] == 112527
+        assert "112.527 oficial" in r["nota"] and "Censo" in r["fuente"]
+
+    def test_sin_el_tabulado_ubicar_punto_igual_responde(self, capas, sin_ide):
+        r = h.ubicar_punto(-31.42, -58.17)
+        assert r["localidad"]["poblacion_2023"] == 114043
+        assert r["localidad"]["poblacion_oficial_2023"] is None
+        assert "no se pudo" in r["nota"].lower()

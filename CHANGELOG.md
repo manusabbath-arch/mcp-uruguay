@@ -1,7 +1,53 @@
 # Cambios
 
-## Sin publicar
+## 0.15.0 — 2026-11-26
 
+- **Correcciones de exactitud verificadas al integrar las PR #13 y #14.** La búsqueda del MIDES
+  cuenta y omite por 30 días los indicadores cuya lectura fue rechazada. Las marcas se guardan por
+  indicador con temporales únicos, para no perder actualizaciones concurrentes, y usan la fecha de
+  Uruguay. Los resultados electorales explican la diferencia entre el escrutinio primario y el
+  definitivo con observados. Las descripciones de herramientas se normalizan también en Python
+  anterior a 3.13; un test limita su tamaño para que no crezca sin decisión explícita.
+- **Degradación y procedencia del censo.** Si falla uno de los dos tabulados, se conserva el otro;
+  cada ausencia se avisa por separado. Los tabulados llevan su URL en `procedencia`, y las capas
+  cartográficas ya cargadas en memoria también quedan registradas como respaldo.
+- **Evaluación reservada intacta.** No se modifican preguntas de balotaje ni el conjunto reservado.
+  La tanda posterior de población corrige la cifra de Paysandú del conjunto de desarrollo, con la
+  publicación vigente del INE como respaldo. No se declara una mejora de puntuación ni se ejecutan
+  evaluaciones pagas.
+- **Revisión de seguridad y recuperación.** Los avisos de tabulados ausentes no interpolan errores
+  crudos que pueden contener rutas locales: informan un motivo controlado (acceso o formato). Una
+  lectura válida del MIDES retira inmediatamente la marca de rechazo, también para el registro
+  anterior; la búsqueda no afirma que todo rechazo sea un formato viejo permanente.
+- **La prueba de humo ya no da por recuperada una fuente que respondió desde la caché.** En una máquina
+  con copias guardadas informaba `VOLVIO` para las tres herramientas del Parlamento, que sigue en 403.
+  Una respuesta con `copia_vencida` es `VENCIDA` (cuenta como falla), o `CAIDA` si ya se conocía.
+- **Las instrucciones del servidor nombran `uru://trampas`.** El recurso existía, pero nada le decía al
+  cliente que lo consultara. Un test lo cubre. No se midió si mejora las respuestas: `evals/evaluar.py`
+  no entregaba al modelo las instrucciones ni los recursos del servidor.
+- **La evaluación tiene un modo `guiado`.** Suma a las herramientas las instrucciones del servidor y la
+  lectura de sus recursos; `con` y `sin` no cambian. Un `--modo` mal escrito ahora se rechaza: antes se
+  corría sin el servidor. Probado con un cliente falso; no se ejecutaron evaluaciones pagas.
+- **La frase sobre `uru://trampas` no mostró efecto medible.** Conjunto de desarrollo en `guiado` con
+  `deepseek-v4.1-flash` (Ollama), 3 repeticiones, 114 corridas el 2026-11-26: 53/57 aciertos sin la
+  frase y 54/57 con ella; leyeron algún recurso 51/57 y 53/57. Sin la frase el modelo ya leía el
+  recurso. No dice nada sobre otros modelos ni clientes. La frase se mantiene.
+- **Las 19 preguntas de desarrollo quedan confirmadas o resueltas por cálculo y reglas.** Las 12 que
+  faltaban se buscaron en la fuente citada (varias son prensa); la del Frente Amplio se revisó a mano
+  (la fuente dice 43,85, dentro de la tolerancia). `balotaje-2024-orsi-pct` falló 6/6: el servidor
+  responde 49,77 (definitivo con observados) y la pregunta espera 49,84. Esa decisión sigue abierta.
+- **La evaluación guarda el detalle también con modelos como `nombre:cloud`.** En Windows quedaba un
+  archivo vacío.
+- **`opentelemetry-api` 1.45.2** (dependencia de `mcp`) en `uv.lock`, por CVE-2026-126360.
+- **Tres preguntas de desarrollo más:** el peso de la ciudad de Canelones en su departamento, el de los
+  tres departamentos más poblados en el país y la comparación inválida entre el precio al público del
+  gasoil y su paridad de importación. Con `deepseek-v4.1-flash`, 3 repeticiones: 0/9 sin el servidor,
+  8/9 en `con` y 9/9 en `guiado`. Distinguen tener el servidor de no tenerlo; no alcanzan para medir
+  diferencias entre `con` y `guiado`. La tabla de la medición anterior es sobre las 19 de antes.
+- **Se confirmaron en la fuente 7 respuestas del conjunto reservado**, sin cambiar preguntas, esperados
+  ni herramientas. Queda sin confirmar `trampa-pobreza-metodologia`, que no tiene una cifra que buscar.
+  Las dos del balotaje usan, como la de desarrollo, cifras de prensa distintas del escrutinio
+  definitivo con observados.
 - **`clima` (INIA) y `observaciones_inumet` marcan los días dudosos, sin descartar ninguno.** Misma forma que
   `nivel_rio_ina`: por serie, `pruebas`, `marcas`, `marcadas` (hasta 20) y `marcadas_omitidas`. `clima` marca
   `tmax`, `tmin` y `lluvia_mm`; `observaciones_inumet` marca temperatura y presión (rango, plano, sin_dato),
@@ -37,12 +83,39 @@
   otro. Ahora cada bajada crea un temporal único junto al archivo (`cache._temporal`), y
   `diagnostico` no lista ninguna de las dos formas de temporal (`<archivo>.XXXX.nuevo` y las
   carpetas `.nuevo-*` del BCU, que antes se colaban como copias).
+- **`localidad` trae la población oficial del Censo 2023** (`poblacion_oficial_2023` por localidad y
+  `departamentos` con la población oficial de cada departamento), de los tabulados del INE que lee
+  `uydatos.censo` (cuadros 12 y 13, datos ponderados). `poblacion_2023` sigue siendo la de la capa
+  cartográfica: ciudad de Salto 114.043 en la capa y 112.527 oficial. Si el tabulado no se puede bajar,
+  la herramienta responde igual y lo dice en la nota. Se conserva `uydatos>=0.18,<0.19` y se agrega
+  el extra `hojas` para leer los tabulados publicados.
+- **`ubicar_punto` trae la población oficial del Censo 2023 de la localidad.** Antes la respuesta
+  llevaba solo `poblacion_2023`, la de la capa cartográfica, así que el servidor daba dos cifras para
+  la misma ciudad según la herramienta: 114.043 en `ubicar_punto` y 112.527 en `localidad`. Ahora la
+  localidad del punto trae también `poblacion_oficial_2023` (el tabulado del INE, la que se cita) y la
+  nota dice cuál es cuál; la `fuente` suma el Censo cuando se pudo leer. Si el tabulado no se puede
+  bajar, la herramienta responde igual, con la cifra en `null` y el motivo en la nota. Medido el
+  2026-11-26 en el centro de Salto: 114.043 en la capa y 112.527 oficial, igual que `localidad`.
+- **`localidad` sin argumentos responde por el país: `poblacion_oficial_total`, los 19 departamentos y
+  las localidades más pobladas.** Antes una llamada vacía era un error, así que «¿cuál es la población
+  de Uruguay según el Censo 2023?» no tenía herramienta que la respondiera: la pregunta está en el
+  conjunto de desarrollo de la eval (`censo-2023-total`) esperando `localidad`. El total es la suma de
+  los 19 departamentos del cuadro 12 (3.499.451), **no** la de las localidades (3.499.215): 236
+  personas están en filas sin localidad (situación de calle y hogares). Si el cuadro 12 no trae todos
+  los departamentos de la capa, el total va en `null` en vez de publicar una suma parcial. Medido el
+  2026-11-26 contra los tabulados reales.
 - **`herramientas.py` (2.680 líneas) pasa a ser un paquete con un módulo por dominio** (`monedas`,
   `combustibles`, `rio_y_clima`, `territorio`, `estado`, `agua`, `sinred` y `comun`; el más grande tiene 717
   líneas). **Sin cambios para quien usa el servidor ni para quien importa `herramientas`**: el paquete
   reexporta las mismas funciones, tipos y constantes. El código se movió textualmente con un script, y se
   verificó que los esquemas de entrada y salida de las 31 herramientas, `docs/herramientas.md` y
   `manifest.json` quedaron idénticos.
+- **Las guías se publican también como Agent Skills.** `scripts/generar_skills.py` escribe
+  `skills/<nombre>/SKILL.md` desde `guias.PROMPTS`: el mismo texto, con marcadores (`<producto>`,
+  `<desde>`) en vez de valores de ejemplo y la trampa de cada herramienta que nombra. `--check` falla
+  si una skill falta, quedó vieja o sobra, y un test compara los archivos con la salida del generador.
+  No cambia el servidor ni los prompts.
+
 ## 0.14.0 — 2026-11-16
 
 - **`calidad_agua`: la calidad del agua potable de OSE**, por localidad y trimestre desde 2017

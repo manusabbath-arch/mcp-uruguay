@@ -51,8 +51,14 @@ TRAMPAS: dict[str, str] = {
         "ante lo que no encuentra devuelve el centro de la localidad, una puerta vecina u "
         "otra calle, sin error: mirar la calidad"
     ),
-    "ubicar_punto": "sin srsName=EPSG:4326 la capa llega en metros y ningún punto cae adentro",
-    "localidad": "el año sale del nombre del campo; el centro aproximado es el del rectángulo, no un centroide",
+    "ubicar_punto": (
+        "sin srsName=EPSG:4326 la capa llega en metros y ningún punto cae adentro; poblacion_2023 es la de la "
+        "capa: la cifra que se cita es poblacion_oficial_2023"
+    ),
+    "localidad": (
+        "el año sale del nombre del campo; el centro aproximado es el del rectángulo, no un centroide; "
+        "pob_tot_23 no es la cifra oficial, y las localidades no suman el departamento ni el país"
+    ),
     "resultados_electorales": (
         "los observados se escrutan en mesas especiales sin habilitados ni localidad: sumar "
         "solo las comunes deja votos afuera"
