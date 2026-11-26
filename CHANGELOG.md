@@ -1,5 +1,18 @@
 # Cambios
 
+## Sin publicar
+
+- **Criterio de las preguntas electorales: cuenta el escrutinio definitivo.** Las tres preguntas del
+  balotaje dicen ahora cuál de los dos conteos se pide («según el escrutinio definitivo…, incluidos
+  los votos observados») y su esperado pasa a la cifra final de la Corte Electoral: Orsi 49,77%
+  (1.212.833 votos) y Delgado 45,94% (1.119.537), sobre 2.436.780 emitidos. Antes esperaban el
+  primario de la noche de la elección (49,84% y 1.101.296), que es provisorio y queda reemplazado:
+  en `balotaje-2024-orsi-pct` el servidor respondía bien y la pregunta marcaba fallo. La decisión se
+  tomó con el dueño del repositorio el 2026-11-26, **antes** de correr el conjunto para publicar, se
+  aplicó a los dos conjuntos para no dejar preguntas ambiguas y quedó escrita en `evals/README.md`.
+  Las cifras se contrastaron con dos publicaciones que citan a la Corte, no con la respuesta del
+  servidor.
+
 ## 0.15.0 — 2026-11-26
 
 - **Correcciones de exactitud verificadas al integrar las PR #13 y #14.** La búsqueda del MIDES

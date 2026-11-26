@@ -34,6 +34,23 @@ propio servidor sería circular.
 Hay dos conjuntos. `desarrollo` es el que se mira para mejorar las herramientas. `reservado` **no se
 mira** al ajustar: es el número que se publica.
 
+### Qué escrutinio cuenta en las preguntas electorales
+
+Una elección tiene dos cifras y no son la misma: el **escrutinio primario** que se difunde la noche
+misma, y el **escrutinio definitivo**, que incluye los votos observados y que la Corte Electoral
+publica días después. En el balotaje de 2024: primario, Orsi 1.196.798 (49,84%) y Delgado 1.101.296
+(45,87%); definitivo, Orsi 1.212.833 (49,77%) y Delgado 1.119.537 (45,94%), sobre 2.436.780 votos
+emitidos.
+
+**El esperado es siempre el escrutinio definitivo**, porque es el resultado final que publica la
+Corte y el que reemplaza al primario. Para que la pregunta tenga una sola respuesta, su texto dice
+cuál de los dos se pide («según el escrutinio definitivo…, incluidos los votos observados»).
+
+El criterio se fijó el **2026-11-26**, con el dueño del repositorio, **antes** de correr el conjunto
+para publicar un número, y se aplicó a los dos conjuntos a la vez para no dejar preguntas ambiguas.
+Las cifras se contrastaron contra dos publicaciones independientes que citan la Corte, no contra lo
+que devuelve el servidor.
+
 ## Los modos
 
 | `--modo` | qué recibe el agente |

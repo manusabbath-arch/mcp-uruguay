@@ -5,43 +5,51 @@
     {
       "id": "balotaje-2024-orsi-pct",
       "conjunto": "desarrollo",
-      "pregunta": "En el balotaje del 24 de noviembre de 2024 en Uruguay, ¿qué porcentaje de los votos emitidos obtuvo Yamandú Orsi?",
+      "pregunta": "En el balotaje del 24 de noviembre de 2024 en Uruguay, ¿qué porcentaje de los votos emitidos obtuvo Yamandú Orsi, según el escrutinio definitivo de la Corte Electoral (incluidos los votos observados)?",
       "tipo": "numero",
-      "esperado": 49.84,
+      "esperado": 49.77,
       "tolerancia": 0.05,
       "unidad": "%",
       "herramientas_esperadas": [
         "resultados_electorales"
       ],
       "fuente": {
-        "organismo": "Corte Electoral (cifras al 100% escrutado, citadas por la prensa)",
-        "url": "https://www.ambito.com/uruguay/yamandu-orsi-le-gano-alvaro-delgado-mas-95000-votos-segun-los-datos-oficiales-n6085556",
-        "cita": "Orsi acumuló 1.196.798 votos (49,84%), contra 1.101.296 (45,87%) de Delgado",
+        "organismo": "Corte Electoral, escrutinio definitivo del balotaje de 2024 con los votos observados (publicado el 2024-11-28; cifras citadas por prensa)",
+        "url": "https://www.subrayado.com.uy/finalizo-el-escrutinio-votos-observados-y-la-corte-electoral-publico-el-resultado-definitivo-del-balotaje-n963318",
+        "cita": "La fórmula de Orsi y Cosse obtuvo 1.212.833 votos (49,77%), mientras que la de Delgado y Ripoll logró 1.119.537 votos (45,94%).",
         "via": "prensa",
+        "otras_fuentes": [
+          "https://mediospublicos.uy/corte-electoral-orsi-gano-el-balotaje-por-93-296-votos-segun-el-escrutinio-definitivo/"
+        ],
+        "nota": "Es el escrutinio definitivo, con los votos observados. El primario de la noche de la elección, sin observados, daba 1.196.798 votos (49,84%) a Orsi y 1.101.296 (45,87%) a Delgado: cifra provisoria y superada. El criterio de que el esperado es el definitivo se fijó el 2026-11-26, antes de correr el conjunto para publicar, y está escrito en evals/README.md.",
         "confirmada_en_fuente": true,
         "confirmada_el": "2026-11-26",
-        "confirmada_en": "https://www.ambito.com/uruguay/yamandu-orsi-le-gano-alvaro-delgado-mas-95000-votos-segun-los-datos-oficiales-n6085556"
+        "confirmada_en": "https://www.subrayado.com.uy/finalizo-el-escrutinio-votos-observados-y-la-corte-electoral-publico-el-resultado-definitivo-del-balotaje-n963318"
       }
     },
     {
       "id": "balotaje-2024-delgado-votos",
       "conjunto": "reservado",
-      "pregunta": "¿Cuántos votos obtuvo Álvaro Delgado en el balotaje de noviembre de 2024 en Uruguay?",
+      "pregunta": "¿Cuántos votos obtuvo Álvaro Delgado en el balotaje de noviembre de 2024 en Uruguay, según el escrutinio definitivo de la Corte Electoral (incluidos los votos observados)?",
       "tipo": "numero",
-      "esperado": 1101296,
+      "esperado": 1119537,
       "tolerancia": 0,
       "unidad": "votos",
       "herramientas_esperadas": [
         "resultados_electorales"
       ],
       "fuente": {
-        "organismo": "Corte Electoral (citada por la prensa)",
-        "url": "https://www.ambito.com/uruguay/yamandu-orsi-le-gano-alvaro-delgado-mas-95000-votos-segun-los-datos-oficiales-n6085556",
-        "cita": "contra 1.101.296 (45,87%) de Delgado",
+        "organismo": "Corte Electoral, escrutinio definitivo del balotaje de 2024 con los votos observados (publicado el 2024-11-28; cifras citadas por prensa)",
+        "url": "https://www.subrayado.com.uy/finalizo-el-escrutinio-votos-observados-y-la-corte-electoral-publico-el-resultado-definitivo-del-balotaje-n963318",
+        "cita": "La fórmula de Orsi y Cosse obtuvo 1.212.833 votos (49,77%), mientras que la de Delgado y Ripoll logró 1.119.537 votos (45,94%).",
         "via": "prensa",
+        "otras_fuentes": [
+          "https://mediospublicos.uy/corte-electoral-orsi-gano-el-balotaje-por-93-296-votos-segun-el-escrutinio-definitivo/"
+        ],
+        "nota": "Es el escrutinio definitivo, con los votos observados. El primario de la noche de la elección, sin observados, daba 1.196.798 votos (49,84%) a Orsi y 1.101.296 (45,87%) a Delgado: cifra provisoria y superada. El criterio de que el esperado es el definitivo se fijó el 2026-11-26, antes de correr el conjunto para publicar, y está escrito en evals/README.md.",
         "confirmada_en_fuente": true,
         "confirmada_el": "2026-11-26",
-        "confirmada_en": "https://www.ambito.com/uruguay/yamandu-orsi-le-gano-alvaro-delgado-mas-95000-votos-segun-los-datos-oficiales-n6085556"
+        "confirmada_en": "https://www.subrayado.com.uy/finalizo-el-escrutinio-votos-observados-y-la-corte-electoral-publico-el-resultado-definitivo-del-balotaje-n963318"
       }
     },
     {
@@ -340,25 +348,26 @@
     {
       "id": "balotaje-2024-delgado-pct",
       "conjunto": "reservado",
-      "pregunta": "En el balotaje del 24 de noviembre de 2024 en Uruguay, ¿qué porcentaje de los votos emitidos obtuvo Álvaro Delgado?",
+      "pregunta": "En el balotaje del 24 de noviembre de 2024 en Uruguay, ¿qué porcentaje de los votos emitidos obtuvo Álvaro Delgado, según el escrutinio definitivo de la Corte Electoral (incluidos los votos observados)?",
       "tipo": "numero",
-      "esperado": 45.87,
+      "esperado": 45.94,
       "tolerancia": 0.05,
       "unidad": "%",
       "herramientas_esperadas": [
         "resultados_electorales"
       ],
       "fuente": {
-        "organismo": "Corte Electoral (citada por la prensa)",
-        "url": "https://www.ambito.com/uruguay/yamandu-orsi-le-gano-alvaro-delgado-mas-95000-votos-segun-los-datos-oficiales-n6085556",
-        "cita": "contra 1.101.296 (45,87%) de Delgado",
+        "organismo": "Corte Electoral, escrutinio definitivo del balotaje de 2024 con los votos observados (publicado el 2024-11-28; cifras citadas por prensa)",
+        "url": "https://www.subrayado.com.uy/finalizo-el-escrutinio-votos-observados-y-la-corte-electoral-publico-el-resultado-definitivo-del-balotaje-n963318",
+        "cita": "La fórmula de Orsi y Cosse obtuvo 1.212.833 votos (49,77%), mientras que la de Delgado y Ripoll logró 1.119.537 votos (45,94%).",
         "via": "prensa",
-        "confirmada_en_fuente": true,
         "otras_fuentes": [
-          "https://chequeado.com/?p=88355"
+          "https://mediospublicos.uy/corte-electoral-orsi-gano-el-balotaje-por-93-296-votos-segun-el-escrutinio-definitivo/"
         ],
+        "nota": "Es el escrutinio definitivo, con los votos observados. El primario de la noche de la elección, sin observados, daba 1.196.798 votos (49,84%) a Orsi y 1.101.296 (45,87%) a Delgado: cifra provisoria y superada. El criterio de que el esperado es el definitivo se fijó el 2026-11-26, antes de correr el conjunto para publicar, y está escrito en evals/README.md.",
+        "confirmada_en_fuente": true,
         "confirmada_el": "2026-11-26",
-        "confirmada_en": "https://www.ambito.com/uruguay/yamandu-orsi-le-gano-alvaro-delgado-mas-95000-votos-segun-los-datos-oficiales-n6085556"
+        "confirmada_en": "https://www.subrayado.com.uy/finalizo-el-escrutinio-votos-observados-y-la-corte-electoral-publico-el-resultado-definitivo-del-balotaje-n963318"
       }
     },
     {
