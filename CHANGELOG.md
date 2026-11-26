@@ -19,6 +19,11 @@
 - **La evaluación guarda el detalle también con modelos como `nombre:cloud`.** En Windows quedaba un
   archivo vacío.
 - **`opentelemetry-api` 1.45.2** (dependencia de `mcp`) en `uv.lock`, por CVE-2026-126360.
+- **Tres preguntas de desarrollo más:** el peso de la ciudad de Canelones en su departamento, el de los
+  tres departamentos más poblados en el país y la comparación inválida entre el precio al público del
+  gasoil y su paridad de importación. Con `deepseek-v4.1-flash`, 3 repeticiones: 0/9 sin el servidor,
+  8/9 en `con` y 9/9 en `guiado`. Distinguen tener el servidor de no tenerlo; no alcanzan para medir
+  diferencias entre `con` y `guiado`. La tabla de la medición anterior es sobre las 19 de antes.
 - **Se confirmaron en la fuente 7 respuestas del conjunto reservado**, sin cambiar preguntas, esperados
   ni herramientas. Queda sin confirmar `trampa-pobreza-metodologia`, que no tiene una cifra que buscar.
   Las dos del balotaje usan, como la de desarrollo, cifras de prensa distintas del escrutinio

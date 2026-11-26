@@ -629,6 +629,114 @@
         "via": "medición en uydatos (compras)",
         "confirmada_en_fuente": true
       }
+    },
+    {
+      "id": "censo-2023-canelones-peso-capital",
+      "conjunto": "desarrollo",
+      "pregunta": "Según el Censo 2023, ¿qué porcentaje de la población del departamento de Canelones vive en la ciudad de Canelones? Usá la población oficial de esa localidad y la población oficial del departamento, y redondeá a dos decimales.",
+      "tipo": "numero",
+      "esperado": 3.97,
+      "tolerancia": 0.05,
+      "unidad": "%",
+      "herramientas_esperadas": [
+        "localidad"
+      ],
+      "fuente": {
+        "organismo": "INE, Censo 2023, tabulados de población (cuadros 12 y 13)",
+        "url": "https://www5.ine.gub.uy/documents/CENSO%202023/Tabulados/Personas/Cuadro_13_CAR_2023.xlsx",
+        "cita": "03320 CANELONES CANELONES 24159",
+        "via": "organismo",
+        "insumos": [
+          {
+            "url": "https://www5.ine.gub.uy/documents/CENSO%202023/Tabulados/Personas/Cuadro_12_CAR_2023.xlsx",
+            "cita": "03 CANELONES 608960"
+          },
+          {
+            "url": "https://www5.ine.gub.uy/documents/CENSO%202023/Tabulados/Personas/Cuadro_13_CAR_2023.xlsx",
+            "cita": "03320 CANELONES CANELONES 24159"
+          }
+        ],
+        "calculo": "24.159 / 608.960 x 100 = 3,967 % -> 3,97 %",
+        "nota": "La población del departamento sale del cuadro 12, no de sumar las localidades del cuadro 13.",
+        "confirmada_en_fuente": true,
+        "confirmada_el": "2026-11-26",
+        "confirmada_en": "https://www5.ine.gub.uy/documents/CENSO%202023/Tabulados/Personas/Cuadro_13_CAR_2023.xlsx"
+      }
+    },
+    {
+      "id": "trampa-paridad-ppi-contra-pvp",
+      "conjunto": "desarrollo",
+      "pregunta": "Para julio de 2026, ¿cuánto más caro está el gasoil 50-S al público que su precio de paridad de importación? Quiero la diferencia en pesos por litro entre el precio máximo al público y la paridad.",
+      "tipo": "comportamiento",
+      "debe_mencionar": [
+        "ex[ -]?planta|sin (impuestos|tasas|iva)|no (se pueden?|es|son) .{0,20}compar"
+      ],
+      "herramientas_esperadas": [
+        "paridad_combustibles",
+        "combustible_ancap"
+      ],
+      "fuente": {
+        "organismo": "MIEM, «Evolución de los precios de los combustibles líquidos»; PVP de julio de 2026 por Decreto 146/026",
+        "url": "https://www.gub.uy/ministerio-industria-energia-mineria/politicas-y-gestion/evolucion-precios-combustibles-liquidos",
+        "cita": "se presenta el Subtotal 3 del informe de la Unidad Reguladora de Servicios de Energía y Agua (URSEA) (PPI sin tasas ni impuestos), que constituye la base para el cálculo de los precios de venta al público de los combustibles líquidos.",
+        "via": "organismo",
+        "insumos": [
+          {
+            "url": "https://www.gub.uy/ministerio-industria-energia-mineria/politicas-y-gestion/evolucion-precios-combustibles-liquidos",
+            "cita": "Precio de Venta al Público de referencia (PVP de referencia): corresponde al precio calculado por la URSEA, que incorpora, sobre el PPI (subtotal 3), los componentes previstos en la metodología vigente, incluidos los márgenes de distribución, el factor de ajuste o estabilización (Decreto n.° 130/025) y los impuestos correspondientes."
+          },
+          {
+            "url": "https://www.impo.com.uy/bases/decretos/146-2026",
+            "cita": "Gas Oil 50S\n58,68"
+          }
+        ],
+        "calculo": "No hay una resta válida entre el PVP (con IVA e IMESI y con márgenes de distribución) y el PPI (Subtotal 3, sin tasas ni impuestos): lo que se compara es el precio ex planta de ANCAP contra el PPI, los dos sin impuestos.",
+        "nota": "Es la trampa que declara `paridad_combustibles`: la comparación es sin impuestos contra sin impuestos. Una respuesta correcta avisa que el PVP y el PPI no son comparables directamente y, si da una brecha, la da entre el precio ex planta y el PPI, o aclara que la diferencia contra el surtidor incluye impuestos y márgenes.",
+        "confirmada_en_fuente": true,
+        "confirmada_el": "2026-11-26",
+        "confirmada_en": "https://www.gub.uy/ministerio-industria-energia-mineria/politicas-y-gestion/evolucion-precios-combustibles-liquidos"
+      }
+    },
+    {
+      "id": "censo-2023-tres-departamentos-peso",
+      "conjunto": "desarrollo",
+      "pregunta": "Según el Censo 2023, ¿qué porcentaje de la población total del país vive en los tres departamentos más poblados? Usá la población oficial de cada departamento, sumá los tres más poblados y dividí por el total del país; redondeá a dos decimales.",
+      "tipo": "numero",
+      "esperado": 60.71,
+      "tolerancia": 0.05,
+      "unidad": "%",
+      "herramientas_esperadas": [
+        "localidad"
+      ],
+      "fuente": {
+        "organismo": "INE, Censo 2023, tabulados de población (cuadro 12, datos ponderados)",
+        "url": "https://www5.ine.gub.uy/documents/CENSO%202023/Tabulados/Personas/Cuadro_12_CAR_2023.xlsx",
+        "cita": "01 MONTEVIDEO 1302721",
+        "via": "organismo",
+        "insumos": [
+          {
+            "url": "https://www5.ine.gub.uy/documents/CENSO%202023/Tabulados/Personas/Cuadro_12_CAR_2023.xlsx",
+            "cita": "01 MONTEVIDEO 1302721"
+          },
+          {
+            "url": "https://www5.ine.gub.uy/documents/CENSO%202023/Tabulados/Personas/Cuadro_12_CAR_2023.xlsx",
+            "cita": "03 CANELONES 608960"
+          },
+          {
+            "url": "https://www5.ine.gub.uy/documents/CENSO%202023/Tabulados/Personas/Cuadro_12_CAR_2023.xlsx",
+            "cita": "10 MALDONADO 212954"
+          },
+          {
+            "url": "https://www5.ine.gub.uy/documents/CENSO%202023/Tabulados/Personas/Cuadro_13_CAR_2023.xlsx",
+            "cita": "Total 3499451"
+          }
+        ],
+        "calculo": "(1.302.721 + 608.960 + 212.954) / 3.499.451 x 100 = 2.124.635 / 3.499.451 x 100 = 60,714 % -> 60,71 %.",
+        "nota": "Los tres más poblados son Montevideo, Canelones y Maldonado. La trampa es sumar localidades en vez de departamentos: la población de un departamento está en el cuadro 12 y no es la suma de sus localidades (el servidor lo advierte en `localidad`). El total del país es la suma de los 19 departamentos, no la de las localidades. Tolerancia de 0,05: cubre el redondeo a dos decimales y una diferencia de una o dos personas en las cifras ponderadas.",
+        "confirmada_en_fuente": true,
+        "confirmada_el": "2026-11-26",
+        "confirmada_en": "https://www5.ine.gub.uy/documents/CENSO%202023/Tabulados/Personas/Cuadro_12_CAR_2023.xlsx"
+      }
     }
   ]
 }

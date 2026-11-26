@@ -16,7 +16,7 @@ servidor y sin él.
 
 ## Qué mide
 
-`preguntas.json` tiene 30 preguntas de tres tipos, que cubren 13 herramientas (19 de desarrollo y 11 reservadas):
+`preguntas.json` tiene 33 preguntas de tres tipos, que cubren 15 herramientas (22 de desarrollo y 11 reservadas):
 
 | tipo | qué se espera | cómo se verifica |
 |---|---|---|
@@ -100,7 +100,7 @@ el script activa:
 - **con el servidor**: unos 4 turnos de unos 11.000 tokens de entrada y unos 3.000 de salida, alrededor
   de **US$ 0,25 por pregunta**;
 - **sin el servidor**: alrededor de **US$ 0,05 por pregunta**;
-- **las 30 preguntas, en los dos modos**: alrededor de **US$ 9**.
+- **las 33 preguntas, en los dos modos**: alrededor de **US$ 10**.
 
 La caché debería bajarlo, porque las herramientas se repiten idénticas. Lo que vale es medirlo: correr
 una pregunta con `--id` y mirar los tokens del detalle.
