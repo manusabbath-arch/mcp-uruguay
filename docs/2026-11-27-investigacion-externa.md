@@ -52,7 +52,16 @@ un mismo proceso, la misma `observaciones_inumet` tardó 19,0 s con el recolecto
 93,4 s con el recolector apagado. El proceso tenía 1,8 millones de objetos vivos: los memos de
 compras y electorales quedan en memoria. Con el recolector apagado se usa más memoria, y la
 variación grande apunta a presión de memoria de la máquina, no a la lógica de una herramienta. Un
-servidor que vive horas acumula esos memos. Medir su memoria residente es el paso siguiente.
+servidor que vive horas acumula esos memos.
+
+Medición de memoria (mismo día, `psutil`, las 31 llamadas de `scripts/humo.py` en un proceso, en
+una máquina con 5,9 GB de RAM y 0,9 GB libres al empezar): el proceso arranca en 71 MB y termina
+en **655 MB**. Los saltos son tres: `observaciones_inumet` +285 MB (memo de la serie de una
+variable), `resultados_electorales` +131 MB y `compras_estado` +143 MB. En esa corrida
+`compras_estado` tardó 84 s; aislada, 16 s. Al final quedaban 0,4 GB libres. La lentitud de la
+sonda es presión de memoria del servidor sobre una máquina chica, no una regresión de una
+herramienta. Recortar los memos más grandes, que guardan filas enteras cuando la respuesta usa
+agregados, es el arreglo de fondo. Es una decisión de diseño, sobre todo para el modo remoto (M8).
 
 Corrección posterior: `--precalentar` **ya existía**; este documento lo daba por faltante. Le
 faltaban `resultados_electorales` y las capas de `ubicar_punto`, que se agregaron con su test.
@@ -124,7 +133,8 @@ medir la licencia de cada edición antes de escribir un lector.
 
 1. ~~Test en rojo y arreglo del aviso pisado (§4).~~ Hecho (CHANGELOG, «Sin publicar»).
 2. ~~Completar `--precalentar` (§2).~~ Hecho: elecciones y capas de `ubicar_punto`.
-3. Herramienta `feriados`/`dias_habiles` sin red (§5). El módulo va primero a `uydatos`, después la
-   Release y el pin, y recién ahí la herramienta.
+3. Herramienta `feriados`/`dias_habiles` sin red (§5). El módulo ya está escrito en `uydatos`
+   (rama `hermes/feriados`, sin publicar). La herramienta espera la Release y el pin.
 4. Una línea en el README sobre qué distingue a este servidor de los vecinos (§5).
-5. Medir la memoria residente de un servidor que respondió varias herramientas pesadas (§2).
+5. Recortar los memos de `observaciones_inumet`, `resultados_electorales` y `compras_estado`
+   (§2: 655 MB medidos después de las 31 llamadas).
