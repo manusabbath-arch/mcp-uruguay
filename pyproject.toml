@@ -23,6 +23,7 @@ dependencies = [
 ]
 
 [project.optional-dependencies]
+remoto = ["uvicorn>=0.54", "starlette>=1.7"]
 test = ["pytest>=9.2.0"]
 
 [project.scripts]

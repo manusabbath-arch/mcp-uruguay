@@ -28,6 +28,18 @@ herramienta y qué fuentes hoy no responden."""
 
 servidor = MCPServer(name="mcp-uruguay", version=__version__, instructions=INSTRUCCIONES)
 
+servidor_piloto = MCPServer(
+    name="mcp-uruguay-salto",
+    version=__version__,
+    instructions=(
+        "Datos del observatorio de Salto. Cita la fuente, la fecha de descarga y la cobertura. "
+        "Una ausencia de mediciones nunca equivale a cero."
+    ),
+)
+_HERRAMIENTAS_PILOTO = {"nivel_rio", "clima", "calidad_agua", "buscar_datasets_catalogo", "recursos_catalogo"}
+_cupos_piloto = anyio.CapacityLimiter(2)
+_turnos_piloto = {nombre: anyio.Lock() for nombre in _HERRAMIENTAS_PILOTO}
+
 EN_RED = ToolAnnotations(read_only_hint=True, destructive_hint=False, idempotent_hint=True, open_world_hint=True)
 LOCAL = ToolAnnotations(read_only_hint=True, destructive_hint=False, idempotent_hint=True, open_world_hint=False)
 
@@ -171,9 +183,25 @@ def herramienta(titulo: str, anotaciones: ToolAnnotations) -> Callable:
             "ctx": Context,
         }
 
-        return servidor.tool(
-            title=titulo, annotations=anotaciones, description=inspect.cleandoc(funcion.__doc__ or "")
-        )(envuelta)
+        opciones = {
+            "title": titulo,
+            "annotations": anotaciones,
+            "description": inspect.cleandoc(funcion.__doc__ or ""),
+        }
+        if funcion.__name__ in _HERRAMIENTAS_PILOTO:
+
+            @functools.wraps(funcion)
+            async def en_piloto(*args: Any, ctx: Context, **kwargs: Any) -> Any:
+                async with _turnos_piloto[funcion.__name__], _cupos_piloto:
+                    try:
+                        return await envuelta(*args, ctx=ctx, **kwargs)
+                    except ToolError:
+                        raise ToolError("La consulta no pudo completarse. Revisa los argumentos o la fuente.") from None
+
+            en_piloto.__signature__ = envuelta.__signature__  # type: ignore[attr-defined]
+            en_piloto.__annotations__ = envuelta.__annotations__
+            servidor_piloto.tool(**opciones)(en_piloto)
+        return servidor.tool(**opciones)(envuelta)
 
     return decorar
 
@@ -531,6 +559,11 @@ def main() -> None:
         from mcp_uruguay.precalentar import precalentar
 
         raise SystemExit(precalentar())
+    if "--remoto" in sys.argv[1:]:
+        from mcp_uruguay.remoto import ejecutar_remoto
+
+        ejecutar_remoto(servidor_piloto)
+        return
     servidor.run()
 
 

@@ -403,6 +403,10 @@ dependencies = [
 ]
 
 [package.optional-dependencies]
+remoto = [
+    { name = "starlette" },
+    { name = "uvicorn" },
+]
 test = [
     { name = "pytest" },
 ]
@@ -411,11 +415,13 @@ test = [
 requires-dist = [
     { name = "mcp", specifier = ">=2.3,<3" },
     { name = "pytest", marker = "extra == 'test'", specifier = ">=9.2.0" },
+    { name = "starlette", marker = "extra == 'remoto'", specifier = ">=1.7" },
     { name = "truststore", specifier = ">=0.10" },
     { name = "typing-extensions", specifier = ">=4.7" },
+    { name = "uvicorn", marker = "extra == 'remoto'", specifier = ">=0.54" },
     { name = "uydatos", extras = ["hojas"], specifier = ">=0.18,<0.19" },
 ]
-provides-extras = ["test"]
+provides-extras = ["remoto", "test"]
 
 [[package]]
 name = "openpyxl"
