@@ -1,0 +1,1018 @@
+{
+  "preguntas": [
+    {
+      "id": "dominio-censo-2023-total-es",
+      "conjunto": "desarrollo",
+      "pregunta": "¿Cuál es la población total de Uruguay según los resultados finales del Censo 2023?",
+      "tipo": "numero",
+      "esperado": 3499451,
+      "tolerancia": 0,
+      "unidad": "personas",
+      "herramientas_esperadas": [
+        "localidad"
+      ],
+      "fuente": {
+        "organismo": "INE, vía Presidencia",
+        "url": "https://www.gub.uy/presidencia/comunicacion/noticias/censo-nacional-2023-contabilizo-3499451-habitantes-uruguay",
+        "cita": "El INE fijó la población de Uruguay en 3.499.451 personas al 31 de mayo de 2023 (reemplazó a la preliminar de 3.444.263)",
+        "via": "organismo",
+        "confirmada_en_fuente": true,
+        "confirmada_el": "2026-11-26",
+        "confirmada_en": "https://www.gub.uy/presidencia/comunicacion/noticias/censo-nacional-2023-contabilizo-3499451-habitantes-uruguay"
+      },
+      "categoria": "dominio",
+      "idioma": "es",
+      "herramienta": "localidad"
+    },
+    {
+      "id": "dominio-censo-2023-total-en",
+      "conjunto": "desarrollo",
+      "pregunta": "What population did Uruguay record in the 2023 census?",
+      "tipo": "numero",
+      "esperado": 3499451,
+      "tolerancia": 0,
+      "unidad": "personas",
+      "herramientas_esperadas": [
+        "localidad"
+      ],
+      "fuente": {
+        "organismo": "INE, vía Presidencia",
+        "url": "https://www.gub.uy/presidencia/comunicacion/noticias/censo-nacional-2023-contabilizo-3499451-habitantes-uruguay",
+        "cita": "El INE fijó la población de Uruguay en 3.499.451 personas al 31 de mayo de 2023 (reemplazó a la preliminar de 3.444.263)",
+        "via": "organismo",
+        "confirmada_en_fuente": true,
+        "confirmada_el": "2026-11-26",
+        "confirmada_en": "https://www.gub.uy/presidencia/comunicacion/noticias/censo-nacional-2023-contabilizo-3499451-habitantes-uruguay"
+      },
+      "categoria": "dominio",
+      "idioma": "en",
+      "herramienta": "localidad"
+    },
+    {
+      "id": "dominio-censo-2023-ciudad-salto-es",
+      "conjunto": "desarrollo",
+      "pregunta": "¿Cuántos habitantes tiene la ciudad de Salto según el Censo 2023?",
+      "tipo": "numero",
+      "esperado": 112527,
+      "tolerancia": 0,
+      "unidad": "personas",
+      "herramientas_esperadas": [
+        "localidad"
+      ],
+      "fuente": {
+        "organismo": "INE, infografía departamental del Censo 2023",
+        "url": "https://www5.ine.gub.uy/documents/CENSO%202023/Infografias/Salto.pdf",
+        "cita": "la ciudad de Salto tiene 112.527 habitantes",
+        "via": "organismo",
+        "nota": "Medido el 2026-11-26 en el PDF vigente («POR LOCALIDAD | Salto 112.527 - Rural 7.543»): coincide con el cuadro 13 del tabulado.",
+        "confirmada_en_fuente": true,
+        "confirmada_el": "2026-11-26",
+        "confirmada_en": "https://www5.ine.gub.uy/documents/CENSO%202023/Infografias/Salto.pdf"
+      },
+      "categoria": "dominio",
+      "idioma": "es",
+      "herramienta": "localidad"
+    },
+    {
+      "id": "dominio-censo-2023-ciudad-salto-en",
+      "conjunto": "desarrollo",
+      "pregunta": "What was the official 2023 census population of the city of Salto, Uruguay?",
+      "tipo": "numero",
+      "esperado": 112527,
+      "tolerancia": 0,
+      "unidad": "personas",
+      "herramientas_esperadas": [
+        "localidad"
+      ],
+      "fuente": {
+        "organismo": "INE, infografía departamental del Censo 2023",
+        "url": "https://www5.ine.gub.uy/documents/CENSO%202023/Infografias/Salto.pdf",
+        "cita": "la ciudad de Salto tiene 112.527 habitantes",
+        "via": "organismo",
+        "nota": "Medido el 2026-11-26 en el PDF vigente («POR LOCALIDAD | Salto 112.527 - Rural 7.543»): coincide con el cuadro 13 del tabulado.",
+        "confirmada_en_fuente": true,
+        "confirmada_el": "2026-11-26",
+        "confirmada_en": "https://www5.ine.gub.uy/documents/CENSO%202023/Infografias/Salto.pdf"
+      },
+      "categoria": "dominio",
+      "idioma": "en",
+      "herramienta": "localidad"
+    },
+    {
+      "id": "dominio-censo-2023-departamento-paysandu-es",
+      "conjunto": "desarrollo",
+      "pregunta": "¿Cuántos habitantes tiene el departamento de Paysandú según el Censo 2023?",
+      "tipo": "numero",
+      "esperado": 121838,
+      "tolerancia": 0,
+      "unidad": "personas",
+      "herramientas_esperadas": [
+        "localidad"
+      ],
+      "fuente": {
+        "organismo": "INE, infografía departamental del Censo 2023 (versión vigente al 2026-11-26; la de antes de mayo de 2026 decía 121.843)",
+        "url": "https://www5.ine.gub.uy/documents/CENSO%202023/Infografias/Paysandu.pdf",
+        "cita": "PERFIL DEPARTAMENTAL PAYSANDÚ 2011 117.023 2023 121.838",
+        "via": "organismo",
+        "nota": "Medido el 2026-11-26 sobre el PDF vigente: coincide con el cuadro 12 del tabulado del Censo 2023 (121.838). Hasta esa fecha el esperado era 121.843, la versión anterior de la infografía, que marcaba como fallo una respuesta correcta.",
+        "confirmada_en_fuente": true,
+        "confirmada_el": "2026-11-26",
+        "confirmada_en": "https://www5.ine.gub.uy/documents/CENSO%202023/Infografias/Paysandu.pdf"
+      },
+      "categoria": "dominio",
+      "idioma": "es",
+      "herramienta": "localidad"
+    },
+    {
+      "id": "dominio-censo-2023-departamento-paysandu-en",
+      "conjunto": "desarrollo",
+      "pregunta": "What was the official 2023 census population of Paysandú Department?",
+      "tipo": "numero",
+      "esperado": 121838,
+      "tolerancia": 0,
+      "unidad": "personas",
+      "herramientas_esperadas": [
+        "localidad"
+      ],
+      "fuente": {
+        "organismo": "INE, infografía departamental del Censo 2023 (versión vigente al 2026-11-26; la de antes de mayo de 2026 decía 121.843)",
+        "url": "https://www5.ine.gub.uy/documents/CENSO%202023/Infografias/Paysandu.pdf",
+        "cita": "PERFIL DEPARTAMENTAL PAYSANDÚ 2011 117.023 2023 121.838",
+        "via": "organismo",
+        "nota": "Medido el 2026-11-26 sobre el PDF vigente: coincide con el cuadro 12 del tabulado del Censo 2023 (121.838). Hasta esa fecha el esperado era 121.843, la versión anterior de la infografía, que marcaba como fallo una respuesta correcta.",
+        "confirmada_en_fuente": true,
+        "confirmada_el": "2026-11-26",
+        "confirmada_en": "https://www5.ine.gub.uy/documents/CENSO%202023/Infografias/Paysandu.pdf"
+      },
+      "categoria": "dominio",
+      "idioma": "en",
+      "herramienta": "localidad"
+    },
+    {
+      "id": "dominio-ipc-argentina-2024-es",
+      "conjunto": "desarrollo",
+      "pregunta": "¿Cuánto fue la inflación anual de Argentina en 2024 (variación del IPC nacional de diciembre de 2024 contra diciembre de 2023), en porcentaje?",
+      "tipo": "numero",
+      "esperado": 117.8,
+      "tolerancia": 0.15,
+      "unidad": "%",
+      "herramientas_esperadas": [
+        "ipc_argentina"
+      ],
+      "fuente": {
+        "organismo": "INDEC (citado por la prensa)",
+        "url": "https://www.bloomberglinea.com/latinoamerica/argentina/inflacion-de-2024-en-argentina-fue-de-1178/",
+        "cita": "la inflación de diciembre de 2024 fue de 2,7% y el acumulado anual cerró en 117,8%",
+        "via": "prensa",
+        "confirmada_en_fuente": true,
+        "confirmada_el": "2026-11-26",
+        "confirmada_en": "https://www.bloomberglinea.com/latinoamerica/argentina/inflacion-de-2024-en-argentina-fue-de-1178/"
+      },
+      "categoria": "dominio",
+      "idioma": "es",
+      "herramienta": "ipc_argentina"
+    },
+    {
+      "id": "dominio-ipc-argentina-2024-en",
+      "conjunto": "desarrollo",
+      "pregunta": "What was Argentina's national consumer inflation for calendar year 2024, in percent?",
+      "tipo": "numero",
+      "esperado": 117.8,
+      "tolerancia": 0.15,
+      "unidad": "%",
+      "herramientas_esperadas": [
+        "ipc_argentina"
+      ],
+      "fuente": {
+        "organismo": "INDEC (citado por la prensa)",
+        "url": "https://www.bloomberglinea.com/latinoamerica/argentina/inflacion-de-2024-en-argentina-fue-de-1178/",
+        "cita": "la inflación de diciembre de 2024 fue de 2,7% y el acumulado anual cerró en 117,8%",
+        "via": "prensa",
+        "confirmada_en_fuente": true,
+        "confirmada_el": "2026-11-26",
+        "confirmada_en": "https://www.bloomberglinea.com/latinoamerica/argentina/inflacion-de-2024-en-argentina-fue-de-1178/"
+      },
+      "categoria": "dominio",
+      "idioma": "en",
+      "herramienta": "ipc_argentina"
+    },
+    {
+      "id": "dominio-ipc-argentina-2024-12-mensual-es",
+      "conjunto": "desarrollo",
+      "pregunta": "¿Cuánto varió el IPC nacional de Argentina en el mes de diciembre de 2024, en porcentaje?",
+      "tipo": "numero",
+      "esperado": 2.7,
+      "tolerancia": 0.06,
+      "unidad": "%",
+      "herramientas_esperadas": [
+        "ipc_argentina"
+      ],
+      "fuente": {
+        "organismo": "INDEC (citado por la prensa)",
+        "url": "https://www.bloomberglinea.com/latinoamerica/argentina/inflacion-de-2024-en-argentina-fue-de-1178/",
+        "cita": "la inflación de diciembre de 2024 fue de 2,7%",
+        "via": "prensa",
+        "confirmada_en_fuente": true,
+        "otras_fuentes": [
+          "https://www.cronista.com/economia-politica/la-inflacion-de-diciembre-fue-del-2-7-y-cerro-el-ano-con-una-variacion-del-117-8"
+        ],
+        "confirmada_el": "2026-11-26",
+        "confirmada_en": "https://www.bloomberglinea.com/latinoamerica/argentina/inflacion-de-2024-en-argentina-fue-de-1178/"
+      },
+      "categoria": "dominio",
+      "idioma": "es",
+      "herramienta": "ipc_argentina"
+    },
+    {
+      "id": "dominio-ipc-argentina-2024-12-mensual-en",
+      "conjunto": "desarrollo",
+      "pregunta": "What was Argentina's national month-over-month inflation in December 2024, in percent?",
+      "tipo": "numero",
+      "esperado": 2.7,
+      "tolerancia": 0.06,
+      "unidad": "%",
+      "herramientas_esperadas": [
+        "ipc_argentina"
+      ],
+      "fuente": {
+        "organismo": "INDEC (citado por la prensa)",
+        "url": "https://www.bloomberglinea.com/latinoamerica/argentina/inflacion-de-2024-en-argentina-fue-de-1178/",
+        "cita": "la inflación de diciembre de 2024 fue de 2,7%",
+        "via": "prensa",
+        "confirmada_en_fuente": true,
+        "otras_fuentes": [
+          "https://www.cronista.com/economia-politica/la-inflacion-de-diciembre-fue-del-2-7-y-cerro-el-ano-con-una-variacion-del-117-8"
+        ],
+        "confirmada_el": "2026-11-26",
+        "confirmada_en": "https://www.bloomberglinea.com/latinoamerica/argentina/inflacion-de-2024-en-argentina-fue-de-1178/"
+      },
+      "categoria": "dominio",
+      "idioma": "en",
+      "herramienta": "ipc_argentina"
+    },
+    {
+      "id": "dominio-ipca-brasil-2023-es",
+      "conjunto": "desarrollo",
+      "pregunta": "¿Cuánto fue la inflación de Brasil medida por el IPCA en 2023, en porcentaje?",
+      "tipo": "numero",
+      "esperado": 4.62,
+      "tolerancia": 0.02,
+      "unidad": "%",
+      "herramientas_esperadas": [
+        "ipca_brasil"
+      ],
+      "fuente": {
+        "organismo": "IBGE (citado por la prensa)",
+        "url": "https://investnews.com.br/economia/ipca-sobe-em-056-em-dezembro-e-acumula-alta-de-462-diz-ibge/amp/",
+        "cita": "IPCA sobe 0,56% em dezembro e acumula alta de 4,62%, diz IBGE",
+        "via": "prensa",
+        "confirmada_en_fuente": true,
+        "otras_fuentes": [
+          "https://www.thestar.com.my/news/world/2024/01/12/brazil-sees-three-year-low-inflation-of-462-pct-in-2023"
+        ],
+        "confirmada_el": "2026-11-26",
+        "confirmada_en": "https://investnews.com.br/economia/ipca-sobe-em-056-em-dezembro-e-acumula-alta-de-462-diz-ibge/amp/"
+      },
+      "categoria": "dominio",
+      "idioma": "es",
+      "herramienta": "ipca_brasil"
+    },
+    {
+      "id": "dominio-ipca-brasil-2023-en",
+      "conjunto": "desarrollo",
+      "pregunta": "What was Brazil's official IPCA inflation for calendar year 2023, in percent?",
+      "tipo": "numero",
+      "esperado": 4.62,
+      "tolerancia": 0.02,
+      "unidad": "%",
+      "herramientas_esperadas": [
+        "ipca_brasil"
+      ],
+      "fuente": {
+        "organismo": "IBGE (citado por la prensa)",
+        "url": "https://investnews.com.br/economia/ipca-sobe-em-056-em-dezembro-e-acumula-alta-de-462-diz-ibge/amp/",
+        "cita": "IPCA sobe 0,56% em dezembro e acumula alta de 4,62%, diz IBGE",
+        "via": "prensa",
+        "confirmada_en_fuente": true,
+        "otras_fuentes": [
+          "https://www.thestar.com.my/news/world/2024/01/12/brazil-sees-three-year-low-inflation-of-462-pct-in-2023"
+        ],
+        "confirmada_el": "2026-11-26",
+        "confirmada_en": "https://investnews.com.br/economia/ipca-sobe-em-056-em-dezembro-e-acumula-alta-de-462-diz-ibge/amp/"
+      },
+      "categoria": "dominio",
+      "idioma": "en",
+      "herramienta": "ipca_brasil"
+    },
+    {
+      "id": "dominio-ipca-brasil-2024-12-mensual-es",
+      "conjunto": "desarrollo",
+      "pregunta": "¿Cuánto varió el IPCA de Brasil en el mes de diciembre de 2024, en porcentaje?",
+      "tipo": "numero",
+      "esperado": 0.52,
+      "tolerancia": 0.02,
+      "unidad": "%",
+      "herramientas_esperadas": [
+        "ipca_brasil"
+      ],
+      "fuente": {
+        "organismo": "IBGE, Agência de Notícias",
+        "url": "https://agenciadenoticias.ibge.gov.br/agencia-noticias/42416-ipca-em-dezembro-vai-a-0-52-e-acumula-4-83-em-2024.html",
+        "cita": "IPCA em dezembro vai a 0,52%",
+        "via": "organismo",
+        "confirmada_en_fuente": true,
+        "confirmada_el": "2026-11-26",
+        "confirmada_en": "https://agenciadenoticias.ibge.gov.br/agencia-noticias/42416-ipca-em-dezembro-vai-a-0-52-e-acumula-4-83-em-2024.html"
+      },
+      "categoria": "dominio",
+      "idioma": "es",
+      "herramienta": "ipca_brasil"
+    },
+    {
+      "id": "dominio-ipca-brasil-2024-12-mensual-en",
+      "conjunto": "desarrollo",
+      "pregunta": "What was Brazil's month-over-month IPCA in December 2024, in percent?",
+      "tipo": "numero",
+      "esperado": 0.52,
+      "tolerancia": 0.02,
+      "unidad": "%",
+      "herramientas_esperadas": [
+        "ipca_brasil"
+      ],
+      "fuente": {
+        "organismo": "IBGE, Agência de Notícias",
+        "url": "https://agenciadenoticias.ibge.gov.br/agencia-noticias/42416-ipca-em-dezembro-vai-a-0-52-e-acumula-4-83-em-2024.html",
+        "cita": "IPCA em dezembro vai a 0,52%",
+        "via": "organismo",
+        "confirmada_en_fuente": true,
+        "confirmada_el": "2026-11-26",
+        "confirmada_en": "https://agenciadenoticias.ibge.gov.br/agencia-noticias/42416-ipca-em-dezembro-vai-a-0-52-e-acumula-4-83-em-2024.html"
+      },
+      "categoria": "dominio",
+      "idioma": "en",
+      "herramienta": "ipca_brasil"
+    },
+    {
+      "id": "dominio-ui-2025-01-01-es",
+      "conjunto": "desarrollo",
+      "pregunta": "¿Cuál era el valor de la Unidad Indexada (UI) de Uruguay el 1 de enero de 2025, en pesos?",
+      "tipo": "numero",
+      "esperado": 6.1697,
+      "tolerancia": 0.0001,
+      "unidad": "pesos",
+      "herramientas_esperadas": [
+        "cotizacion"
+      ],
+      "fuente": {
+        "organismo": "INE, tabla de la Unidad Indexada de diciembre de 2024 (6/12/2024 al 5/1/2025)",
+        "url": "https://www5.ine.gub.uy/documents/Estadísticaseconómicas/PDF/UI/2024/UI_Diciembre%202024.pdf",
+        "cita": "01/1/2025 6,1697",
+        "via": "organismo",
+        "confirmada_en_fuente": true,
+        "confirmada_el": "2026-11-26",
+        "confirmada_en": "https://www5.ine.gub.uy/documents/Estadísticaseconómicas/PDF/UI/2024/UI_Diciembre%202024.pdf"
+      },
+      "categoria": "dominio",
+      "idioma": "es",
+      "herramienta": "cotizacion"
+    },
+    {
+      "id": "dominio-ui-2025-01-01-en",
+      "conjunto": "desarrollo",
+      "pregunta": "What was the official value of Uruguay's indexed unit in pesos on January 1, 2025?",
+      "tipo": "numero",
+      "esperado": 6.1697,
+      "tolerancia": 0.0001,
+      "unidad": "pesos",
+      "herramientas_esperadas": [
+        "cotizacion"
+      ],
+      "fuente": {
+        "organismo": "INE, tabla de la Unidad Indexada de diciembre de 2024 (6/12/2024 al 5/1/2025)",
+        "url": "https://www5.ine.gub.uy/documents/Estadísticaseconómicas/PDF/UI/2024/UI_Diciembre%202024.pdf",
+        "cita": "01/1/2025 6,1697",
+        "via": "organismo",
+        "confirmada_en_fuente": true,
+        "confirmada_el": "2026-11-26",
+        "confirmada_en": "https://www5.ine.gub.uy/documents/Estadísticaseconómicas/PDF/UI/2024/UI_Diciembre%202024.pdf"
+      },
+      "categoria": "dominio",
+      "idioma": "en",
+      "herramienta": "cotizacion"
+    },
+    {
+      "id": "dominio-nafta-super95-2025-01-es",
+      "conjunto": "desarrollo",
+      "pregunta": "¿Cuál fue el precio máximo de venta al público de la nafta Súper 95 en Uruguay en enero de 2025, en pesos por litro?",
+      "tipo": "numero",
+      "esperado": 78.54,
+      "tolerancia": 0.01,
+      "unidad": "$/litro",
+      "herramientas_esperadas": [
+        "combustible_ancap"
+      ],
+      "fuente": {
+        "organismo": "Poder Ejecutivo, Decreto 355/2024 (IMPO); confirmado por la prensa",
+        "url": "https://www.impo.com.uy/bases/decretos/355-2024",
+        "cita": "pasó de $75,052 a $78,54 por litro, desde el 1 de enero de 2025",
+        "via": "organismo",
+        "confirmada_en_fuente": true,
+        "otras_fuentes": [
+          "https://www.elobservador.com.uy/economia-y-empresas/combustibles-el-gobierno-definio-los-precios-nafta-gasoil-y-supergas-enero-2025-n5977260"
+        ],
+        "confirmada_el": "2026-11-26",
+        "confirmada_en": "https://www.impo.com.uy/bases/decretos/355-2024"
+      },
+      "categoria": "dominio",
+      "idioma": "es",
+      "herramienta": "combustible_ancap"
+    },
+    {
+      "id": "dominio-nafta-super95-2025-01-en",
+      "conjunto": "desarrollo",
+      "pregunta": "What was the official retail price per liter of Súper 95 gasoline in Uruguay in January 2025, in pesos?",
+      "tipo": "numero",
+      "esperado": 78.54,
+      "tolerancia": 0.01,
+      "unidad": "$/litro",
+      "herramientas_esperadas": [
+        "combustible_ancap"
+      ],
+      "fuente": {
+        "organismo": "Poder Ejecutivo, Decreto 355/2024 (IMPO); confirmado por la prensa",
+        "url": "https://www.impo.com.uy/bases/decretos/355-2024",
+        "cita": "pasó de $75,052 a $78,54 por litro, desde el 1 de enero de 2025",
+        "via": "organismo",
+        "confirmada_en_fuente": true,
+        "otras_fuentes": [
+          "https://www.elobservador.com.uy/economia-y-empresas/combustibles-el-gobierno-definio-los-precios-nafta-gasoil-y-supergas-enero-2025-n5977260"
+        ],
+        "confirmada_el": "2026-11-26",
+        "confirmada_en": "https://www.impo.com.uy/bases/decretos/355-2024"
+      },
+      "categoria": "dominio",
+      "idioma": "en",
+      "herramienta": "combustible_ancap"
+    },
+    {
+      "id": "dominio-ley-19889-promulgacion-es",
+      "conjunto": "desarrollo",
+      "pregunta": "¿En qué fecha se promulgó la ley 19.889 de Uruguay? Respondé la fecha como AAAA-MM-DD.",
+      "tipo": "texto",
+      "patron": "2020-07-09",
+      "herramientas_esperadas": [
+        "leyes"
+      ],
+      "fuente": {
+        "organismo": "IMPO",
+        "url": "https://impo.com.uy/bases/leyes/19889-2020/83",
+        "cita": "Promulgación: 09/07/2020 Publicación: 14/07/2020",
+        "via": "organismo",
+        "confirmada_en_fuente": true,
+        "confirmada_el": "2026-11-26",
+        "confirmada_en": "https://impo.com.uy/bases/leyes/19889-2020/83"
+      },
+      "categoria": "dominio",
+      "idioma": "es",
+      "herramienta": "leyes"
+    },
+    {
+      "id": "dominio-ley-19889-promulgacion-en",
+      "conjunto": "desarrollo",
+      "pregunta": "On what date was Uruguay's Law 19,889 promulgated?",
+      "tipo": "texto",
+      "patron": "2020-07-09",
+      "herramientas_esperadas": [
+        "leyes"
+      ],
+      "fuente": {
+        "organismo": "IMPO",
+        "url": "https://impo.com.uy/bases/leyes/19889-2020/83",
+        "cita": "Promulgación: 09/07/2020 Publicación: 14/07/2020",
+        "via": "organismo",
+        "confirmada_en_fuente": true,
+        "confirmada_el": "2026-11-26",
+        "confirmada_en": "https://impo.com.uy/bases/leyes/19889-2020/83"
+      },
+      "categoria": "dominio",
+      "idioma": "en",
+      "herramienta": "leyes"
+    },
+    {
+      "id": "fuente-inia-precipitacion-temps-extremas-sg-es",
+      "conjunto": "desarrollo",
+      "categoria": "descubrimiento",
+      "idioma": "es",
+      "pregunta": "Busco el dataset oficial de lluvia diaria y temperaturas extremas de Salto Grande.",
+      "tipo": "texto",
+      "patron": "inia\\-precipitacion\\-temps\\-extremas\\-sg",
+      "fuente": {
+        "url": "https://catalogodatos.gub.uy/dataset/inia-precipitacion-temps-extremas-sg"
+      },
+      "herramienta": "buscar_datasets_catalogo"
+    },
+    {
+      "id": "fuente-inia-precipitacion-temps-extremas-sg-en",
+      "conjunto": "desarrollo",
+      "categoria": "descubrimiento",
+      "idioma": "en",
+      "pregunta": "Find the official dataset for daily rainfall and temperature extremes at Salto Grande.",
+      "tipo": "texto",
+      "patron": "inia\\-precipitacion\\-temps\\-extremas\\-sg",
+      "fuente": {
+        "url": "https://catalogodatos.gub.uy/dataset/inia-precipitacion-temps-extremas-sg"
+      },
+      "herramienta": "buscar_datasets_catalogo"
+    },
+    {
+      "id": "fuente-ide-hidrografia-nacional-y-urbana-es",
+      "conjunto": "desarrollo",
+      "categoria": "descubrimiento",
+      "idioma": "es",
+      "pregunta": "Busco la ficha de hidrografía nacional y urbana de la IDE.",
+      "tipo": "texto",
+      "patron": "ide\\-hidrografia\\-nacional\\-y\\-urbana",
+      "fuente": {
+        "url": "https://catalogodatos.gub.uy/dataset/ide-hidrografia-nacional-y-urbana"
+      },
+      "herramienta": "buscar_datasets_catalogo"
+    },
+    {
+      "id": "fuente-ide-hidrografia-nacional-y-urbana-en",
+      "conjunto": "desarrollo",
+      "categoria": "descubrimiento",
+      "idioma": "en",
+      "pregunta": "Find the IDE dataset on national and urban hydrography.",
+      "tipo": "texto",
+      "patron": "ide\\-hidrografia\\-nacional\\-y\\-urbana",
+      "fuente": {
+        "url": "https://catalogodatos.gub.uy/dataset/ide-hidrografia-nacional-y-urbana"
+      },
+      "herramienta": "buscar_datasets_catalogo"
+    },
+    {
+      "id": "fuente-ide-cuencas-hidrograficas-es",
+      "conjunto": "desarrollo",
+      "categoria": "descubrimiento",
+      "idioma": "es",
+      "pregunta": "¿Dónde encuentro la ficha de cuencas hidrográficas publicada por IDE?",
+      "tipo": "texto",
+      "patron": "ide\\-cuencas\\-hidrograficas",
+      "fuente": {
+        "url": "https://catalogodatos.gub.uy/dataset/ide-cuencas-hidrograficas"
+      },
+      "herramienta": "buscar_datasets_catalogo"
+    },
+    {
+      "id": "fuente-ide-cuencas-hidrograficas-en",
+      "conjunto": "desarrollo",
+      "categoria": "descubrimiento",
+      "idioma": "en",
+      "pregunta": "Find the IDE dataset for drainage basins.",
+      "tipo": "texto",
+      "patron": "ide\\-cuencas\\-hidrograficas",
+      "fuente": {
+        "url": "https://catalogodatos.gub.uy/dataset/ide-cuencas-hidrograficas"
+      },
+      "herramienta": "buscar_datasets_catalogo"
+    },
+    {
+      "id": "fuente-intendencia-de-san-jose-mapa-social-de-san-jose-es",
+      "conjunto": "desarrollo",
+      "categoria": "descubrimiento",
+      "idioma": "es",
+      "pregunta": "¿Dónde está la ficha del mapa social de San José?",
+      "tipo": "texto",
+      "patron": "intendencia\\-de\\-san\\-jose\\-mapa\\-social\\-de\\-san\\-jose",
+      "fuente": {
+        "url": "https://catalogodatos.gub.uy/dataset/intendencia-de-san-jose-mapa-social-de-san-jose"
+      },
+      "herramienta": "buscar_datasets_catalogo"
+    },
+    {
+      "id": "fuente-intendencia-de-san-jose-mapa-social-de-san-jose-en",
+      "conjunto": "desarrollo",
+      "categoria": "descubrimiento",
+      "idioma": "en",
+      "pregunta": "Find the dataset page for the San José social map.",
+      "tipo": "texto",
+      "patron": "intendencia\\-de\\-san\\-jose\\-mapa\\-social\\-de\\-san\\-jose",
+      "fuente": {
+        "url": "https://catalogodatos.gub.uy/dataset/intendencia-de-san-jose-mapa-social-de-san-jose"
+      },
+      "herramienta": "buscar_datasets_catalogo"
+    },
+    {
+      "id": "fuente-acce-compras-estatales-es",
+      "conjunto": "desarrollo",
+      "categoria": "descubrimiento",
+      "idioma": "es",
+      "pregunta": "Busco el dataset de publicaciones del sitio de Compras Estatales, no la serie histórica de ARCE.",
+      "tipo": "texto",
+      "patron": "acce\\-compras\\-estatales",
+      "fuente": {
+        "url": "https://catalogodatos.gub.uy/dataset/acce-compras-estatales"
+      },
+      "herramienta": "buscar_datasets_catalogo"
+    },
+    {
+      "id": "fuente-acce-compras-estatales-en",
+      "conjunto": "desarrollo",
+      "categoria": "descubrimiento",
+      "idioma": "en",
+      "pregunta": "Find the dataset for notices published on Uruguay's public procurement website.",
+      "tipo": "texto",
+      "patron": "acce\\-compras\\-estatales",
+      "fuente": {
+        "url": "https://catalogodatos.gub.uy/dataset/acce-compras-estatales"
+      },
+      "herramienta": "buscar_datasets_catalogo"
+    },
+    {
+      "id": "fuente-arce-datos-historicos-de-compras-es",
+      "conjunto": "desarrollo",
+      "categoria": "descubrimiento",
+      "idioma": "es",
+      "pregunta": "¿Qué ficha contiene los datos históricos de compras de ARCE?",
+      "tipo": "texto",
+      "patron": "arce\\-datos\\-historicos\\-de\\-compras",
+      "fuente": {
+        "url": "https://catalogodatos.gub.uy/dataset/arce-datos-historicos-de-compras"
+      },
+      "herramienta": "buscar_datasets_catalogo"
+    },
+    {
+      "id": "fuente-arce-datos-historicos-de-compras-en",
+      "conjunto": "desarrollo",
+      "categoria": "descubrimiento",
+      "idioma": "en",
+      "pregunta": "Find ARCE's historical procurement data page.",
+      "tipo": "texto",
+      "patron": "arce\\-datos\\-historicos\\-de\\-compras",
+      "fuente": {
+        "url": "https://catalogodatos.gub.uy/dataset/arce-datos-historicos-de-compras"
+      },
+      "herramienta": "buscar_datasets_catalogo"
+    },
+    {
+      "id": "fuente-calidad-de-agua-es",
+      "conjunto": "desarrollo",
+      "categoria": "descubrimiento",
+      "idioma": "es",
+      "pregunta": "¿Dónde está el dataset de análisis de agua potable que publicó OSE?",
+      "tipo": "texto",
+      "patron": "calidad\\-de\\-agua",
+      "fuente": {
+        "url": "https://catalogodatos.gub.uy/dataset/calidad-de-agua"
+      },
+      "herramienta": "buscar_datasets_catalogo"
+    },
+    {
+      "id": "fuente-calidad-de-agua-en",
+      "conjunto": "desarrollo",
+      "categoria": "descubrimiento",
+      "idioma": "en",
+      "pregunta": "Find OSE's dataset about drinking water tests.",
+      "tipo": "texto",
+      "patron": "calidad\\-de\\-agua",
+      "fuente": {
+        "url": "https://catalogodatos.gub.uy/dataset/calidad-de-agua"
+      },
+      "herramienta": "buscar_datasets_catalogo"
+    },
+    {
+      "id": "fuente-inumet-observaciones-meteorologicas-precipitacion-puntual-en-el-uruguay-es",
+      "conjunto": "desarrollo",
+      "categoria": "descubrimiento",
+      "idioma": "es",
+      "pregunta": "Busco observaciones meteorológicas de precipitación puntual publicadas por INUMET.",
+      "tipo": "texto",
+      "patron": "inumet\\-observaciones\\-meteorologicas\\-precipitacion\\-puntual\\-en\\-el\\-uruguay",
+      "fuente": {
+        "url": "https://catalogodatos.gub.uy/dataset/inumet-observaciones-meteorologicas-precipitacion-puntual-en-el-uruguay"
+      },
+      "herramienta": "buscar_datasets_catalogo"
+    },
+    {
+      "id": "fuente-inumet-observaciones-meteorologicas-precipitacion-puntual-en-el-uruguay-en",
+      "conjunto": "desarrollo",
+      "categoria": "descubrimiento",
+      "idioma": "en",
+      "pregunta": "Find INUMET's point rainfall observations dataset.",
+      "tipo": "texto",
+      "patron": "inumet\\-observaciones\\-meteorologicas\\-precipitacion\\-puntual\\-en\\-el\\-uruguay",
+      "fuente": {
+        "url": "https://catalogodatos.gub.uy/dataset/inumet-observaciones-meteorologicas-precipitacion-puntual-en-el-uruguay"
+      },
+      "herramienta": "buscar_datasets_catalogo"
+    },
+    {
+      "id": "fuente-ancap-precio-combustible-pe-es",
+      "conjunto": "desarrollo",
+      "categoria": "descubrimiento",
+      "idioma": "es",
+      "pregunta": "Busco la ficha de precios de combustibles fijados por el Poder Ejecutivo que publica ANCAP.",
+      "tipo": "texto",
+      "patron": "ancap\\-precio\\-combustible\\-pe",
+      "fuente": {
+        "url": "https://catalogodatos.gub.uy/dataset/ancap-precio-combustible-pe"
+      },
+      "herramienta": "buscar_datasets_catalogo"
+    },
+    {
+      "id": "fuente-ancap-precio-combustible-pe-en",
+      "conjunto": "desarrollo",
+      "categoria": "descubrimiento",
+      "idioma": "en",
+      "pregunta": "Find ANCAP's dataset for fuel prices set by Uruguay's executive branch.",
+      "tipo": "texto",
+      "patron": "ancap\\-precio\\-combustible\\-pe",
+      "fuente": {
+        "url": "https://catalogodatos.gub.uy/dataset/ancap-precio-combustible-pe"
+      },
+      "herramienta": "buscar_datasets_catalogo"
+    },
+    {
+      "id": "fuente-intendencia-montevideo-monitoreo-de-agua-de-playas-es",
+      "conjunto": "desarrollo",
+      "categoria": "descubrimiento",
+      "idioma": "es",
+      "pregunta": "Busco el dataset de monitoreo de agua de playas de la Intendencia de Montevideo.",
+      "tipo": "texto",
+      "patron": "intendencia\\-montevideo\\-monitoreo\\-de\\-agua\\-de\\-playas",
+      "fuente": {
+        "url": "https://catalogodatos.gub.uy/dataset/intendencia-montevideo-monitoreo-de-agua-de-playas"
+      },
+      "herramienta": "buscar_datasets_catalogo"
+    },
+    {
+      "id": "fuente-intendencia-montevideo-monitoreo-de-agua-de-playas-en",
+      "conjunto": "desarrollo",
+      "categoria": "descubrimiento",
+      "idioma": "en",
+      "pregunta": "Find Montevideo's municipal beach water monitoring dataset.",
+      "tipo": "texto",
+      "patron": "intendencia\\-montevideo\\-monitoreo\\-de\\-agua\\-de\\-playas",
+      "fuente": {
+        "url": "https://catalogodatos.gub.uy/dataset/intendencia-montevideo-monitoreo-de-agua-de-playas"
+      },
+      "herramienta": "buscar_datasets_catalogo"
+    },
+    {
+      "id": "limite-lluvia-futura-es",
+      "conjunto": "desarrollo",
+      "categoria": "evidencia_insuficiente",
+      "idioma": "es",
+      "pregunta": "¿Cuántos milímetros llovió en INIA Salto Grande en enero de 2099?",
+      "tipo": "texto",
+      "patron": "^sin dato$",
+      "fuente": {
+        "url": "https://catalogodatos.gub.uy/dataset/inia-precipitacion-temps-extremas-sg"
+      },
+      "herramienta": "clima"
+    },
+    {
+      "id": "limite-lluvia-futura-en",
+      "conjunto": "desarrollo",
+      "categoria": "evidencia_insuficiente",
+      "idioma": "en",
+      "pregunta": "How many millimeters of rain fell at INIA Salto Grande in January 2099?",
+      "tipo": "texto",
+      "patron": "^sin dato$",
+      "fuente": {
+        "url": "https://catalogodatos.gub.uy/dataset/inia-precipitacion-temps-extremas-sg"
+      },
+      "herramienta": "clima"
+    },
+    {
+      "id": "limite-playa-potable-es",
+      "conjunto": "desarrollo",
+      "categoria": "evidencia_insuficiente",
+      "idioma": "es",
+      "pregunta": "Solo con la turbidez de OSE en Salto en 2025, ¿estaba habilitada Playa Salto Chico el 3 de febrero?",
+      "tipo": "texto",
+      "patron": "^sin dato$",
+      "fuente": {
+        "url": "https://datos.ose.com.uy/dataset/calidad-de-agua"
+      },
+      "herramienta": "calidad_agua"
+    },
+    {
+      "id": "limite-playa-potable-en",
+      "conjunto": "desarrollo",
+      "categoria": "evidencia_insuficiente",
+      "idioma": "en",
+      "pregunta": "Using only OSE drinking-water turbidity in Salto in 2025, was Salto Chico beach open for swimming on February 3?",
+      "tipo": "texto",
+      "patron": "^sin dato$",
+      "fuente": {
+        "url": "https://datos.ose.com.uy/dataset/calidad-de-agua"
+      },
+      "herramienta": "calidad_agua"
+    },
+    {
+      "id": "limite-unidad-ctm-es",
+      "conjunto": "desarrollo",
+      "categoria": "evidencia_insuficiente",
+      "idioma": "es",
+      "pregunta": "¿Qué unidad de altura declara explícitamente el servicio de la CTM para la estación Salto?",
+      "tipo": "texto",
+      "patron": "^sin dato$",
+      "fuente": {
+        "url": "https://www.saltogrande.org/ws.php"
+      },
+      "herramienta": "nivel_rio"
+    },
+    {
+      "id": "limite-unidad-ctm-en",
+      "conjunto": "desarrollo",
+      "categoria": "evidencia_insuficiente",
+      "idioma": "en",
+      "pregunta": "What height unit does the Salto Grande CTM service explicitly declare for the Salto gauge?",
+      "tipo": "texto",
+      "patron": "^sin dato$",
+      "fuente": {
+        "url": "https://www.saltogrande.org/ws.php"
+      },
+      "herramienta": "nivel_rio"
+    },
+    {
+      "id": "limite-clima-previo-es",
+      "conjunto": "desarrollo",
+      "categoria": "evidencia_insuficiente",
+      "idioma": "es",
+      "pregunta": "¿Cuánto llovió en la serie de INIA Salto Grande en enero de 1950?",
+      "tipo": "texto",
+      "patron": "^sin dato$",
+      "fuente": {
+        "url": "https://catalogodatos.gub.uy/dataset/inia-precipitacion-temps-extremas-sg"
+      },
+      "herramienta": "clima"
+    },
+    {
+      "id": "limite-clima-previo-en",
+      "conjunto": "desarrollo",
+      "categoria": "evidencia_insuficiente",
+      "idioma": "en",
+      "pregunta": "How much rain does the INIA Salto Grande series report in January 1950?",
+      "tipo": "texto",
+      "patron": "^sin dato$",
+      "fuente": {
+        "url": "https://catalogodatos.gub.uy/dataset/inia-precipitacion-temps-extremas-sg"
+      },
+      "herramienta": "clima"
+    },
+    {
+      "id": "limite-fecha-ose-es",
+      "conjunto": "desarrollo",
+      "categoria": "evidencia_insuficiente",
+      "idioma": "es",
+      "pregunta": "¿Qué día exacto se tomó la primera muestra de turbidez de OSE en Salto de 2025 según el dataset trimestral?",
+      "tipo": "texto",
+      "patron": "^sin dato$",
+      "fuente": {
+        "url": "https://datos.ose.com.uy/dataset/calidad-de-agua"
+      },
+      "herramienta": "calidad_agua"
+    },
+    {
+      "id": "limite-fecha-ose-en",
+      "conjunto": "desarrollo",
+      "categoria": "evidencia_insuficiente",
+      "idioma": "en",
+      "pregunta": "What exact day was OSE's first 2025 Salto turbidity sample taken according to the quarterly dataset?",
+      "tipo": "texto",
+      "patron": "^sin dato$",
+      "fuente": {
+        "url": "https://datos.ose.com.uy/dataset/calidad-de-agua"
+      },
+      "herramienta": "calidad_agua"
+    },
+    {
+      "id": "limite-ose-limite-es",
+      "conjunto": "desarrollo",
+      "categoria": "evidencia_insuficiente",
+      "idioma": "es",
+      "pregunta": "¿Cuál fue la medición exacta en NTU de una muestra de OSE publicada como menor que 0,2 NTU?",
+      "tipo": "texto",
+      "patron": "^sin dato$",
+      "fuente": {
+        "url": "https://datos.ose.com.uy/dataset/calidad-de-agua"
+      },
+      "herramienta": "calidad_agua"
+    },
+    {
+      "id": "limite-ose-limite-en",
+      "conjunto": "desarrollo",
+      "categoria": "evidencia_insuficiente",
+      "idioma": "en",
+      "pregunta": "What was the exact NTU reading of an OSE sample reported as below 0.2 NTU?",
+      "tipo": "texto",
+      "patron": "^sin dato$",
+      "fuente": {
+        "url": "https://datos.ose.com.uy/dataset/calidad-de-agua"
+      },
+      "herramienta": "calidad_agua"
+    },
+    {
+      "id": "limite-caru-limite-es",
+      "conjunto": "desarrollo",
+      "categoria": "evidencia_insuficiente",
+      "idioma": "es",
+      "pregunta": "¿Qué umbral numérico especifica la tabla de CARU para el dato de E. coli marcado < LD de Salto Chico del 3/1/2023?",
+      "tipo": "texto",
+      "patron": "^sin dato$",
+      "fuente": {
+        "url": "https://caru.org.uy/nuevositio/wp-content/uploads/2023/10/Informe-Resultados-Semana-del-27-de-Febrero-de-2023.pdf"
+      }
+    },
+    {
+      "id": "limite-caru-limite-en",
+      "conjunto": "desarrollo",
+      "categoria": "evidencia_insuficiente",
+      "idioma": "en",
+      "pregunta": "What numerical detection limit does the CARU table specify for the Salto Chico E. coli result marked < LD on 3 January 2023?",
+      "tipo": "texto",
+      "patron": "^sin dato$",
+      "fuente": {
+        "url": "https://caru.org.uy/nuevositio/wp-content/uploads/2023/10/Informe-Resultados-Semana-del-27-de-Febrero-de-2023.pdf"
+      }
+    },
+    {
+      "id": "limite-ose-dictamen-es",
+      "conjunto": "desarrollo",
+      "categoria": "evidencia_insuficiente",
+      "idioma": "es",
+      "pregunta": "Usando solo los resultados trimestrales publicados de turbidez, ¿cuál es el dictamen oficial de cumplimiento para Salto 2025?",
+      "tipo": "texto",
+      "patron": "^sin dato$",
+      "fuente": {
+        "url": "https://datos.ose.com.uy/dataset/calidad-de-agua"
+      },
+      "herramienta": "calidad_agua"
+    },
+    {
+      "id": "limite-ose-dictamen-en",
+      "conjunto": "desarrollo",
+      "categoria": "evidencia_insuficiente",
+      "idioma": "en",
+      "pregunta": "Using only the published quarterly turbidity results, what is the official compliance determination for Salto in 2025?",
+      "tipo": "texto",
+      "patron": "^sin dato$",
+      "fuente": {
+        "url": "https://datos.ose.com.uy/dataset/calidad-de-agua"
+      },
+      "herramienta": "calidad_agua"
+    },
+    {
+      "id": "limite-caru-habilitacion-es",
+      "conjunto": "desarrollo",
+      "categoria": "evidencia_insuficiente",
+      "idioma": "es",
+      "pregunta": "¿Cuál es la decisión oficial de habilitación de Playa Salto Chico que publica la tabla de CARU del 3 de febrero de 2025?",
+      "tipo": "texto",
+      "patron": "^sin dato$",
+      "fuente": {
+        "url": "https://caru.org.uy/nuevositio/wp-content/uploads/2025/02/Informe-Resultados-Semana-del-03-de-Febrero-de-2025.pdf"
+      }
+    },
+    {
+      "id": "limite-caru-habilitacion-en",
+      "conjunto": "desarrollo",
+      "categoria": "evidencia_insuficiente",
+      "idioma": "en",
+      "pregunta": "What official swimming authorization decision is published in the CARU table for Salto Chico on 3 February 2025?",
+      "tipo": "texto",
+      "patron": "^sin dato$",
+      "fuente": {
+        "url": "https://caru.org.uy/nuevositio/wp-content/uploads/2025/02/Informe-Resultados-Semana-del-03-de-Febrero-de-2025.pdf"
+      }
+    },
+    {
+      "id": "limite-lluvia-desde-rio-es",
+      "conjunto": "desarrollo",
+      "categoria": "evidencia_insuficiente",
+      "idioma": "es",
+      "pregunta": "Según solo las alturas del río en Salto, ¿cuántos milímetros de lluvia acumuló la estación INIA del 1 al 3 de septiembre?",
+      "tipo": "texto",
+      "patron": "^sin dato$",
+      "fuente": {
+        "url": "https://www.saltogrande.org/ws.php"
+      },
+      "herramienta": "nivel_rio"
+    },
+    {
+      "id": "limite-lluvia-desde-rio-en",
+      "conjunto": "desarrollo",
+      "categoria": "evidencia_insuficiente",
+      "idioma": "en",
+      "pregunta": "Using only river gauge heights in Salto, how many millimeters of rain accumulated at the INIA station from September 1 to 3?",
+      "tipo": "texto",
+      "patron": "^sin dato$",
+      "fuente": {
+        "url": "https://www.saltogrande.org/ws.php"
+      },
+      "herramienta": "nivel_rio"
+    }
+  ]
+}
