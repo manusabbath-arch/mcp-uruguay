@@ -147,6 +147,10 @@
       "description": "Un indicador social del MIDES, con su ficha"
     },
     {
+      "name": "buscar_datasets_catalogo",
+      "description": "Buscar datasets del catalogo de Uruguay"
+    },
+    {
       "name": "recursos_catalogo",
       "description": "Recursos de un dataset del catálogo de Uruguay"
     },
