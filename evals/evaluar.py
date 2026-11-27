@@ -38,7 +38,7 @@ PREGUNTAS = AQUI / "preguntas.json"
 MODELO = "claude-opus-5-5"
 MAX_TURNOS = 15
 #: sin = solo el modelo; con = las herramientas; guiado = además las instrucciones y los recursos.
-MODOS = ("con", "sin", "guiado")
+MODOS = ("con", "sin", "guiado", "sin_catalogo")
 LECTOR = "leer_recurso"  # no es una herramienta del servidor: la agrega el modo guiado
 
 SISTEMA = """\
@@ -118,8 +118,8 @@ def verificar(pregunta: dict, texto: str) -> dict:
     raise ValueError(f"{pregunta['id']}: tipo desconocido {tipo!r}")
 
 
-def cargar(conjunto: str = "todos", ids: Optional[list[str]] = None) -> list[dict]:
-    preguntas = json.loads(PREGUNTAS.read_text(encoding="utf-8"))["preguntas"]
+def cargar(conjunto: str = "todos", ids: Optional[list[str]] = None, archivo: Optional[Path] = None) -> list[dict]:
+    preguntas = json.loads((archivo or PREGUNTAS).read_text(encoding="utf-8"))["preguntas"]
     if conjunto != "todos":
         preguntas = [p for p in preguntas if p["conjunto"] == conjunto]
     if ids:
@@ -179,6 +179,7 @@ async def preguntar(
     mensajes: list[dict] = [{"role": "user", "content": pregunta}]
     m = {
         "llamadas": [],
+        "argumentos": [],
         "recursos_leidos": [],
         "errores_herramienta": 0,
         "tokens_entrada": 0,
@@ -198,7 +199,8 @@ async def preguntar(
     if herramientas:
         parametros["tools"] = herramientas
     # Solo se leen recursos si el lector se ofreció: en `con`, pedirlo es una herramienta desconocida.
-    con_lector = any(t["name"] == LECTOR for t in herramientas or [])
+    ofrecidas = {t["name"] for t in herramientas or []}
+    con_lector = LECTOR in ofrecidas
     inicio = time.monotonic()
     texto, motivo_fin = "", ""
     while m["turnos"] < MAX_TURNOS:
@@ -220,7 +222,10 @@ async def preguntar(
             if b.type != "tool_use":
                 continue
             m["llamadas"].append(b.name)
+            m["argumentos"].append({"herramienta": b.name, "argumentos": b.input})
             try:
+                if b.name not in ofrecidas:
+                    raise ValueError("herramienta no ofrecida en este modo")
                 if con_lector and b.name == LECTOR:
                     uri = b.input["uri"]
                     res = await sesion.read_resource(uri)
@@ -256,6 +261,10 @@ async def correr(cliente, preguntas: list[dict], modos: list[str], *, modelo=MOD
         servidor_en = {
             "sin": {},
             "con": {"sesion": sesion, "herramientas": herramientas},
+            "sin_catalogo": {
+                "sesion": sesion,
+                "herramientas": [t for t in herramientas if t["name"] != "buscar_datasets_catalogo"],
+            },
         }
         if "guiado" in modos:
             servidor_en["guiado"] = {
@@ -284,6 +293,8 @@ async def correr(cliente, preguntas: list[dict], modos: list[str], *, modelo=MOD
                             "conjunto": p["conjunto"],
                             "tipo": p["tipo"],
                             "modo": modo,
+                            "categoria": p.get("categoria"),
+                            "herramienta_correcta": (p["herramienta"] in m["llamadas"] if "herramienta" in p else None),
                             "intento": n + 1,
                             **v,
                             **m,
@@ -292,6 +303,23 @@ async def correr(cliente, preguntas: list[dict], modos: list[str], *, modelo=MOD
                     )
                     print(f"{p['id']:<34} {modo:<6} {'OK' if v['correcta'] else '--'}  {v['motivo']}", file=sys.stderr)
     return filas
+
+
+def resumen_observatorio(filas: list[dict]) -> str:
+    lineas = [
+        "| modo | categoria | respuesta correcta | herramienta esperada | segundo p95 |",
+        "|---|---|---:|---:|---:|",
+    ]
+    grupos = {(f["modo"], f["categoria"]) for f in filas if f.get("categoria")}
+    for modo, categoria in sorted(grupos):
+        grupo = [f for f in filas if f["modo"] == modo and f.get("categoria") == categoria]
+        aciertos = sum(f["correcta"] for f in grupo)
+        esperadas = [f["herramienta_correcta"] for f in grupo if f["herramienta_correcta"] is not None]
+        eleccion = f"{sum(esperadas)}/{len(esperadas)}" if esperadas else "-"
+        tiempos = sorted(f["segundos"] for f in grupo)
+        p95 = tiempos[(95 * len(tiempos) + 99) // 100 - 1]
+        lineas.append(f"| {modo} | {categoria} | {aciertos}/{len(grupo)} | {eleccion} | {p95:.1f} |")
+    return "\n".join(lineas) + "\n"
 
 
 def resumen(filas: list[dict]) -> str:
@@ -325,6 +353,7 @@ def main(argv: Optional[list[str]] = None) -> int:
         help="separados por coma: con, sin (con y sin el servidor) o guiado (además instrucciones y recursos)",
     )
     ap.add_argument("--conjunto", default="desarrollo", choices=["desarrollo", "reservado", "todos"])
+    ap.add_argument("--archivo", type=Path, help="banco de preguntas aparte del conjunto habitual")
     ap.add_argument("--id", action="append", help="solo esta pregunta (se puede repetir)")
     ap.add_argument("--modelo", default=MODELO)
     ap.add_argument("--esfuerzo", default="medium", choices=["low", "medium", "high", "xhigh", "max"])
@@ -337,7 +366,7 @@ def main(argv: Optional[list[str]] = None) -> int:
 
     import anthropic  # solo para correr de verdad: los tests usan un cliente falso
 
-    preguntas = cargar(args.conjunto, args.id)
+    preguntas = cargar(args.conjunto, args.id, args.archivo)
     if not preguntas:
         print("ninguna pregunta con esos filtros", file=sys.stderr)
         return 2
@@ -367,6 +396,8 @@ def main(argv: Optional[list[str]] = None) -> int:
         encoding="utf-8",
     )
     print(resumen(filas))
+    if any(f.get("categoria") for f in filas):
+        print(resumen_observatorio(filas))
     print(f"detalle: {destino}", file=sys.stderr)
     return 0
 
