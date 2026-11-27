@@ -223,6 +223,40 @@ def geocodificar_direccion(direccion: str, localidad: str = "", departamento: st
     }
 
 
+class DatasetCatalogo(TypedDict):
+    nombre: str
+    titulo: str
+    organizacion: str
+    modificado: str
+    formatos: list[str]
+    licencia: Optional[str]
+    url: str
+
+
+class BusquedaCatalogo(TypedDict):
+    datasets: list[DatasetCatalogo]
+    total: int
+    pagina: int
+    fuente: str
+
+
+def buscar_datasets_catalogo(consulta: str, limite: int = 10, pagina: int = 1) -> BusquedaCatalogo:
+    consulta = consulta.strip()
+    if not consulta or not 1 <= limite <= 20 or pagina < 1:
+        raise ValueError("Indica una consulta, limite entre 1 y 20 y pagina desde 1.")
+    resultado = catalogo.accion("package_search", q=consulta, rows=limite, start=(pagina - 1) * limite)
+    busqueda = catalogo.parsear_busqueda(resultado)
+    datasets = [
+        {
+            **ficha,
+            "licencia": crudo.get("license_title") or crudo.get("license_id"),
+            "url": f"https://catalogodatos.gub.uy/dataset/{ficha['nombre']}",
+        }
+        for ficha, crudo in zip(busqueda["datasets"], resultado["results"])
+    ]
+    return {"datasets": datasets, "total": busqueda["total"], "pagina": pagina, "fuente": "catalogodatos.gub.uy"}
+
+
 def recursos_catalogo(dataset: str) -> RecursosCatalogo:
     return {
         "dataset": dataset,

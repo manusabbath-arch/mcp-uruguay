@@ -55,6 +55,7 @@ LLAMADAS = [
     ("pedidos_de_informes", {"organismo": "transporte", "cantidad": 3}),
     ("buscar_indicador_social", {"texto": "pobreza departamento"}),
     ("indicador_social", {"indicador": "tasa-desempleo-segun-quintil-ingreso-total-pais"}),
+    ("buscar_datasets_catalogo", {"consulta": "Salto", "limite": 3}),
     ("recursos_catalogo", {"dataset": "inia-precipitacion-temps-extremas-sg"}),
     ("diagnostico", {}),
 ]

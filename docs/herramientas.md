@@ -18,6 +18,17 @@ y las filas que contienen `nombre`. Avisa de nombres repetidos, que pueden ser h
 | `minimo_citaciones` | `integer` | no |
 | `cantidad` | `integer` | no |
 
+## `buscar_datasets_catalogo` — Buscar datasets del catalogo de Uruguay
+
+Encuentra fuentes por tema en el catalogo nacional CKAN. Devuelve fichas y licencias, no cifras.
+Usa recursos_catalogo para listar archivos y una herramienta de dominio para calcular datos ya cubiertos.
+
+| parametro | tipo | obligatorio |
+|---|---|---|
+| `consulta` | `string` | si |
+| `limite` | `integer` | no |
+| `pagina` | `integer` | no |
+
 ## `buscar_indicador_social` — Buscar indicadores sociales del MIDES
 
 Busca entre los ~1.260 indicadores sociales del Observatorio Social del MIDES (pobreza, empleo,

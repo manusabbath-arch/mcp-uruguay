@@ -77,6 +77,7 @@ TRAMPAS: dict[str, str] = {
         "Excel convierte el RUT en número y se come el cero inicial; la validez es aritmética, no inscripción"
     ),
     "semana": "el año de la semana ISO puede no ser el del día",
+    "buscar_datasets_catalogo": "cero coincidencias para una consulta no demuestra que no existan datos",
     "recursos_catalogo": "las URLs cambian cuando el organismo resube el archivo",
     "buscar_indicador_social": "los nombres salen del título sin tildes; la copia del catálogo abierto es vieja",
     "indicador_social": "trae filas Total mezcladas, puede venir parcial y los mapas pueden traer un solo año",

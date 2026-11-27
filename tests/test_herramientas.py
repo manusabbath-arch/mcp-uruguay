@@ -430,3 +430,20 @@ class TestPedidosDeInformes:
     def test_un_organismo_sin_pedidos_lo_dice(self):
         with pytest.raises(ValueError, match="ningún pedido"):
             h.pedidos_de_informes(organismo="turismo")
+
+
+def test_busqueda_catalogo_con_licencia_y_paginacion(monkeypatch):
+    from mcp_uruguay.herramientas import sinred
+
+    pedidos = []
+
+    def accion(nombre, **args):
+        pedidos.append((nombre, args))
+        return {"count": 8, "results": [{"name": "ejemplo", "title": "Ejemplo", "license_id": "odc-uy"}]}
+
+    monkeypatch.setattr(sinred.catalogo, "accion", accion)
+    resultado = sinred.buscar_datasets_catalogo(" Salto ", 3, 2)
+    assert pedidos == [("package_search", {"q": "Salto", "rows": 3, "start": 3})]
+    assert resultado["total"] == 8
+    assert resultado["datasets"][0]["licencia"] == "odc-uy"
+    assert resultado["datasets"][0]["url"] == "https://catalogodatos.gub.uy/dataset/ejemplo"

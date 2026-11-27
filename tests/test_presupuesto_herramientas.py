@@ -13,8 +13,8 @@ from mcp import Client
 
 from mcp_uruguay.servidor import servidor
 
-TOPE_CARACTERES = 19_954  # 2026-11-26: 19.849 + 105 de `localidad` sin argumentos (total del país)
-TOPE_HERRAMIENTAS = 31
+TOPE_CARACTERES = 20_650  # 2026-11-26: 19.849 + 105 de `localidad` sin argumentos (total del país)
+TOPE_HERRAMIENTAS = 32
 
 
 async def _definiciones():

@@ -479,6 +479,13 @@ def indicador_social(indicador: str, filtro: str = "") -> h.IndicadorSocial:
     return h.indicador_social(indicador, filtro)
 
 
+@herramienta("Buscar datasets del catalogo de Uruguay", EN_RED)
+def buscar_datasets_catalogo(consulta: str, limite: int = 10, pagina: int = 1) -> h.BusquedaCatalogo:
+    """Encuentra fuentes por tema en el catalogo nacional CKAN. Devuelve fichas y licencias, no cifras.
+    Usa recursos_catalogo para listar archivos y una herramienta de dominio para calcular datos ya cubiertos."""
+    return h.buscar_datasets_catalogo(consulta, limite, pagina)
+
+
 @herramienta("Recursos de un dataset del catálogo de Uruguay", EN_RED)
 def recursos_catalogo(dataset: str) -> h.RecursosCatalogo:
     """Los archivos vigentes (nombre, URL, formato, fecha) de un dataset de catalogodatos.gub.uy, por su
