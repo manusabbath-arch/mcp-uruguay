@@ -65,12 +65,12 @@ fuente. Este lee el archivo primario, declara sus trampas medidas y devuelve cad
 
 **Todas son de solo lectura**, y así lo declaran al cliente.
 
-> **Estado al 16/11/2026: tres herramientas no responden.** `leyes`, `asistencia_parlamentaria` y
-> `proyectos_parlamento` leen de `parlamento.gub.uy`, que desde fines de octubre de 2026 devuelve
-> `403` a los clientes automáticos. No es una caída y no se arregla reintentando; quien ya tenía la
-> copia en caché la sigue recibiendo. El error de cada herramienta lo dice, y el recurso
-> `uru://trampas` lista las fuentes que hoy no responden. Seguimiento en el
-> [issue #2](https://github.com/manusabbath-arch/mcp-uruguay/issues/2).
+> **Estado al 27/11/2026.** Desde la 0.16.0 responden otra vez `proyectos_parlamento` y
+> `asistencia_parlamentaria`: el 403 de `parlamento.gub.uy` era la forma del `User-Agent`, no una
+> caída ([diagnóstico](docs/2026-11-27-parlamento-403-es-el-user-agent.md)). `leyes` es
+> **intermitente**: el sitio tarda unos 65 s en generar ese CSV y su CDN a veces corta y entrega una
+> respuesta vacía, que se rechaza. El error de la herramienta lo dice y el recurso `uru://trampas`
+> la lista. Seguimiento en el [issue #2](https://github.com/manusabbath-arch/mcp-uruguay/issues/2).
 
 Cada respuesta trae dos campos para citar el dato:
 
@@ -214,8 +214,8 @@ Dos cosas ayudan:
   ```
 
   Baja de una vez lo que tarda y dice qué pasó con cada fuente. Una fuente caída no frena a las demás.
-  Termina con código 0 si todo anduvo o si solo falló lo que ya se declara caído (hoy, parte del
-  Parlamento), y con 1 si alguna otra falló.
+  Termina con código 0 si todo anduvo o si solo falló lo que ya se declara caído en `guias.CAIDAS`
+  (hoy, `leyes`), y con 1 si alguna otra falló.
 - **Avisos de progreso.** Mientras una herramienta trabaja, el servidor manda cada 10 segundos un aviso de
   progreso. Sirve si el cliente lo muestra o reinicia su plazo con él; no todos lo hacen, y para esos
   `--precalentar` sigue siendo la salida.

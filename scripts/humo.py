@@ -63,11 +63,7 @@ LLAMADAS = [
 
 # herramienta -> número del issue que la sigue. La misma lista que `mcp_uruguay.guias.CAIDAS`: está
 # repetida porque este script corre contra el paquete de PyPI, que puede ser anterior a la lista.
-CAIDAS_CONOCIDAS = {
-    "asistencia_parlamentaria": 2,
-    "leyes": 2,
-    "proyectos_parlamento": 2,
-}
+CAIDAS_CONOCIDAS: dict[str, int] = {"leyes": 2}
 
 
 def clasificar(nombre: str, ok: bool, vencida: bool = False) -> str:

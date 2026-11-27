@@ -1,6 +1,30 @@
 # Cambios
 
-## Sin publicar
+## 0.16.0 — 2026-11-27
+
+- **Vuelven `proyectos_parlamento` y `asistencia_parlamentaria`.** El 403 de `parlamento.gub.uy`
+  desde octubre no era una caída: el sitio rechaza el `User-Agent` `uydatos/X (…)` y acepta
+  `Mozilla/5.0 (compatible; uydatos/X; +url)`. uydatos 0.19.1 lo cambia; el pin pasa a
+  `>=0.19.1,<0.20`. Diagnóstico: `docs/2026-11-27-parlamento-403-es-el-user-agent.md`. **`leyes`
+  sigue en `guias.CAIDAS`, ahora como intermitente**: probada por stdio con la caché vacía, tardó 81 s
+  y recibió una respuesta vacía. El sitio tarda ~65 s en generar ese CSV, y su CDN a veces corta y
+  guarda el vacío 3 minutos. A la mañana el mismo archivo había llegado entero (998 KB).
+- **`cotizacion` dice qué día es cuando el BCU no publicó**: «es sábado», «es feriado nacional
+  (Declaratoria de la Independencia)» o «no es fin de semana ni feriado nacional». Antes decía «fin de
+  semana, feriado o día sin cotización» sin distinguir. **`semana` trae los feriados** nacionales que
+  se observan esa semana. La idea viene de la rama `claude/feriados`; se reimplementó sobre
+  `uydatos.feriados` en vez de un segundo calendario.
+- **Herramienta nueva, `buscar_datasets_catalogo`**: busca datasets en el catálogo nacional (CKAN)
+  por tema y devuelve la ficha; `recursos_catalogo` da después sus archivos.
+- **`calidad_agua` conserva la URL de origen** de las copias de OSE en la `procedencia`.
+- **Experimental, para el piloto del Observatorio de Salto** (opciones que no cambian el uso normal
+  por stdio):
+  - `--remoto` sirve cinco herramientas del piloto por Streamable HTTP en `127.0.0.1:8420`, con
+    límite por IP; requiere el extra `remoto`. `--precalentar-piloto` baja solo sus tres fuentes.
+    Guía en `docs/observatorio-http.md`.
+  - `--caru` agrega `muestreos_salto_chico`; necesita un uydatos con `uydatos.caru`, que todavía no
+    está publicado, y Poppler. Sin eso termina con un mensaje claro. `docs/observatorio-caru.md`.
+  - Banco de evaluación bilingüe del observatorio: `evals/observatorio.json`.
 
 - **Herramienta nueva, `feriados`** (sin red), sobre `uydatos.feriados` 0.19. Con `anio` devuelve
   los feriados nacionales con su tipo (pago, laborable o no laborable) y el día al que se trasladan.

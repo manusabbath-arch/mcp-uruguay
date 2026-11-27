@@ -6,7 +6,7 @@ GeoJSON de 4,7 MB) y muchos clientes MCP cortan cerca de los 60 s. Este comando 
 vez en la terminal, después de instalar, y deja la caché lista: las llamadas siguientes salen del disco.
 
 Una fuente que no responde no frena a las demás: se anota y se sigue. Las que `guias.CAIDAS` ya declara
-caídas (hoy, el Parlamento) se informan como tales y no hacen fallar el comando.
+caídas se informan como tales y no hacen fallar el comando.
 """
 
 from __future__ import annotations

@@ -121,6 +121,7 @@ async def test_una_fuente_caida_conocida_lo_dice_en_el_error(monkeypatch):
         raise _rechazo(403)
 
     monkeypatch.setattr(h, "leyes", bloqueada)
+    monkeypatch.setitem(guias.CAIDAS, "leyes", "parlamento.gub.uy responde 403 (simulado en el test).")
     async with Client(servidor) as c:
         r = await c.call_tool("leyes", {"buscar": "riego"})
     assert r.is_error

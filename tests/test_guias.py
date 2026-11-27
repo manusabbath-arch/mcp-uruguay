@@ -21,7 +21,7 @@ async def test_cada_herramienta_tiene_su_trampa_y_ninguna_sobra():
     assert set(guias.TRAMPAS) == reales
 
 
-async def test_las_caidas_son_herramientas_reales_y_humo_lleva_la_misma_lista():
+async def test_las_caidas_son_herramientas_reales_y_humo_lleva_la_misma_lista(monkeypatch):
     import importlib.util
     from pathlib import Path
 
@@ -33,6 +33,8 @@ async def test_las_caidas_son_herramientas_reales_y_humo_lleva_la_misma_lista():
     assert set(humo.CAIDAS_CONOCIDAS) == set(guias.CAIDAS)
     for nombre, issue in humo.CAIDAS_CONOCIDAS.items():
         assert f"/issues/{issue}" in guias.CAIDAS[nombre]
+    # El mecanismo se prueba con una caída simulada: la lista real puede estar vacía.
+    monkeypatch.setitem(humo.CAIDAS_CONOCIDAS, "leyes", 2)
     assert humo.clasificar("leyes", ok=False) == "CAIDA" and humo.clasificar("leyes", ok=True) == "VOLVIO"
     assert humo.clasificar("semana", ok=True) == "OK" and humo.clasificar("semana", ok=False) == "ERROR"
     # Una respuesta salida de una copia vencida no prueba que la fuente responda: en una máquina con
@@ -50,7 +52,8 @@ async def test_las_instrucciones_del_servidor_nombran_el_recurso_de_trampas():
     assert "uru://trampas" in guias.RECURSOS
 
 
-async def test_el_recurso_de_trampas_dice_que_fuentes_no_responden():
+async def test_el_recurso_de_trampas_dice_que_fuentes_no_responden(monkeypatch):
+    monkeypatch.setitem(guias.CAIDAS, "leyes", "simulada en el test")
     async with Client(servidor) as cliente:
         texto = (await cliente.read_resource("uru://trampas")).contents[0].text
     assert "Fuentes que hoy no responden" in texto
@@ -115,3 +118,8 @@ async def test_el_recurso_de_fuentes_trae_todas_las_fuentes_del_servidor():
         texto = (await cliente.read_resource("uru://fuentes")).contents[0].text
     for linea in (v for k, v in vars(guias.h).items() if k.startswith("FUENTE_") and isinstance(v, str)):
         assert linea in texto
+
+
+def test_sin_caidas_el_recurso_no_anuncia_fuentes_caidas(monkeypatch):
+    monkeypatch.setattr(guias, "CAIDAS", {})
+    assert "Fuentes que hoy no responden" not in guias.trampas()

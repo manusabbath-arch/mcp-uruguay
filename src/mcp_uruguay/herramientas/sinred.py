@@ -42,6 +42,7 @@ class SemanaTyped(TypedDict):
     desde: str
     hasta: str
     de_total: str
+    feriados: list["FeriadoTyped"]
     nota: str
 
 
@@ -199,13 +200,20 @@ def validar_documento(numero: str, tipo: Literal["rut", "ci"]) -> Validacion:
 
 def semana(fecha: str) -> SemanaTyped:
     s = semanas.semana_de(_fecha(fecha, "fecha"))
+    feriados_semana: list[FeriadoTyped] = []
+    nota_feriados = f" Feriados: se calculan desde {_feriados.ANIO_MINIMO}."
+    if s.desde.year >= _feriados.ANIO_MINIMO:
+        for anio in sorted({s.desde.year, s.hasta.year}):
+            feriados_semana += [_feriado(f) for f in _feriados.del_anio(anio) if s.desde <= f.fecha <= s.hasta]
+        nota_feriados = " `feriados`: los nacionales que se observan esa semana (los trasladados, en su lunes)."
     return {
         "etiqueta": s.corta,
         "etiqueta_con_anio": str(s),
         "desde": s.desde.isoformat(),
         "hasta": s.hasta.isoformat(),
         "de_total": s.de_total,
-        "nota": "Semana ISO 8601, de lunes a domingo. El año de la semana puede no ser el del día.",
+        "feriados": feriados_semana,
+        "nota": "Semana ISO 8601, de lunes a domingo. El año de la semana puede no ser el del día." + nota_feriados,
     }
 
 

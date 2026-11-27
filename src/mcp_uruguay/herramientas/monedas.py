@@ -9,6 +9,7 @@ from typing import Literal, Optional
 # esquema de salida y la respuesta sin `structuredContent`. Medido en el CI de 3.10 y 3.11.
 from typing_extensions import NotRequired, TypedDict
 from uydatos import bcu, ibge, indec
+from uydatos import feriados as _feriados
 
 from mcp_uruguay import cache
 from mcp_uruguay.herramientas.comun import VariacionReal, _fecha, _mes
@@ -122,6 +123,19 @@ def _codigo(moneda: str) -> int:
     return MONEDAS[moneda]
 
 
+def _tipo_de_dia(dia: date) -> str:
+    """Qué se sabe del día pedido. No afirma que sea la causa de que falte la publicación."""
+    if dia.year >= _feriados.ANIO_MINIMO:
+        nombres = [f.nombre for f in _feriados.feriados_de(dia)]
+        if nombres:
+            return f"es feriado nacional ({' y '.join(nombres)})"
+    if dia.weekday() >= 5:
+        return "es sábado" if dia.weekday() == 5 else "es domingo"
+    if dia.year < _feriados.ANIO_MINIMO:
+        return "puede ser feriado o un día sin cotización"
+    return "no es fin de semana ni feriado nacional"
+
+
 def cotizacion(moneda: Moneda, fecha: str, hacia_atras: bool = False, hoy: Optional[date] = None) -> Cotizacion:
     dia = _fecha(fecha, "fecha")
     codigo = _codigo(moneda)
@@ -131,7 +145,7 @@ def cotizacion(moneda: Moneda, fecha: str, hacia_atras: bool = False, hoy: Optio
     usada = next((d for d in sorted(serie, reverse=True) if d <= dia), None) if valor is not None else None
     if valor is None:
         nota = (
-            "Sin publicación ese día (fin de semana, feriado o día sin cotización). "
+            f"Sin publicación ese día: {_tipo_de_dia(dia)}. "
             "Pedir hacia_atras=true para usar el último día hábil previo, hasta una semana."
             if not hacia_atras
             else f"Sin publicación en los {bcu.MAX_DIAS_ATRAS} días previos: falta el dato, no es un fin de semana."

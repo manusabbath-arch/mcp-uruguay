@@ -92,15 +92,18 @@ TRAMPAS: dict[str, str] = {
 # herramienta -> por qué no responde y desde cuándo, medido. No es una trampa del dato: es el estado de
 # la fuente, y se saca de acá el día que vuelve. `scripts/humo.py` lleva la misma lista y
 # `tests/test_guias.py` falla si se desincronizan.
-_PARLAMENTO_BLOQUEA = (
-    "parlamento.gub.uy responde 403 a los clientes automáticos desde fines de octubre de 2026 (medido el "
-    "16/11/2026). No es una caída y no se arregla reintentando; una copia que ya estaba en la caché se sigue "
-    "sirviendo. Seguimiento: https://github.com/manusabbath-arch/mcp-uruguay/issues/2"
-)
+# El 403 del Parlamento se resolvió con el `User-Agent` de uydatos 0.19.1
+# (docs/2026-11-27-parlamento-403-es-el-user-agent.md): `proyectos_parlamento` y
+# `asistencia_parlamentaria` volvieron. `leyes` queda: su CSV tarda en generarse lo mismo que el límite
+# de CloudFront.
 CAIDAS: dict[str, str] = {
-    "asistencia_parlamentaria": _PARLAMENTO_BLOQUEA,
-    "leyes": _PARLAMENTO_BLOQUEA,
-    "proyectos_parlamento": _PARLAMENTO_BLOQUEA,
+    "leyes": (
+        "intermitente: parlamento.gub.uy tarda unos 65 s en generar el CSV de leyes y su CDN corta cerca de "
+        "ese límite. Cuando corta, entrega una respuesta vacía y la guarda 3 minutos (medido el 27/11/2026: "
+        "el mismo archivo llegó entero a la mañana y vacío a la tarde). Se rechaza en vez de guardar un "
+        "archivo vacío; una copia anterior en la caché se sigue sirviendo. Reintentar en unos minutos. "
+        "Seguimiento: https://github.com/manusabbath-arch/mcp-uruguay/issues/2"
+    ),
 }
 
 

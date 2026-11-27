@@ -7,6 +7,7 @@ leído el 2026-11-27), no del módulo.
 from __future__ import annotations
 
 import pytest
+from conftest import BcuFalso, xml_bcu
 from mcp import Client
 
 from mcp_uruguay import herramientas as h
@@ -76,3 +77,41 @@ async def test_por_el_servidor_devuelve_datos_estructurados():
         malo = await c.call_tool("feriados", {"anio": 1999})
     assert not r.is_error and r.structured_content["anio"] == 2026
     assert malo.is_error and "16.805" in malo.content[0].text
+
+
+class _BcuSinFeriados(BcuFalso):
+    """Como el BCU real: no publica el 25 de agosto (martes en 2026, feriado pago)."""
+
+    def __call__(self, moneda, desde, hasta, destino):
+        from datetime import date, timedelta
+        from pathlib import Path
+
+        anio, mes = map(int, desde.split("-"))
+        d, datos = date(anio, mes, 1), []
+        while d.month == mes:
+            if d.weekday() < 5 and d != date(2026, 8, 25) and d <= self.hasta:
+                datos.append((d.isoformat(), moneda, 40.0))
+            d += timedelta(days=1)
+        p = Path(destino) / f"{moneda}_{desde}.xml"
+        p.write_text(xml_bcu(datos), encoding="utf-8")
+        return [p]
+
+
+def test_la_cotizacion_sin_publicacion_dice_que_dia_es(monkeypatch, cache_temporal):
+    """Antes decía «fin de semana, feriado o día sin cotización» sin distinguir: ahora lo sabe."""
+    from datetime import date
+
+    from uydatos import bcu
+
+    monkeypatch.setattr(bcu, "descargar", BcuFalso(hasta=date(2026, 10, 9)))
+    assert "es sábado" in h.cotizacion("USD", "2026-10-03", hoy=date(2026, 10, 9))["nota"]
+    monkeypatch.setattr(bcu, "descargar", _BcuSinFeriados(hasta=date(2026, 10, 9)))
+    r = h.cotizacion("USD", "2026-08-25", hoy=date(2026, 10, 9))
+    assert r["valor_en_pesos"] is None
+    assert "feriado nacional (Declaratoria de la Independencia)" in r["nota"]
+
+
+def test_la_semana_trae_sus_feriados():
+    r = h.semana("2027-05-19")  # la semana del traslado de Las Piedras al lunes 17
+    assert [(f["fecha"], f["nombre"]) for f in r["feriados"]] == [("2027-05-17", "Batalla de Las Piedras")]
+    assert h.semana("2027-06-09")["feriados"] == []
