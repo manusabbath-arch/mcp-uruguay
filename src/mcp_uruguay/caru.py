@@ -3,7 +3,9 @@
 from __future__ import annotations
 
 from datetime import datetime
+from typing import Any
 
+from typing_extensions import TypedDict
 from uydatos import red
 
 from mcp_uruguay import cache
@@ -15,7 +17,17 @@ _INFORMES = {
 }
 
 
-def _leer_informe(lector, fecha: str) -> dict:
+class InformePlaya(cache.Procedencia, TypedDict):
+    playa: str
+    fuente: str
+    bajado: str
+    sha256: str
+    muestras: list[dict[str, Any]]
+    semana_del_informe: str
+    nota: str
+
+
+def _leer_informe(lector, fecha: str) -> InformePlaya:
     if fecha not in _INFORMES:
         raise ValueError("Elegí la semana 2023-02-27 o 2025-02-03.")
     url = _INFORMES[fecha]
@@ -40,7 +52,7 @@ def registrar(herramienta, anotaciones) -> None:
         raise SystemExit("--caru requiere un wheel de uydatos que incluya el lector CARU.") from None
 
     @herramienta("Muestreos historicos de Playa Salto Chico", anotaciones)
-    def muestreos_salto_chico(semana: str) -> dict:
+    def muestreos_salto_chico(semana: str) -> InformePlaya:
         """Lee el informe semanal de CARU para 2023-02-27 o 2025-02-03.
         Informa muestreos historicos, valores censurados y respaldo del PDF."""
         return _leer_informe(leer_salto_chico, semana)
