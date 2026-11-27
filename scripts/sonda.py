@@ -11,6 +11,7 @@ from __future__ import annotations
 
 import argparse
 import json
+import os
 import sys
 import time
 from pathlib import Path
@@ -31,7 +32,11 @@ def _textos(resultado) -> list[str]:
 
 async def main(salida: Path, herramientas: list[str], stdio: bool) -> int:
     registros = []
-    transporte = StdioServerParameters(command=sys.executable, args=["-m", "mcp_uruguay"]) if stdio else servidor
+    transporte = servidor
+    if stdio:
+        cache = os.environ.get("MCP_URUGUAY_CACHE")
+        env = {"MCP_URUGUAY_CACHE": cache} if cache is not None else None
+        transporte = StdioServerParameters(command=sys.executable, args=["-m", "mcp_uruguay"], env=env)
     async with Client(transporte) as c:
         for nombre, args in LLAMADAS:
             if herramientas and nombre not in herramientas:

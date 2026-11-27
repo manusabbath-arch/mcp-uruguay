@@ -158,25 +158,29 @@ class EstacionesCercanas(cache.Procedencia, TypedDict):
 MAX_DIAS = 400
 
 
-_serie_inia: dict[float, list[dict]] = {}
+_serie_inia: dict[tuple[tuple[Path, int, int], ...], list[dict]] = {}
 
 
 def _clima() -> tuple[list[dict], str]:
     carpeta = cache.directorio() / "inia"
     carpeta.mkdir(parents=True, exist_ok=True)
-    archivos = list(carpeta.glob("ppt_tmax_tmin_sg_*.csv"))
+    archivos = sorted(carpeta.glob("ppt_tmax_tmin_sg_[0-9][0-9][0-9][0-9].csv"))
     if not archivos or cache.vencido(max(archivos, key=lambda p: p.stat().st_mtime), 7 * cache.DIA):
         try:
             inia.descargar(carpeta)
         except Exception:
             if not archivos:
                 raise
-        archivos = list(carpeta.glob("ppt_tmax_tmin_sg_*.csv"))
-    clave = max(p.stat().st_mtime for p in archivos)
+        archivos = sorted(carpeta.glob("ppt_tmax_tmin_sg_[0-9][0-9][0-9][0-9].csv"))
+    estados = [(ruta, ruta.stat()) for ruta in archivos]
+    clave = tuple((ruta, estado.st_mtime_ns, estado.st_size) for ruta, estado in estados)
     if clave not in _serie_inia:
         _serie_inia.clear()
         _serie_inia[clave] = inia.leer_serie(carpeta)
-    return _serie_inia[clave], cache.sello(max(archivos, key=lambda p: p.stat().st_mtime))
+    for ruta in archivos:
+        cache.anotar_lectura(ruta)
+    mas_reciente, _ = max(estados, key=lambda par: par[1].st_mtime_ns)
+    return _serie_inia[clave], cache.sello(mas_reciente)
 
 
 def clima_salto(desde: str, hasta: str) -> dict:

@@ -79,3 +79,32 @@ class TestCalidadClima:
     def test_un_solo_dia_no_rompe(self, clima_falso):
         c = clima_falso([_dia(0)])["calidad"]
         assert c["tmax"]["lecturas"] == 1
+
+
+def test_clima_registra_todos_los_csv_incluso_con_la_serie_en_memoria(tmp_path, monkeypatch):
+    from mcp_uruguay import cache
+
+    monkeypatch.setenv("MCP_URUGUAY_CACHE", str(tmp_path))
+    monkeypatch.setattr(rio, "_serie_inia", {})
+    monkeypatch.setattr(cache, "vencido", lambda *args: False)
+    carpeta = tmp_path / "inia"
+    carpeta.mkdir()
+    for anio in (2024, 2025):
+        (carpeta / f"ppt_tmax_tmin_sg_{anio}.csv").write_text(str(anio), encoding="utf-8")
+    serie = [_dia(0)]
+    lecturas = []
+
+    def leer(carpeta):
+        lecturas.append(carpeta)
+        return serie
+
+    monkeypatch.setattr(rio.inia, "leer_serie", leer)
+    for _ in range(2):
+        with cache.vigilar_procedencia() as copias:
+            assert rio._clima()[0] is serie
+        assert [copia["archivo"] for copia in copias] == [
+            "inia/ppt_tmax_tmin_sg_2024.csv",
+            "inia/ppt_tmax_tmin_sg_2025.csv",
+        ]
+        assert all(len(copia["sha256"]) == 64 for copia in copias)
+    assert lecturas == [carpeta]
