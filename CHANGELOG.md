@@ -2,6 +2,24 @@
 
 ## Sin publicar
 
+- **La procedencia ya no se pierde cuando el archivo sale de la caché vigente.**
+  `resultados_electorales` y `pedidos_de_informes` respondían sin `procedencia`, y la de
+  `compras_estado` traía las cotizaciones del BCU pero no el ZIP de compras. Las tres bajan el
+  archivo solo si venció, y en la rama de la copia vigente no lo anotaban como respaldo. Medido con
+  `scripts/sonda.py`; un test en rojo por cada una antes del arreglo.
+- **Menos memoria y menos lecturas en las herramientas pesadas.** Medido el 2026-11-27: un servidor
+  que respondió las 31 herramientas llegaba a 655 MB.
+  - `observaciones_inumet` releía el CSV entero (8 s con el real) en cada llamada, aunque tuviera
+    la serie en memoria. Ahora lo lee una vez. Además guarda una sola variable: cada una son ~400.000
+    filas, y antes las seis podían quedar juntas.
+  - El desglose electoral (354.176 filas en 2024) se guarda sumado por departamento, nivel y lema,
+    que es lo único que usa la herramienta.
+  - Las adjudicaciones de compras se guardan compactadas: 343 MB asignados → 142 MB, sin el nombre
+    de los proveedores.
+  - Las respuestas de `compras_estado` y `resultados_electorales` sobre los archivos reales dan el
+    mismo resultado byte a byte antes y después. El pico del proceso bajó de 874 a 689 MB. El
+    techo que queda es leer el año de compras entero de una vez: eso se arregla en `uydatos`.
+
 - **Una copia vencida ya no borra el aviso propio de la herramienta.** Cuando se servía una copia
   vencida, el aviso de «no se pudo refrescar» reemplazaba al `aviso` que ya traía la respuesta. La
   única herramienta con aviso propio es `compras_estado` («un solo ítem es el N% del total»): esa

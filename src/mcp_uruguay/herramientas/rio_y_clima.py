@@ -259,28 +259,38 @@ def clima(desde: str = "", hasta: str = "") -> Clima:
     return clima_tendencia()
 
 
-_serie_inumet: dict[tuple[str, float], list[dict]] = {}
+# Una sola variable en memoria: una real son ~400.000 filas y ~290 MB (medido el 2026-11-27).
+# variable -> ((ruta, mtime_ns, tamaño), serie, líneas sin dato)
+_serie_inumet: dict[str, tuple[tuple[str, int, int], list[dict], int]] = {}
 
 
 INUMET_VARIABLES = tuple(n for n, (_, _, horaria) in inumet.DATASETS.items() if horaria)
+
+
+def _sello_archivo(ruta: Path) -> tuple[str, int, int]:
+    estado = ruta.stat()
+    return (str(ruta), estado.st_mtime_ns, estado.st_size)
 
 
 def _inumet(variable: str) -> tuple[list[dict], Path, int]:
     if variable not in INUMET_VARIABLES:
         raise ValueError(f"variable {variable!r} desconocida; las horarias son {', '.join(INUMET_VARIABLES)}")
     ruta = cache.directorio() / "inumet" / f"inumet_{variable}.csv"
-    _, ruta = cache.archivo(
+    memo = _serie_inumet.get(variable)
+    if memo is not None and not cache.vencido(ruta, cache.DIA) and memo[0] == _sello_archivo(ruta):
+        # `cache.archivo` lee el CSV entero en cada llamada (8 s con el real): con la serie en memoria
+        # alcanza con anotar la copia como respaldo de la respuesta.
+        cache.anotar_lectura(ruta)
+        return memo[1], ruta, memo[2]
+    serie, ruta = cache.archivo(
         ruta,
         lambda destino: inumet.descargar(variable, destino),
         lambda r: inumet.valor_por_estacion(r, variable),
         cache.DIA,
     )
-    clave = (variable, ruta.stat().st_mtime)
-    if clave not in _serie_inumet:
-        for vieja in [k for k in _serie_inumet if k[0] == variable]:
-            del _serie_inumet[vieja]
-        _serie_inumet[clave] = inumet.valor_por_estacion(ruta, variable)
-    return _serie_inumet[clave], ruta, inumet.filas_sin_dato(ruta)
+    _serie_inumet.clear()
+    _serie_inumet[variable] = (_sello_archivo(ruta), serie, inumet.filas_sin_dato(ruta))
+    return serie, ruta, _serie_inumet[variable][2]
 
 
 def observaciones_inumet(

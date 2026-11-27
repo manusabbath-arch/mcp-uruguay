@@ -87,3 +87,52 @@ class TestErrores:
     def test_departamento_desconocido(self, elecciones):
         with pytest.raises(ValueError, match="SALTO"):
             h.resultados_electorales("balotaje-2024", "Saltoo")
+
+
+def _fila(depto, codigo, crv, nivel, clase, lema, votos):
+    return {
+        "codigo_departamento": codigo,
+        "departamento": depto,
+        "crv": crv,
+        "nivel": nivel,
+        "clase": clase,
+        "lema": lema,
+        "hoja": str(crv),
+        "municipio": None,
+        "votos": votos,
+    }
+
+
+def test_el_desglose_compacto_da_los_mismos_votos_por_lema():
+    """Medido el 2026-11-27: el desglose de 2024 son 354.176 filas y ~120 MB en memoria. La
+    herramienta solo suma por lema, departamento y nivel: compactado por esa clave, el resultado es
+    el mismo con cualquier filtro de departamento (nombre, código o sin tildes)."""
+    from uydatos import elecciones
+
+    from mcp_uruguay.herramientas.estado import _compactar_desglose
+
+    filas = [
+        _fila("SALTO", "SA", crv, nivel, clase, lema, votos)
+        for crv in (1, 2, 3)
+        for nivel, clase, lema, votos in [
+            ("nacional", "hoja", "Partido Frente Amplio", 40),
+            ("nacional", "lema", "Partido Frente Amplio", 2),
+            ("nacional", "hoja", "Partido Nacional", 38 + crv),
+            ("departamental", "hoja", "Partido Nacional", 7),
+        ]
+    ] + [_fila("PAYSANDÚ", "PA", 9, "nacional", "hoja", "Partido Colorado", 170)]
+    compacto = _compactar_desglose(filas)
+    assert len(compacto) < len(filas)
+    for nivel in ("nacional", "departamental"):
+        for departamento in ("", "salto", "SA", "Paysandu", "PA", "PAYSANDÚ"):
+            assert elecciones.votos_por_lema(compacto, nivel, departamento) == elecciones.votos_por_lema(
+                filas, nivel, departamento
+            ), (nivel, departamento)
+
+
+def test_la_herramienta_guarda_el_desglose_compacto(elecciones):
+    from mcp_uruguay.herramientas import estado
+
+    h.resultados_electorales("nacionales-2024")
+    guardados = [v for (ruta, _), v in estado._elecciones.items() if ruta.endswith("_desglose.csv")]
+    assert guardados and all(f["crv"] is None for f in guardados[-1])

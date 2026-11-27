@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+from collections import defaultdict
 from datetime import date
 from pathlib import Path
 from typing import Optional
@@ -64,8 +65,36 @@ class ResultadoElectoral(cache.Procedencia, TypedDict):
 _elecciones: dict[tuple[str, float], list[dict]] = {}
 
 
+def _compactar_desglose(filas: list[dict]) -> list[dict]:
+    """El desglose sumado por departamento, nivel, clase y lema.
+
+    `resultados_electorales` solo usa `elecciones.votos_por_lema` sin `excluir`, que filtra por nivel
+    y departamento y suma por lema y clase: con esta clave da lo mismo, y 354.176 filas (~120 MB,
+    medido el 2026-11-27 con las nacionales 2024) quedan en unos pocos miles. Se pierden el circuito,
+    la hoja y el municipio: quien los necesite tiene que leer el archivo, no este memo.
+    """
+    suma: dict[tuple[str, str, str, str, str], int] = defaultdict(int)
+    for f in filas:
+        suma[(f["codigo_departamento"], f["departamento"], f["nivel"], f["clase"], f["lema"])] += f["votos"]
+    return [
+        {
+            "codigo_departamento": codigo,
+            "departamento": departamento,
+            "crv": None,
+            "nivel": nivel,
+            "clase": clase,
+            "lema": lema,
+            "hoja": None,
+            "municipio": None,
+            "votos": votos,
+        }
+        for (codigo, departamento, nivel, clase, lema), votos in suma.items()
+    ]
+
+
 def _archivo_electoral(eleccion: str, archivo: str) -> tuple[list[dict], str]:
-    """Totales o desglose de una elección cerrada: se baja una vez (un año en caché) y se lee una vez."""
+    """Totales o desglose de una elección cerrada: se baja una vez (un año en caché) y se lee una vez.
+    El desglose se guarda compactado (`_compactar_desglose`)."""
     ruta = cache.directorio() / "elecciones" / f"{eleccion}_{archivo}.csv"
     leer = elecciones.leer_totales if archivo == "totales" else elecciones.leer_desglose
     if cache.vencido(ruta, 365 * cache.DIA):
@@ -74,7 +103,9 @@ def _archivo_electoral(eleccion: str, archivo: str) -> tuple[list[dict], str]:
     if clave not in _elecciones:
         if len(_elecciones) > 6:
             _elecciones.clear()
-        _elecciones[clave] = leer(ruta)
+        filas = leer(ruta)
+        _elecciones[clave] = filas if archivo == "totales" else _compactar_desglose(filas)
+    cache.anotar_lectura(ruta)  # también cuando sale del memo: sigue siendo el respaldo
     return _elecciones[clave], cache.sello(ruta)
 
 
@@ -188,9 +219,57 @@ def _es_zip(ruta) -> bool:
     return True
 
 
+_PROVEEDOR_OMITIDO: dict = {"id": "", "nombre": ""}
+
+
+def _compactar_adjudicaciones(adjudicaciones: list[dict]) -> list[dict]:
+    """Las adjudicaciones con lo que usan `compras.resumen` y `compras_estado`, y nada más.
+
+    Medido el 2026-11-27 con el ZIP de 2025 (140.144 adjudicaciones): 343 MB asignados en memoria
+    leídas tal cual, 142 MB compactadas. Los textos repetidos (organismo, descripción, moneda,
+    estado) y las fechas se comparten. Del ítem se quitan el catálogo y el esquema, y de la
+    adjudicación los importes por moneda, que nadie lee. El proveedor queda solo como «hay» o
+    `None`, porque `resumen` solo cuenta los que faltan. Además así el nombre de una persona física
+    no queda en la memoria de un servidor que nunca lo devuelve.
+    """
+    textos: dict[str, str] = {}
+    compradores: dict[tuple[str, str], dict] = {}
+    fechas: dict[date, date] = {}
+
+    def texto(x):
+        return textos.setdefault(x, x) if isinstance(x, str) else x
+
+    out = []
+    for a in adjudicaciones:
+        comp = a["comprador"]
+        if comp is not None:
+            clave = (comp["id"], comp["nombre"])
+            comp = compradores.setdefault(clave, {"id": texto(clave[0]), "nombre": texto(clave[1])})
+        out.append(
+            {
+                "ocid": a["ocid"],
+                "fecha": fechas.setdefault(a["fecha"], a["fecha"]),
+                "comprador": comp,
+                "proveedor": None if a["proveedor"] is None else _PROVEEDOR_OMITIDO,
+                "estado": texto(a["estado"]),
+                "items": [
+                    {
+                        "descripcion": texto(i["descripcion"]),
+                        "cantidad": i["cantidad"],
+                        "precio_unitario": i["precio_unitario"],
+                        "moneda": texto(i["moneda"]),
+                        "importe": i["importe"],
+                    }
+                    for i in a["items"]
+                ],
+            }
+        )
+    return out
+
+
 def _compras(anio: int) -> tuple[list[dict], str]:
     """Las adjudicaciones de un año: el ZIP en caché (el año en curso vence a la semana, los cerrados
-    al año) y leído una sola vez por proceso. Solo se guarda un año en memoria: pesa."""
+    al año) y leído una sola vez por proceso. Solo se guarda un año en memoria, y compactado: pesa."""
     ruta = cache.directorio() / "compras" / f"{anio}.zip"
     ttl = 7 * cache.DIA if anio >= cache.hoy().year else 365 * cache.DIA
     if cache.vencido(ruta, ttl):
@@ -198,7 +277,8 @@ def _compras(anio: int) -> tuple[list[dict], str]:
     clave = (anio, ruta.stat().st_mtime)
     if clave not in _compras_memo:
         _compras_memo.clear()
-        _compras_memo[clave] = compras.leer_adjudicaciones(ruta)
+        _compras_memo[clave] = _compactar_adjudicaciones(compras.leer_adjudicaciones(ruta))
+    cache.anotar_lectura(ruta)  # también cuando sale del memo: sigue siendo el respaldo
     return _compras_memo[clave], cache.sello(ruta)
 
 
@@ -449,6 +529,7 @@ def _archivo_parlamento(clave: str, legislatura: Optional[int] = None) -> Path:
     ttl = cache.DIA if unico or legislatura == LEGISLATURA_ACTUAL else 365 * cache.DIA
     if cache.vencido(ruta, ttl):
         cache.archivo(ruta, lambda p: parlamento.descargar(clave, p, legislatura), lambda p: p, ttl)
+    cache.anotar_lectura(ruta)  # la copia vigente también es el respaldo de la respuesta
     return ruta
 
 

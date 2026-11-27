@@ -177,3 +177,31 @@ def test_toda_cota_de_inumet_apunta_a_una_columna_y_una_agregacion_que_existen()
     columnas = {c for _, cols, _ in inumet.DATASETS.values() for c in cols}
     for columna, agregacion in h.rio_y_clima.CALIDAD_INUMET:
         assert columna in columnas and agregacion in inumet.AGREGACIONES
+
+
+def test_la_segunda_llamada_no_vuelve_a_leer_el_archivo(temperatura, monkeypatch):
+    """Medido el 2026-11-27: cada llamada releía el CSV entero (8 s con el real de 14 MB) aunque la
+    serie ya estaba en memoria, porque `cache.archivo` lee siempre. La procedencia se conserva."""
+    from uydatos import inumet
+
+    from mcp_uruguay import cache
+
+    lecturas = []
+    original = inumet.valor_por_estacion
+    monkeypatch.setattr(inumet, "valor_por_estacion", lambda *a, **k: lecturas.append(1) or original(*a, **k))
+    h.observaciones_inumet("temperatura")
+    with cache.vigilar_procedencia() as leidas:
+        r = h.observaciones_inumet("temperatura")
+    assert len(lecturas) == 1
+    assert [c["archivo"] for c in leidas] == ["inumet/inumet_temperatura.csv"]
+    assert r["lineas_sin_dato"] == 2
+
+
+def test_solo_una_variable_queda_en_memoria(temperatura):
+    """Una variable real son ~400.000 filas y ~290 MB: seis variables no pueden quedar juntas."""
+    from mcp_uruguay.herramientas import rio_y_clima
+
+    _csv(temperatura / "inumet", "precipitacion", "fecha;estacion_id;precip_horario", ["2026-01-01 03:00;Salto G3;0"])
+    h.observaciones_inumet("temperatura")
+    h.observaciones_inumet("precipitacion")
+    assert list(rio_y_clima._serie_inumet) == ["precipitacion"]
