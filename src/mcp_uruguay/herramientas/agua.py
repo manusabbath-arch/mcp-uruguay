@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import json
 from pathlib import Path
 from typing import Optional
 
@@ -66,6 +67,16 @@ FUENTE_OSE = "OSE, dataset calidad-de-agua de su propio CKAN (datos.ose.com.uy),
 TTL_OSE = 30 * cache.DIA  # el dataset declara frecuencia anual; 122 MB no se bajan por consulta
 
 
+def _anotar_ose(ruta: Path) -> None:
+    ficha = ruta.with_suffix(".origen.json")
+    try:
+        origen = json.loads(ficha.read_text(encoding="utf-8"))
+        url = origen["url"] if origen["sha256"] == cache._sha256(ruta) else None
+    except (OSError, ValueError, TypeError, KeyError):
+        url = None
+    cache.anotar_lectura(ruta, url)
+
+
 def _archivo_ose(area: str) -> Path:
     """El CSV de un área en la caché, validado entero la vez que se baja.
 
@@ -77,20 +88,20 @@ def _archivo_ose(area: str) -> Path:
 
     ruta = cache.directorio() / "ose" / f"{area}.csv"
     if not cache.vencido(ruta, TTL_OSE):
-        cache.anotar_lectura(ruta)
+        _anotar_ose(ruta)
         return ruta
     ruta.parent.mkdir(parents=True, exist_ok=True)
     try:
         vigente = ose.recursos_vigentes()[area]
     except OSError:
         if ruta.exists():  # sin red, la copia vieja sirve y su `bajado` dice de cuándo es
-            cache.anotar_lectura(ruta)
+            _anotar_ose(ruta)
             return ruta
         raise
     falta, _ = ose.hace_falta_bajar(area, ruta, vigente)
     if not falta:
         os.utime(ruta)
-        cache.anotar_lectura(ruta, vigente.get("url"))
+        _anotar_ose(ruta)
         return ruta
     nueva = cache._temporal(ruta)
     try:
@@ -99,11 +110,20 @@ def _archivo_ose(area: str) -> Path:
     except Exception:
         nueva.unlink(missing_ok=True)
         if ruta.exists():
-            cache.anotar_lectura(ruta, vigente.get("url"))
+            _anotar_ose(ruta)
             return ruta
         raise
-    nueva.replace(ruta)
-    cache.anotar_lectura(ruta, vigente.get("url"))
+    ficha = ruta.with_suffix(".origen.json")
+    temporal_ficha = cache._temporal(ficha)
+    try:
+        origen = {"sha256": cache._sha256(nueva), "url": vigente["url"]}
+        temporal_ficha.write_text(json.dumps(origen), encoding="utf-8")
+        nueva.replace(ruta)
+        temporal_ficha.replace(ficha)
+    finally:
+        nueva.unlink(missing_ok=True)
+        temporal_ficha.unlink(missing_ok=True)
+    _anotar_ose(ruta)
     return ruta
 
 

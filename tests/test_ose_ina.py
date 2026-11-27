@@ -341,3 +341,19 @@ class TestCalidadIna:
         """Si uydatos suma una serie, esta tabla tiene que enterarse en vez de fallar con KeyError en vivo."""
         faltan = {(s["nombre"], s["var"]) for s in ina.SERIES.values()} - set(h.rio_y_clima.LIMITES_INA)
         assert not faltan
+
+
+def test_ose_conserva_la_url_de_los_bytes_descargados(tmp_path, monkeypatch):
+    from mcp_uruguay import cache
+    from mcp_uruguay.herramientas import agua
+
+    monkeypatch.setenv("MCP_URUGUAY_CACHE", str(tmp_path))
+    url = "https://datos.example/descarga.csv"
+    monkeypatch.setattr(agua.ose, "recursos_vigentes", lambda: {"area": {"url": url}})
+    monkeypatch.setattr(agua.ose, "hace_falta_bajar", lambda *args: (True, ""))
+    monkeypatch.setattr(agua.ose, "leer", lambda ruta: None)
+    monkeypatch.setattr(agua.red, "bajar", lambda url, ruta: ruta.write_bytes(b"datos"))
+    for _ in range(2):
+        with cache.vigilar_procedencia() as copias:
+            agua._archivo_ose("area")
+        assert copias[0]["url"] == url
