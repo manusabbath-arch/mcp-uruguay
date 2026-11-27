@@ -572,6 +572,10 @@ def main() -> None:
 
         ejecutar_remoto(servidor_piloto)
         return
+    if "--caru" in sys.argv[1:]:
+        from mcp_uruguay.caru import registrar
+
+        registrar(herramienta, EN_RED)
     servidor.run()
 
 
