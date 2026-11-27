@@ -325,3 +325,14 @@ def test_las_respuestas_de_calculo_se_recalculan():
     pesos = [2, 9, 8, 7, 6, 3, 4]
     suma = sum(int(c) * w for c, w in zip("1234567", pesos))
     assert (10 - suma % 10) % 10 == 2  # 1.234.567-2 es válida; -3 no
+
+
+async def test_sin_catalogo_solo_retira_la_busqueda():
+    cliente = ClienteFalso([_fin(), _fin()])
+    pregunta = next(q for q in evaluar.cargar() if q["id"] == "ipca-brasil-2024")
+    filas = await evaluar.correr(cliente, [pregunta], ["sin_catalogo", "con"])
+    sin, con = cliente.pedidos
+    assert con["system"] == sin["system"]
+    assert sin["tools"] == [t for t in con["tools"] if t["name"] != "buscar_datasets_catalogo"]
+    assert any(t["name"] == "buscar_datasets_catalogo" for t in con["tools"])
+    assert [f["modo"] for f in filas] == ["sin_catalogo", "con"]
