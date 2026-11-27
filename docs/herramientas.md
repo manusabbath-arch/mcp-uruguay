@@ -145,6 +145,18 @@ orillas) más cercanas a un punto, con las variables que publica cada una y su �
 | `lon` | `number` | si |
 | `cantidad` | `integer` | no |
 
+## `feriados` — Feriados de Uruguay y días hábiles
+
+Feriados nacionales de Uruguay calculados desde la ley, sin red. Con `anio`: los del año, con
+su tipo (pago o laborable) y el día al que se trasladan. Con `desde` y `hasta` (AAAA-MM-DD):
+los días hábiles del rango con dos definiciones (sin ningún feriado, sin feriados pagos).
+
+| parametro | tipo | obligatorio |
+|---|---|---|
+| `anio` | `integer | null` | no |
+| `desde` | `string` | no |
+| `hasta` | `string` | no |
+
 ## `geocodificar_direccion` — Geocodificar una dirección de Uruguay (IDE.uy)
 
 Coordenadas (lat, lon) de una dirección o esquina de Uruguay con la API oficial de IDE.uy, con la

@@ -5,7 +5,7 @@ from __future__ import annotations
 from collections import defaultdict
 from datetime import date
 from pathlib import Path
-from typing import Optional
+from typing import Iterable, Optional
 
 # En Python < 3.12, pydantic no arma el esquema de un `typing.TypedDict`: el SDK se queda sin
 # esquema de salida y la respuesta sin `structuredContent`. Medido en el CI de 3.10 y 3.11.
@@ -222,15 +222,17 @@ def _es_zip(ruta) -> bool:
 _PROVEEDOR_OMITIDO: dict = {"id": "", "nombre": ""}
 
 
-def _compactar_adjudicaciones(adjudicaciones: list[dict]) -> list[dict]:
+def _compactar_adjudicaciones(adjudicaciones: Iterable[dict]) -> list[dict]:
     """Las adjudicaciones con lo que usan `compras.resumen` y `compras_estado`, y nada más.
 
     Medido el 2026-11-27 con el ZIP de 2025 (140.144 adjudicaciones): 343 MB asignados en memoria
     leídas tal cual, 142 MB compactadas. Los textos repetidos (organismo, descripción, moneda,
     estado) y las fechas se comparten. Del ítem se quitan el catálogo y el esquema, y de la
     adjudicación los importes por moneda, que nadie lee. El proveedor queda solo como «hay» o
-    `None`, porque `resumen` solo cuenta los que faltan. Además así el nombre de una persona física
-    no queda en la memoria de un servidor que nunca lo devuelve.
+    `None`, porque `resumen` solo cuenta los que faltan. Recibe el iterador de `uydatos` (0.19): el
+    año original nunca está entero en memoria (pico de 473 → 176 MB al leer, medido el mismo día).
+    Además así el nombre de una persona física no queda en la memoria de un servidor que nunca lo
+    devuelve.
     """
     textos: dict[str, str] = {}
     compradores: dict[tuple[str, str], dict] = {}
@@ -277,7 +279,7 @@ def _compras(anio: int) -> tuple[list[dict], str]:
     clave = (anio, ruta.stat().st_mtime)
     if clave not in _compras_memo:
         _compras_memo.clear()
-        _compras_memo[clave] = _compactar_adjudicaciones(compras.leer_adjudicaciones(ruta))
+        _compras_memo[clave] = _compactar_adjudicaciones(compras.iterar_adjudicaciones(ruta))
     cache.anotar_lectura(ruta)  # también cuando sale del memo: sigue siendo el respaldo
     return _compras_memo[clave], cache.sello(ruta)
 

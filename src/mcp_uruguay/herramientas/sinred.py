@@ -12,6 +12,7 @@ from typing import Literal, Optional, Union
 # esquema de salida y la respuesta sin `structuredContent`. Medido en el CI de 3.10 y 3.11.
 from typing_extensions import NotRequired, TypedDict
 from uydatos import catalogo, ideuy, observatorio, rut, semanas, ursea
+from uydatos import feriados as _feriados
 
 from mcp_uruguay import cache
 from mcp_uruguay.herramientas.comun import _fecha, _mes, _sin_tildes
@@ -205,6 +206,84 @@ def semana(fecha: str) -> SemanaTyped:
         "hasta": s.hasta.isoformat(),
         "de_total": s.de_total,
         "nota": "Semana ISO 8601, de lunes a domingo. El año de la semana puede no ser el del día.",
+    }
+
+
+class FeriadoTyped(TypedDict):
+    fecha: str
+    nombre: str
+    tipo: str
+    fecha_original: str
+    trasladado: bool
+
+
+class DiasHabilesTyped(TypedDict):
+    dias: int
+    lunes_a_viernes: int
+    sin_ningun_feriado: int
+    sin_feriados_pagos: int
+
+
+class Feriados(TypedDict):
+    """La respuesta de `feriados()`: la lista de un año, o los días hábiles de un rango."""
+
+    anio: Optional[int]
+    desde: Optional[str]
+    hasta: Optional[str]
+    feriados: list[FeriadoTyped]
+    dias_habiles: Optional[DiasHabilesTyped]
+    nota: str
+    fuente: str
+
+
+def _feriado(f: _feriados.Feriado) -> FeriadoTyped:
+    return {
+        "fecha": f.fecha.isoformat(),
+        "nombre": f.nombre,
+        "tipo": f.tipo,
+        "fecha_original": f.fecha_original.isoformat(),
+        "trasladado": f.trasladado,
+    }
+
+
+def feriados(anio: Optional[int] = None, desde: str = "", hasta: str = "") -> Feriados:
+    """Con `anio`, los feriados nacionales del año. Con `desde` y `hasta`, los días hábiles del rango
+    (ambos incluidos) y todos los feriados del rango, también los de fin de semana. No sale a la red."""
+    if (anio is None) == (not desde and not hasta):
+        raise ValueError("feriados: o `anio`, o `desde` y `hasta` (AAAA-MM-DD); no los dos ni ninguno")
+    base = {
+        "nota": (
+            "tipo: pago (los cinco de la Ley 12.590: 1/1, 1/5, 18/7, 25/8 y 25/12), laborable (la actividad "
+            "puede seguir) o no_laborable (1 de marzo de transmisión de mando). El 19/4, el 18/5 y el 12/10 se "
+            "observan el lunes más cercano: `fecha` es el día observado y `fecha_original` la del calendario. "
+            "Hábil tiene dos definiciones y van las dos: sin_ningun_feriado y sin_feriados_pagos. No incluye el "
+            "día del Censo, los feriados departamentales ni los de convenios colectivos."
+        ),
+        "fuente": _feriados.FUENTE,
+    }
+    # `uydatos.feriados` rechaza con `ValueError` y motivo (año anterior a 2002, rango al revés).
+    if anio is not None:
+        lista = [_feriado(f) for f in _feriados.del_anio(anio)]
+        return {"anio": anio, "desde": None, "hasta": None, "feriados": lista, "dias_habiles": None, **base}
+    if not (desde and hasta):
+        raise ValueError("feriados: con `desde` va también `hasta`, y al revés")
+    ini, fin = _fecha(desde, "desde"), _fecha(hasta, "hasta")
+    r = _feriados.dias_habiles(ini, fin)
+    vistos: list[FeriadoTyped] = []
+    for anio_ in range(ini.year, fin.year + 1):
+        vistos += [_feriado(f) for f in _feriados.del_anio(anio_) if ini <= f.fecha <= fin]
+    return {
+        "anio": None,
+        "desde": ini.isoformat(),
+        "hasta": fin.isoformat(),
+        "feriados": vistos,
+        "dias_habiles": {
+            "dias": r.dias,
+            "lunes_a_viernes": r.lunes_a_viernes,
+            "sin_ningun_feriado": r.sin_ningun_feriado,
+            "sin_feriados_pagos": r.sin_feriados_pagos,
+        },
+        **base,
     }
 
 

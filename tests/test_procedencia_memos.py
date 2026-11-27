@@ -29,7 +29,7 @@ def test_archivo_electoral_vigente_queda_en_la_procedencia(cache_temporal, monke
 
 def test_zip_de_compras_vigente_queda_en_la_procedencia(cache_temporal, monkeypatch):
     _archivo(cache_temporal / "compras", "2025.zip", b"PK\x03\x04")
-    monkeypatch.setattr(estado.compras, "leer_adjudicaciones", lambda ruta: [])
+    monkeypatch.setattr(estado.compras, "iterar_adjudicaciones", lambda ruta: iter([]))
     estado._compras_memo.clear()
     for _ in range(2):
         with cache.vigilar_procedencia() as leidas:

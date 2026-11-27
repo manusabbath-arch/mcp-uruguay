@@ -56,6 +56,7 @@ fuente. Este lee el archivo primario, declara sus trampas medidas y devuelve cad
 | `proyectos_parlamento` | Proyectos entrados desde 1985 por texto, legislatura o tipo | Parlamento |
 | `validar_documento` | Dígito verificador de RUT o cédula | sin red |
 | `semana` | Semana ISO (`W41`) de una fecha, con su lunes y su domingo | sin red |
+| `feriados` | Feriados nacionales de un año (pagos, laborables y trasladados al lunes) o días hábiles de un rango, con las dos definiciones de hábil | sin red (leyes en IMPO) |
 | `buscar_indicador_social` | Busca entre los ~1.260 indicadores sociales del MIDES por palabras | MIDES (Observatorio Social) |
 | `indicador_social` | Un indicador social (pobreza, empleo, educación, vivienda...) con su unidad, cálculo y fuente, por dimensión y año, hasta 2024 | MIDES (Observatorio Social) |
 | `buscar_datasets_catalogo` | Busca fuentes por tema, organismo, licencia y enlace | Catálogo de Datos Abiertos |

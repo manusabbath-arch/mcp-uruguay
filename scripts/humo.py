@@ -28,6 +28,7 @@ from mcp_uruguay.servidor import servidor
 LLAMADAS = [
     ("validar_documento", {"numero": "1.234.567-2", "tipo": "ci"}),
     ("semana", {"fecha": "2026-10-11"}),
+    ("feriados", {"anio": 2027}),
     ("cotizacion", {"moneda": "USD", "fecha": "2026-10-09"}),
     ("cotizacion_mensual", {"moneda": "USD", "desde": "2026-08", "hasta": "2026-09"}),
     ("pesos_constantes", {"montos": {"2025-01": 1000}, "base": "2026-08"}),

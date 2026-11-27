@@ -478,6 +478,14 @@ def semana(fecha: str) -> h.SemanaTyped:
     return h.semana(fecha)
 
 
+@herramienta("Feriados de Uruguay y días hábiles", LOCAL)
+def feriados(anio: Optional[int] = None, desde: str = "", hasta: str = "") -> h.Feriados:
+    """Feriados nacionales de Uruguay calculados desde la ley, sin red. Con `anio`: los del año, con
+    su tipo (pago o laborable) y el día al que se trasladan. Con `desde` y `hasta` (AAAA-MM-DD):
+    los días hábiles del rango con dos definiciones (sin ningún feriado, sin feriados pagos)."""
+    return h.feriados(anio, desde, hasta)
+
+
 @herramienta("Geocodificar una dirección de Uruguay (IDE.uy)", EN_RED)
 def geocodificar_direccion(direccion: str, localidad: str = "", departamento: str = "") -> h.Geocodificacion:
     """Coordenadas (lat, lon) de una dirección o esquina de Uruguay con la API oficial de IDE.uy, con la

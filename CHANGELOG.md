@@ -2,6 +2,16 @@
 
 ## Sin publicar
 
+- **Herramienta nueva, `feriados`** (sin red), sobre `uydatos.feriados` 0.19. Con `anio` devuelve
+  los feriados nacionales con su tipo (pago, laborable o no laborable) y el día al que se trasladan.
+  El 19/4, el 18/5 y el 12/10 se observan el lunes más cercano, y `fecha_original` conserva la del
+  calendario. Con `desde` y `hasta` devuelve los días hábiles con las dos definiciones: sin ningún
+  feriado y sin feriados pagos. Es una sola herramienta en vez de dos para no gastar otro lugar del
+  presupuesto de definiciones (+558 caracteres; tope 21.050 y 33 herramientas). Antes no había cómo
+  decir si un día sin cotización era fin de semana o feriado.
+- **Pin `uydatos>=0.19,<0.20`.** `compras_estado` lee el ZIP con `compras.iterar_adjudicaciones`:
+  el año nunca está entero en memoria antes de compactarse (pico de lectura 473 → 176 MB con 2025).
+
 - **La procedencia ya no se pierde cuando el archivo sale de la caché vigente.**
   `resultados_electorales` y `pedidos_de_informes` respondían sin `procedencia`, y la de
   `compras_estado` traía las cotizaciones del BCU pero no el ZIP de compras. Las tres bajan el

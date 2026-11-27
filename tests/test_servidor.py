@@ -37,6 +37,7 @@ ESPERADAS = {
     "pedidos_de_informes",
     "proyectos_parlamento",
     "semana",
+    "feriados",
     "buscar_datasets_catalogo",
     "recursos_catalogo",
     "buscar_indicador_social",

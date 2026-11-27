@@ -135,6 +135,10 @@
       "description": "Semana ISO de una fecha"
     },
     {
+      "name": "feriados",
+      "description": "Feriados de Uruguay y días hábiles"
+    },
+    {
       "name": "geocodificar_direccion",
       "description": "Geocodificar una dirección de Uruguay (IDE.uy)"
     },
