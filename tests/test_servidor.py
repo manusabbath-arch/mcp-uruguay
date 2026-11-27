@@ -400,3 +400,22 @@ async def test_los_esquemas_declarados_anuncian_la_procedencia():
     sin_procedencia = sorted(n for n in con_cache if "procedencia" not in esquemas[n].get("properties", {}))
     assert not sin_procedencia, f"estos esquemas no declaran procedencia: {sin_procedencia}"
     assert "procedencia" not in esquemas["validar_documento"]["properties"]
+
+
+def test_la_copia_vencida_no_borra_el_aviso_propio_de_la_herramienta():
+    """`compras_estado` trae su propio `aviso` (un ítem domina el total). Si además se sirvió una
+    copia vencida, la respuesta tiene que conservar los dos: antes el de la copia pisaba al otro."""
+    from mcp_uruguay.servidor import _con_aviso_de_copia
+
+    propio = "Atención: un solo ítem es el 28.7% del total."
+    r = _con_aviso_de_copia({"total": 1, "aviso": propio}, ["2026-10-11T18:49-03:00"])
+    assert r["copia_vencida"] is True
+    assert propio in r["aviso"]
+    assert "No se pudo refrescar" in r["aviso"] and "2026-10-11T18:49-03:00" in r["aviso"]
+
+
+def test_un_aviso_propio_vacio_no_deja_separadores_sueltos():
+    from mcp_uruguay.servidor import _con_aviso_de_copia
+
+    r = _con_aviso_de_copia({"aviso": ""}, ["2026-10-11T18:49-03:00"])
+    assert r["aviso"].startswith("No se pudo refrescar")

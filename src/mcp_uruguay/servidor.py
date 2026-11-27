@@ -67,15 +67,17 @@ def _con_aviso_de_copia(resultado: Any, vencidas: list[str]) -> Any:
     if not vencidas or not isinstance(resultado, dict):
         return resultado
     mas_vieja = min(vencidas)
-    return {
-        **resultado,
-        "copia_vencida": True,
-        "aviso": (
-            "No se pudo refrescar el dato: la fuente no respondió o devolvió algo ilegible, y se usó la "
-            f"copia que ya estaba guardada (bajada {mas_vieja}). Puede estar desactualizada: citá su "
-            "`bajado` y reintentá más tarde."
-        ),
-    }
+    aviso = (
+        "No se pudo refrescar el dato: la fuente no respondió o devolvió algo ilegible, y se usó la "
+        f"copia que ya estaba guardada (bajada {mas_vieja}). Puede estar desactualizada: citá su "
+        "`bajado` y reintentá más tarde."
+    )
+    # Una herramienta puede traer su propio aviso (p. ej. un ítem que domina el total de compras):
+    # se conservan los dos, porque el propio es una advertencia de exactitud sobre el mismo dato.
+    propio = resultado.get("aviso")
+    if propio:
+        aviso = f"{aviso} Además: {propio}"
+    return {**resultado, "copia_vencida": True, "aviso": aviso}
 
 
 def _con_procedencia(resultado: Any, leidas: list[cache.CopiaUsada]) -> Any:

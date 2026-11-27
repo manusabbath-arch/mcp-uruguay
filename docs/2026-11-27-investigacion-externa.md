@@ -47,11 +47,17 @@ Los 339,9 s de `compras_estado` **no se reproducen**: aislada, la misma llamada 
 directa y 19,6 s por un cliente MCP en proceso, y 67 s con el perfilador. No bajó ningún archivo:
 el ZIP de 2025 tiene TTL de 365 días y su copia es del 2026-10-11. El perfil reparte el tiempo
 entre `uydatos.compras._items` (22 s) y `json.loads` de los 12 JSON del ZIP (13 s). La causa del
-valor atípico queda abierta. Hipótesis sin probar: contención de memoria o CPU después de cargar
-los CSV electorales de 21 MB en el mismo proceso.
+valor atípico queda abierta, pero una segunda medición la acota. Con cinco herramientas pesadas en
+un mismo proceso, la misma `observaciones_inumet` tardó 19,0 s con el recolector de basura activo y
+93,4 s con el recolector apagado. El proceso tenía 1,8 millones de objetos vivos: los memos de
+compras y electorales quedan en memoria. Con el recolector apagado se usa más memoria, y la
+variación grande apunta a presión de memoria de la máquina, no a la lógica de una herramienta. Un
+servidor que vive horas acumula esos memos. Medir su memoria residente es el paso siguiente.
 
-Para M7 del plan, esto cambia la prioridad: el comando `--precalentar` y bajar el tiempo de
-`calidad_agua` le sirven a más clientes que seguir agregando progreso.
+Corrección posterior: `--precalentar` **ya existía**; este documento lo daba por faltante. Le
+faltaban `resultados_electorales` y las capas de `ubicar_punto`, que se agregaron con su test.
+`observaciones_inumet` no entra a propósito: su TTL es de un día, así que precalentarla no sirve.
+En caliente, `calidad_agua` tarda de 8 a 19 s.
 
 ## 3. Tamaño de las respuestas: holgado
 
@@ -116,8 +122,9 @@ medir la licencia de cada edición antes de escribir un lector.
 
 ## Qué hacer, en orden de valor
 
-1. Test en rojo y arreglo del aviso pisado (§4): corto, y protege una advertencia de exactitud.
-2. `--precalentar` y medir `calidad_agua` (§2): es lo que destraba a Claude Desktop y a Cursor.
-3. Herramienta `feriados`/`dias_habiles` sin red (§5), con las reglas medidas en la ley.
+1. ~~Test en rojo y arreglo del aviso pisado (§4).~~ Hecho (CHANGELOG, «Sin publicar»).
+2. ~~Completar `--precalentar` (§2).~~ Hecho: elecciones y capas de `ubicar_punto`.
+3. Herramienta `feriados`/`dias_habiles` sin red (§5). El módulo va primero a `uydatos`, después la
+   Release y el pin, y recién ahí la herramienta.
 4. Una línea en el README sobre qué distingue a este servidor de los vecinos (§5).
-5. Re-medir `compras_estado` dentro de la sonda completa para explicar el valor atípico (§2).
+5. Medir la memoria residente de un servidor que respondió varias herramientas pesadas (§2).

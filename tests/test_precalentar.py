@@ -71,3 +71,14 @@ def test_main_con_precalentar_corre_y_termina_sin_levantar_el_servidor(monkeypat
     with pytest.raises(SystemExit) as salida:
         servidor.main()
     assert salida.value.code == 0
+
+
+def test_precalienta_las_elecciones_y_las_capas_que_tardan_mas_de_50_segundos_en_frio():
+    """Medido el 2026-11-27 con `scripts/sonda.py`: `resultados_electorales` (53 s, CSV de hasta
+    21 MB por elección) y las capas de `ubicar_punto` (dos GeoJSON de 4,7 MB) no estaban en el
+    precalentado. Claude Desktop y Cursor cortan a los ~60 s aunque haya avisos de progreso."""
+    from uydatos import elecciones
+
+    nombres = [n for n, _ in precalentar._tareas()]
+    assert nombres.count("resultados_electorales") == len(elecciones.ELECCIONES)
+    assert "ubicar_punto" in nombres

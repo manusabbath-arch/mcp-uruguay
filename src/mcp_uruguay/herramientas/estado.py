@@ -166,7 +166,6 @@ class ComprasEstado(cache.Procedencia, TypedDict):
     fuente: str
     bajado: str
     copia_vencida: NotRequired[bool]
-    aviso: NotRequired[str]
 
 
 PRIMER_ANIO_COMPRAS = 2002

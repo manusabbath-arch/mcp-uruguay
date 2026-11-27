@@ -1,7 +1,8 @@
 """`mcp-uruguay --precalentar`: baja de una vez lo que con la caché fría tarda de 40 a 75 segundos.
 
-La primera llamada a `leyes`, `compras_estado`, `proyectos_parlamento` o `clima` baja archivos grandes
-(57 de INIA, 27 MB de compras) y muchos clientes MCP cortan cerca de los 60 s. Este comando se corre una
+La primera llamada a `leyes`, `compras_estado`, `proyectos_parlamento`, `clima`, `resultados_electorales`
+o `ubicar_punto` baja archivos grandes (57 de INIA, 27 MB de compras, CSV electorales de hasta 21 MB, dos
+GeoJSON de 4,7 MB) y muchos clientes MCP cortan cerca de los 60 s. Este comando se corre una
 vez en la terminal, después de instalar, y deja la caché lista: las llamadas siguientes salen del disco.
 
 Una fuente que no responde no frena a las demás: se anota y se sigue. Las que `guias.CAIDAS` ya declara
@@ -10,9 +11,12 @@ caídas (hoy, el Parlamento) se informan como tales y no hacen fallar el comando
 
 from __future__ import annotations
 
+import functools
 import http.client
 import time
 from typing import Callable
+
+from uydatos import elecciones
 
 from mcp_uruguay import cache, guias
 from mcp_uruguay import herramientas as h
@@ -37,6 +41,12 @@ def _tareas() -> list[tuple[str, Callable[[], object]]]:
         ("proyectos_parlamento", lambda: h.proyectos_parlamento(cantidad=1)),
         ("asistencia_parlamentaria", lambda: h.asistencia_parlamentaria("senado")),
         ("pedidos_de_informes", lambda: h.pedidos_de_informes(cantidad=1)),
+        # Medido el 2026-11-27: 53 s en frío (CSV de hasta 21 MB) y dos GeoJSON de 4,7 MB.
+        *[
+            ("resultados_electorales", functools.partial(h.resultados_electorales, eleccion))
+            for eleccion in elecciones.ELECCIONES
+        ],
+        ("ubicar_punto", lambda: h.ubicar_punto(-31.39, -57.96)),
     ]
 
 

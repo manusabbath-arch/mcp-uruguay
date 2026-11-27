@@ -2,6 +2,16 @@
 
 ## Sin publicar
 
+- **Una copia vencida ya no borra el aviso propio de la herramienta.** Cuando se servía una copia
+  vencida, el aviso de «no se pudo refrescar» reemplazaba al `aviso` que ya traía la respuesta. La
+  única herramienta con aviso propio es `compras_estado` («un solo ítem es el N% del total»): esa
+  advertencia de exactitud se perdía justo cuando la copia además era vieja. Ahora van las dos en
+  el mismo campo. Test en rojo antes del arreglo.
+- **`--precalentar` baja también las elecciones y las capas de `ubicar_punto`.** Medido con
+  `scripts/sonda.py`: `resultados_electorales` tardó 53 s (CSV de hasta 21 MB por elección) y no
+  estaba en el precalentado, igual que los dos GeoJSON de 4,7 MB de `ubicar_punto`. Claude Desktop
+  y Cursor cortan a los ~60 s aunque el servidor mande progreso (`docs/2026-11-27-investigacion-externa.md`).
+
 - **Criterio de las preguntas electorales: cuenta el escrutinio definitivo.** Las tres preguntas del
   balotaje dicen ahora cuál de los dos conteos se pide («según el escrutinio definitivo…, incluidos
   los votos observados») y su esperado pasa a la cifra final de la Corte Electoral: Orsi 49,77%

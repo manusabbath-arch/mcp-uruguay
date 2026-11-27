@@ -21,6 +21,10 @@ Está construido sobre [uydatos](https://github.com/manusabbath-arch/uy-datos-ab
 hereda su regla: **rechazar en vez de arreglar**. Un agente que recibe un error con motivo puede
 decirlo; uno que recibe un número plausible pero falso lo repite.
 
+Otros servidores MCP con datos de Uruguay buscan en los metadatos del catálogo o atienden una sola
+fuente. Este lee el archivo primario, declara sus trampas medidas y devuelve cada cifra con
+`fuente` y `bajado`; las que salen de un archivo, también con el sha256 de los bytes que usó.
+
 ## Herramientas
 
 | Herramienta | Qué responde | Fuente |
