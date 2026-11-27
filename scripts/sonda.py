@@ -1,4 +1,4 @@
-"""Corre las 28 herramientas contra las fuentes reales y guarda la respuesta completa de cada una.
+"""Corre las herramientas contra las fuentes reales y guarda la respuesta completa de cada una.
 
     uv run --quiet --with-editable . python scripts/sonda.py --salida sonda.json
 
@@ -18,7 +18,7 @@ from pathlib import Path
 sys.path.insert(0, str(Path(__file__).parent))
 import anyio  # noqa: E402
 from humo import LLAMADAS  # noqa: E402
-from mcp import Client  # noqa: E402
+from mcp import Client, StdioServerParameters  # noqa: E402
 from mcp.types import TextContent  # noqa: E402
 
 from mcp_uruguay.servidor import servidor  # noqa: E402
@@ -29,10 +29,13 @@ def _textos(resultado) -> list[str]:
     return [bloque.text for bloque in resultado.content if isinstance(bloque, TextContent)]
 
 
-async def main(salida: Path) -> int:
+async def main(salida: Path, herramientas: list[str], stdio: bool) -> int:
     registros = []
-    async with Client(servidor) as c:
+    transporte = StdioServerParameters(command=sys.executable, args=["-m", "mcp_uruguay"]) if stdio else servidor
+    async with Client(transporte) as c:
         for nombre, args in LLAMADAS:
+            if herramientas and nombre not in herramientas:
+                continue
             t0 = time.time()
             try:
                 r = await c.call_tool(nombre, args)
@@ -67,4 +70,13 @@ async def main(salida: Path) -> int:
 if __name__ == "__main__":
     ap = argparse.ArgumentParser(description="Sonda de las herramientas contra las fuentes reales.")
     ap.add_argument("--salida", type=Path, default=Path("sonda.json"))
-    sys.exit(anyio.run(main, ap.parse_args().salida))
+    ap.add_argument(
+        "--herramienta",
+        action="append",
+        default=[],
+        choices=[nombre for nombre, _ in LLAMADAS],
+        help="limita la sonda a las herramientas indicadas (repetible)",
+    )
+    ap.add_argument("--stdio", action="store_true", help="inicia el paquete como un proceso MCP por stdio")
+    opciones = ap.parse_args()
+    sys.exit(anyio.run(main, opciones.salida, opciones.herramienta, opciones.stdio))
