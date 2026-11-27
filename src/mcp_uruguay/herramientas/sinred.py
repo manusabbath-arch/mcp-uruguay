@@ -34,6 +34,16 @@ class Validacion(TypedDict):
     nota: str
 
 
+# Antes de `SemanaTyped`: en Python 3.10 pydantic no resuelve una referencia hacia adelante y la
+# herramienta se queda sin esquema de salida (medido en el CI de 0.16.0).
+class FeriadoTyped(TypedDict):
+    fecha: str
+    nombre: str
+    tipo: str
+    fecha_original: str
+    trasladado: bool
+
+
 class SemanaTyped(TypedDict):
     """La respuesta de `semana()`. Se llama asi para no chocar con el modulo `uydatos.semanas`."""
 
@@ -42,7 +52,7 @@ class SemanaTyped(TypedDict):
     desde: str
     hasta: str
     de_total: str
-    feriados: list["FeriadoTyped"]
+    feriados: list[FeriadoTyped]
     nota: str
 
 
@@ -215,14 +225,6 @@ def semana(fecha: str) -> SemanaTyped:
         "feriados": feriados_semana,
         "nota": "Semana ISO 8601, de lunes a domingo. El año de la semana puede no ser el del día." + nota_feriados,
     }
-
-
-class FeriadoTyped(TypedDict):
-    fecha: str
-    nombre: str
-    tipo: str
-    fecha_original: str
-    trasladado: bool
 
 
 class DiasHabilesTyped(TypedDict):
