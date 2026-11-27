@@ -82,3 +82,16 @@ def test_precalienta_las_elecciones_y_las_capas_que_tardan_mas_de_50_segundos_en
     nombres = [n for n, _ in precalentar._tareas()]
     assert nombres.count("resultados_electorales") == len(elecciones.ELECCIONES)
     assert "ubicar_punto" in nombres
+
+
+def test_precalentar_piloto_ejecuta_solo_las_tres_fuentes(monkeypatch):
+    from mcp_uruguay import servidor
+
+    monkeypatch.setattr(sys, "argv", ["mcp-uruguay", "--precalentar-piloto"])
+    llamadas = []
+    for nombre in ("clima", "calidad_agua", "nivel_rio"):
+        monkeypatch.setattr(h, nombre, lambda *args, nombre=nombre: llamadas.append((nombre, args)))
+    with pytest.raises(SystemExit) as salida:
+        servidor.main()
+    assert salida.value.code == 0
+    assert llamadas == [("clima", ()), ("calidad_agua", ("Salto",)), ("nivel_rio", ("Salto",))]

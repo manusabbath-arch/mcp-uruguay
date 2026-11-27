@@ -50,6 +50,13 @@ def _tareas() -> list[tuple[str, Callable[[], object]]]:
     ]
 
 
+def tareas_piloto() -> list[tuple[str, Callable[[], object]]]:
+    """Llena la cache que usan las tres herramientas de datos del piloto."""
+    return [(nombre, tarea) for nombre, tarea in _tareas() if nombre in {"clima", "calidad_agua"}] + [
+        ("nivel_rio", lambda: h.nivel_rio("Salto"))
+    ]
+
+
 def precalentar(
     tareas: list[tuple[str, Callable[[], object]]] | None = None,
     salida: Callable[[str], None] = print,

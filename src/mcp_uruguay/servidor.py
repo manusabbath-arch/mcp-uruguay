@@ -563,6 +563,10 @@ def main() -> None:
     import truststore
 
     truststore.inject_into_ssl()
+    if "--precalentar-piloto" in sys.argv[1:]:
+        from mcp_uruguay.precalentar import precalentar, tareas_piloto
+
+        raise SystemExit(precalentar(tareas_piloto()))
     if "--precalentar" in sys.argv[1:]:
         from mcp_uruguay.precalentar import precalentar
 

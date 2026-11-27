@@ -5,7 +5,7 @@ El piloto ofrece nivel del río, clima, agua potable y el recorrido de descubrim
 ## Arranque y verificación
 
 ```powershell
-uv run --extra remoto mcp-uruguay --precalentar
+uv run --extra remoto mcp-uruguay --precalentar-piloto
 uv run --extra remoto mcp-uruguay --remoto
 ```
 
