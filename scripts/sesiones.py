@@ -132,9 +132,32 @@ def integrar(raiz: Path) -> str:
         return esperado["head"]
 
 
+def instalar_hook(raiz: Path) -> str:
+    """Instala solo en este clon, sin ocultar hooks anteriores ni depender de cada rama."""
+    with bloqueo(raiz):
+        principal = _integracion(raiz)
+        destino = (principal / ".githooks").resolve()
+        actual = git(raiz, "config", "--get", "--default", "", "core.hooksPath")
+        if actual and actual != destino.as_posix():
+            raise SesionInvalida("Ya hay hooks configurados: revisar antes de reemplazarlos")
+        if not actual:
+            comun = Path(git(raiz, "rev-parse", "--path-format=absolute", "--git-common-dir"))
+            if any(p.is_file() and not p.name.endswith(".sample") for p in (comun / "hooks").glob("*")):
+                raise SesionInvalida("Hay hooks anteriores en el directorio Git: no se desactivan automáticamente")
+        _limpio(principal)
+        hook = destino / "pre-commit"
+        if not hook.is_file() or not os.access(hook, os.X_OK):
+            raise SesionInvalida("Falta el hook ejecutable en main: integrar antes de instalar")
+        git(principal, "ls-files", "--error-unmatch", "--", ".githooks/pre-commit", "scripts/sesiones.py")
+        git(raiz, "config", "--local", "core.hooksPath", destino.as_posix())
+        if git(raiz, "config", "--get", "core.hooksPath") != destino.as_posix():
+            raise SesionInvalida("La configuración efectiva del hook no coincide: revisar las opciones del worktree")
+        return destino.as_posix()
+
+
 def main(argv=None) -> int:
     parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument("accion", choices=["estado", "comprobar", "verificar", "integrar"])
+    parser.add_argument("accion", choices=["estado", "comprobar", "verificar", "integrar", "instalar-hook"])
     parser.add_argument("--repo", type=Path, default=Path.cwd())
     args = parser.parse_args(argv)
     try:
@@ -145,6 +168,8 @@ def main(argv=None) -> int:
             print("OK: worktree propio, rama", comprobar(args.repo))
         elif args.accion == "verificar":
             print(json.dumps(verificar(args.repo), ensure_ascii=False))
+        elif args.accion == "instalar-hook":
+            print("Hook instalado; configuración verificada:", instalar_hook(args.repo))
         else:
             print("Integrado y verificado:", integrar(args.repo))
         return 0

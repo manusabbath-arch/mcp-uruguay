@@ -27,8 +27,8 @@ def git(raiz, *args):
 
 
 @pytest.fixture
-def repo(tmp_path):
-    raiz = tmp_path / "repo"
+def repo(tmp_path, request):
+    raiz = tmp_path / getattr(request, "param", "repo")
     raiz.mkdir()
     git(raiz, "init", "-b", "main")
     git(raiz, "config", "user.name", "Prueba")
@@ -233,6 +233,67 @@ def test_integrar_no_sobrescribe_archivos_ignorados_ajenos(repo, vinculada, monk
     assert ajeno.read_text(encoding="utf-8") == "trabajo-ajeno\n"
     assert git(repo, "rev-parse", "HEAD") == antes
     assert not (repo / ".git" / "MERGE_HEAD").exists()
+
+
+@pytest.mark.parametrize("repo", ["repo con espacios"], indirect=True)
+def test_hook_real_bloquea_main_y_permite_un_worktree_anterior(repo, vinculada):
+    import shutil
+
+    sesiones = cargar()
+    hook = SCRIPT.parents[1] / ".githooks" / "pre-commit"
+    assert hook.is_file(), "Falta el hook versionado"
+    (repo / "scripts").mkdir()
+    (repo / ".githooks").mkdir()
+    shutil.copy2(SCRIPT, repo / "scripts" / "sesiones.py")
+    shutil.copy2(hook, repo / ".githooks" / "pre-commit")
+    (repo / ".githooks" / "pre-commit").chmod(0o755)
+    git(repo, "add", "scripts/sesiones.py", ".githooks/pre-commit")
+    git(repo, "commit", "-m", "coordinador y hook")
+    destino = sesiones.instalar_hook(vinculada)
+    assert git(repo, "config", "--get", "core.hooksPath") == destino
+    assert sesiones.instalar_hook(vinculada) == destino
+    antes = git(repo, "rev-parse", "HEAD")
+    with pytest.raises(subprocess.CalledProcessError) as error:
+        git(repo, "commit", "--allow-empty", "-m", "prohibido")
+    assert "BLOQUEADO" in error.value.stderr and "integración" in error.value.stderr
+    assert git(repo, "rev-parse", "HEAD") == antes
+    # La rama anterior no trae el script: el hook canónico tiene que alcanzarla igualmente.
+    assert not (vinculada / "scripts" / "sesiones.py").exists()
+    (vinculada / "tarea.txt").write_text("cambio propio\n", encoding="utf-8")
+    git(vinculada, "add", "tarea.txt")
+    # El commit por ruta exporta un índice temporal al hook: no debe confundirse con main.
+    git(vinculada, "commit", "-m", "permitido", "--", "tarea.txt")
+    assert git(vinculada, "log", "-1", "--format=%s") == "permitido"
+    git(vinculada, "checkout", "--detach")
+    with pytest.raises(subprocess.CalledProcessError) as error:
+        git(vinculada, "commit", "--allow-empty", "-m", "detached prohibido")
+    assert "detached" in error.value.stderr
+    git(repo, "switch", "-c", "otra-rama-en-principal")
+    with pytest.raises(subprocess.CalledProcessError) as error:
+        git(repo, "commit", "--allow-empty", "-m", "principal prohibido")
+    assert "integración" in error.value.stderr
+
+
+@pytest.mark.parametrize("tipo", ["configurado", "directorio_predeterminado"])
+def test_instalar_hook_no_desactiva_hooks_ajenos(repo, tipo):
+    sesiones = cargar()
+    if tipo == "configurado":
+        git(repo, "config", "core.hooksPath", "hooks-ajenos")
+    else:
+        (repo / ".git" / "hooks" / "pre-push").write_text("#!/bin/sh\nexit 0\n", encoding="utf-8")
+    antes = git(repo, "config", "--get", "--default", "", "core.hooksPath")
+    with pytest.raises(sesiones.SesionInvalida, match="hooks"):
+        sesiones.instalar_hook(repo)
+    assert git(repo, "config", "--get", "--default", "", "core.hooksPath") == antes
+    if tipo == "directorio_predeterminado":
+        assert (repo / ".git" / "hooks" / "pre-push").read_text(encoding="utf-8") == "#!/bin/sh\nexit 0\n"
+
+
+def test_instalar_hook_faltante_no_cambia_configuracion(repo):
+    sesiones = cargar()
+    with pytest.raises(sesiones.SesionInvalida, match="Falta el hook"):
+        sesiones.instalar_hook(repo)
+    assert git(repo, "config", "--get", "--default", "", "core.hooksPath") == ""
 
 
 def test_comprobar_rechaza_el_arbol_compartido(repo):

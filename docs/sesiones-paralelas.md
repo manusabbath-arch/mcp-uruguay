@@ -3,10 +3,10 @@
 ## Estado de esta entrega
 
 Hay un coordinador local en `scripts/sesiones.py`, probado contra repos Git temporales.
-Las instrucciones comunes viven en `AGENTS.md`, creado con autorización del dueño. No se
-instalaron hooks: su edición sigue requiriendo habilitación humana por la protección local de la
-máquina. Este documento describe el comando disponible; no implica que todos los clientes lean
-`AGENTS.md` o lo ejecuten automáticamente.
+Las instrucciones comunes viven en `AGENTS.md`, creado con autorización del dueño. El hook
+`pre-commit` también está versionado, pero no se activa por clonar el repo: se instala explícitamente
+en cada clon como se explica abajo. La configuración no se publica ni afecta a otros repositorios.
+No se presupone que todos los clientes lean `AGENTS.md` o ejecuten el coordinador automáticamente.
 
 ## Motivo y diseño
 
@@ -55,6 +55,32 @@ impiden integrar. No rebasea, no hace stash, no aborta operaciones ajenas,
 no borra ramas ni worktrees y no hace push. Los tests de este coordinador entran en el `pytest`
 habitual y, por lo tanto, en el CI existente.
 
+## Hook de commit: instalación y prueba
+
+Una vez integrada la tanda en un main limpio:
+
+    uv run --no-project python scripts/sesiones.py instalar-hook
+    uv run --no-project python scripts/sesiones.py estado
+
+El instalador escribe `core.hooksPath` solo en la configuración local del clon y lee de vuelta el
+valor efectivo. Si hay otro directorio de hooks configurado o archivos distintos de las muestras
+predeterminadas en el directorio Git de hooks, rechaza la instalación sin reemplazarlos ni ocultarlos.
+También exige que el hook y el coordinador estén versionados en el árbol de main, limpio.
+
+La ruta configurada es absoluta y apunta al hook canónico del árbol de main, no al de cada rama.
+Así también funciona al commitear en worktrees anteriores que no traen todavía `scripts/sesiones.py`.
+Un worktree con una configuración propia de hooks puede tener otro comportamiento; `estado` permite
+consultar su valor efectivo. Después de mover el clon de carpeta hay que revisar esa configuración.
+
+El hook llama a `comprobar`: rechaza commits desde el checkout principal (aunque esté en otra rama),
+desde `main` y desde HEAD detached; permite una rama en un worktree propio. Se prueba con Git real,
+con rutas que contienen espacios y commits por ruta que usan un índice temporal. En Windows, la
+ruta del script se convierte a formato nativo para no depender de la traducción automática de MSYS.
+
+No ejecuta la suite en cada commit: las pruebas completas siguen en `verificar` antes de integrar.
+Requiere `uv` en PATH. No añade una excepción por variable de entorno: la habilitación temporal
+usada para editar la guarda no desactiva la comprobación del hook instalado.
+
 ## Rechazos y recuperación
 
 - **Main cambió:** actualizar la rama propia contra el main nuevo, resolver allí y volver a verificar.
@@ -72,7 +98,8 @@ integración o ejecute Git directamente puede ignorarla. Un hook de commit tampo
 un merge fast-forward ni todas las escrituras. Los recibos locales son comprobantes operativos,
 no firmas contra un actor malicioso. El bloqueo no se recupera automáticamente si el proceso muere.
 
-El siguiente paso de endurecimiento depende de una persona: habilitar y revisar la creación del
-hook local. No hay un hook de commit instalado por esta entrega. La cobertura de cada cliente
-requiere comprobar que efectivamente lee `AGENTS.md`; no se atribuye esa lectura a todos los clientes.
+El hook es una protección local contra errores, no una frontera de seguridad: Git permite omitir
+hooks y tampoco intercepta todas las escrituras o los merges fast-forward. No se usa como prueba de
+que toda sesión haya seguido el protocolo. La cobertura de cada cliente requiere comprobar que
+efectivamente lee `AGENTS.md`; no se atribuye esa lectura a todos los clientes.
 No se tocó la configuración global de Git ni de ningún cliente de agentes.
