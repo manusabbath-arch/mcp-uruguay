@@ -178,15 +178,19 @@ def test_validadores_no_heredan_un_indice_ajeno(vinculada, monkeypatch):
     assert all("GIT_INDEX_FILE" not in opciones.get("env", os.environ) for _, opciones in llamadas)
 
 
-def test_cli_rechaza_main_con_motivo(repo):
+@pytest.mark.parametrize("utf8_heredado", ["0", "1"])
+def test_cli_rechaza_main_con_motivo(repo, utf8_heredado):
     import sys
 
     env = {k: v for k, v in os.environ.items() if not k.startswith("GIT_")}
+    env["PYTHONUTF8"] = utf8_heredado
+    env.pop("PYTHONIOENCODING", None)
     resultado = subprocess.run(
-        [sys.executable, str(SCRIPT), "comprobar", "--repo", str(repo)],
+        # Igual que el hook: el hijo emite UTF-8 aunque Windows herede el modo regional.
+        [sys.executable, "-X", "utf8", str(SCRIPT), "comprobar", "--repo", str(repo)],
         capture_output=True,
         encoding="utf-8",
-        errors="replace",
+        errors="strict",
         env=env,
     )
     assert resultado.returncode == 1
