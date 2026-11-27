@@ -9,7 +9,7 @@ Medición del 27 de noviembre de 2026. Wheel 0.15.0 construido desde el código 
 | Tema | Resultado | Respaldo y límite |
 |---|---|---|
 | Río Uruguay | La última lectura disponible de la estación Salto (`A501258E`) fue `H = 7,81` el 27/11 a las 00:00. La ventana devolvió 1.249 de 1.344 lecturas esperadas e incluyó el día en curso. | Copia mensual descargada a las 00:32 del 27/11 (UTC−03). El servicio deja implícita la unidad de `H`. [CTM de Salto Grande](https://www.saltogrande.org/ws.php) |
-| Clima | La serie disponible de INIA Salto Grande cubrió del 01/07/1970 al 20/11/2026. Para lluvia diaria se pide un rango cerrado y se lee `lluvia_mm`. | Descarga del 26/11 a las 16:34 (UTC−03). El día de INIA va de 09:00 a 09:00. Un nulo indica falta de dato. Queda pendiente incluir los hashes de la serie en la respuesta. [Catálogo de INIA](https://catalogodatos.gub.uy/dataset/inia-precipitacion-temps-extremas-sg) |
+| Clima | La serie disponible de INIA Salto Grande cubrió del 01/07/1970 al 20/11/2026. Para lluvia diaria se pide un rango cerrado y se lee `lluvia_mm`. | Descarga del 26/11 a las 16:34 (UTC−03). El día de INIA va de 09:00 a 09:00. Un nulo indica falta de dato. El wheel de la primera medición no incluía los hashes. La versión del piloto actual los adjunta incluso con la serie cargada en memoria. [Catálogo de INIA](https://catalogodatos.gub.uy/dataset/inia-precipitacion-temps-extremas-sg) |
 | Agua potable | OSE reportó 112 muestras con análisis de turbidez en Salto en 2025-T1. De 112 análisis, 87 fueron exactos (0,2 a 0,7 NTU) y 25 quedaron por debajo del límite de detección de 0,2 NTU. | Copias descargadas el 26/11 a las 11:38 (UTC−03). La resolución es trimestral. El rango describe los valores exactos y la respuesta carece de un dictamen de cumplimiento. [Catálogo de OSE](https://datos.ose.com.uy/dataset/calidad-de-agua) |
 
 El XML mensual de CTM tiene SHA-256 `6f9264af03d30221ff23f1d8fa2e2dd3d61842a66be6c9f60674ccd082d75f28`. El archivo fisicoquímico de OSE tiene SHA-256 `ae052ae069d70bfec21348b6f36005436d1ba4448c4fad8885f36943a55b8781`. La sonda guarda los respaldos completos en `datos.procedencia` cuando el servidor los incluye.
@@ -39,4 +39,9 @@ Las cuatro llamadas por stdio devolvieron datos. Los tiempos con caché existent
 | ¿Puedo usar esas muestras de OSE para saber si Playa Salto Chico estaba habilitada? | Explicar la diferencia de lugar y población muestreada y pedir un informe recreativo con fecha. |
 | ¿Cuánta lluvia midió INIA Salto Grande en enero de 2099? | Informar la falta de observaciones y el último día disponible. |
 
-Usar el mismo wheel y registrar por pregunta la herramienta, los argumentos, la evidencia citada y el tiempo. Para medir caché fría, usar un directorio separado y guardar el resultado junto al de la corrida caliente. Queda pendiente ejecutar este conjunto desde los clientes.
+Usar el mismo wheel y registrar por pregunta la herramienta, los argumentos, la evidencia citada y el tiempo. Para medir caché fría, usar un directorio separado y guardar el resultado junto al de la corrida caliente.
+
+## Comprobaciones desde los clientes
+
+- **Codex.** La traza registró la llamada a `uruguay-observatorio/nivel_rio`. Para el 1 al 3 de septiembre de 2026 devolvió 288 de 288 lecturas y medias diarias de 6,470, 6,095 y 5,922 en la escala H de origen, cuya unidad el servicio deja implícita.
+- **Claude Code.** Coincidió en las cifras y la cobertura del río. Informó 0 mm de lluvia cada día en INIA Salto Grande y 492 análisis trimestrales de turbidez en 2025, incluidos 72 censurados. Identificó que la habilitación de la playa requiere otra fuente. La consulta terminó con código cero. Su hook de cierre informó un problema con el alias de Python.
