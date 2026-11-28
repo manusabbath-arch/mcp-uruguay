@@ -208,19 +208,30 @@ def validar_documento(numero: str, tipo: Literal["rut", "ci"]) -> Validacion:
     }
 
 
+# Con una fecha en los últimos días del año 9999, sumar un día desborda `date`.
+_FIN_DEL_CALENDARIO = "fecha fuera de rango: queda en el fin del calendario (año 9999)"
+
+
 def semana(fecha: str) -> SemanaTyped:
     s = semanas.semana_de(_fecha(fecha, "fecha"))
+    try:
+        hasta = s.hasta
+    except OverflowError as e:
+        raise ValueError(f"semana: {_FIN_DEL_CALENDARIO}") from e
     feriados_semana: list[FeriadoTyped] = []
     nota_feriados = f" Feriados: se calculan desde {_feriados.ANIO_MINIMO}."
-    if s.desde.year >= _feriados.ANIO_MINIMO:
-        for anio in sorted({s.desde.year, s.hasta.year}):
-            feriados_semana += [_feriado(f) for f in _feriados.del_anio(anio) if s.desde <= f.fecha <= s.hasta]
-        nota_feriados = " `feriados`: los nacionales que se observan esa semana (los trasladados, en su lunes)."
+    anios = [a for a in sorted({s.desde.year, hasta.year}) if a >= _feriados.ANIO_MINIMO]
+    for anio in anios:
+        feriados_semana += [_feriado(f) for f in _feriados.del_anio(anio) if s.desde <= f.fecha <= hasta]
+    if anios:
+        calculados = " `feriados`: los nacionales que se observan esa semana (los trasladados, en su lunes)."
+        # Una semana a caballo del primer año calculable trae solo los días desde ese año.
+        nota_feriados = calculados + (nota_feriados if s.desde.year < _feriados.ANIO_MINIMO else "")
     return {
         "etiqueta": s.corta,
         "etiqueta_con_anio": str(s),
         "desde": s.desde.isoformat(),
-        "hasta": s.hasta.isoformat(),
+        "hasta": hasta.isoformat(),
         "de_total": s.de_total,
         "feriados": feriados_semana,
         "nota": "Semana ISO 8601, de lunes a domingo. El año de la semana puede no ser el del día." + nota_feriados,
@@ -278,7 +289,10 @@ def feriados(anio: Optional[int] = None, desde: str = "", hasta: str = "") -> Fe
     if not (desde and hasta):
         raise ValueError("feriados: con `desde` va también `hasta`, y al revés")
     ini, fin = _fecha(desde, "desde"), _fecha(hasta, "hasta")
-    r = _feriados.dias_habiles(ini, fin)
+    try:
+        r = _feriados.dias_habiles(ini, fin)
+    except OverflowError as e:
+        raise ValueError(f"feriados: {_FIN_DEL_CALENDARIO}") from e
     vistos: list[FeriadoTyped] = []
     for anio_ in range(ini.year, fin.year + 1):
         vistos += [_feriado(f) for f in _feriados.del_anio(anio_) if ini <= f.fecha <= fin]

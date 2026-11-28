@@ -1,5 +1,11 @@
 # Cambios
 
+## Sin publicar
+
+- **Bordes de fecha en `semana` y `feriados`.** La semana del 2001-12-31 omitía el feriado del 1 de
+  enero de 2002; ahora lo trae y la nota avisa desde qué año se calculan. Las fechas del final del año
+  9999 se rechazan con motivo en vez de un error genérico.
+
 ## 0.16.0 — 2026-11-27
 
 - **Vuelven `proyectos_parlamento` y `asistencia_parlamentaria`.** El 403 de `parlamento.gub.uy`

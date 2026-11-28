@@ -121,6 +121,27 @@ class TestSinRed:
         r = h.semana("2027-01-01")
         assert (r["etiqueta_con_anio"], r["desde"], r["hasta"]) == ("2026-W53", "2026-12-28", "2027-01-03")
 
+    def test_semana_que_cruza_el_primer_anio_calculable_trae_sus_feriados_y_avisa(self):
+        r = h.semana("2001-12-31")
+        assert [f["fecha"] for f in r["feriados"]] == ["2002-01-01", "2002-01-06"]
+        assert "2002" in r["nota"]
+
+    def test_semana_entera_anterior_a_2002_no_trae_feriados_y_avisa(self):
+        r = h.semana("2001-05-18")
+        assert r["feriados"] == []
+        assert "se calculan desde 2002" in r["nota"]
+
+    @pytest.mark.parametrize(
+        "pedido",
+        [
+            lambda: h.semana("9999-12-31"),
+            lambda: h.feriados(desde="9999-12-01", hasta="9999-12-31"),
+        ],
+    )
+    def test_el_fin_del_calendario_se_rechaza_con_motivo(self, pedido):
+        with pytest.raises(ValueError, match="fin del calendario"):
+            pedido()
+
 
 class TestGeocodificar:
     def test_devuelve_calidad_coordenada_y_fuente(self, monkeypatch):
