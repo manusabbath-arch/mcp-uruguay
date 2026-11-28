@@ -15,7 +15,9 @@ from mcp_uruguay.servidor import servidor
 
 # 2026-11-27: 21.002 medidos con `feriados` (558: una herramienta para feriados y días hábiles, en vez
 # de dos), sobre los 20.444 de las 32 anteriores.
-TOPE_CARACTERES = 21_050
+# 2026-11-28: 21.084 con el filtro `modalidad` y los precios unitarios de `compras_estado` (+34: que un
+# modelo sepa que `buscar` trae precios de referencia; el resto se ganó reescribiendo la descripción).
+TOPE_CARACTERES = 21_084
 TOPE_HERRAMIENTAS = 33
 
 

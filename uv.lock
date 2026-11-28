@@ -393,7 +393,7 @@ wheels = [
 
 [[package]]
 name = "mcp-uruguay"
-version = "0.17.0"
+version = "0.18.0"
 source = { editable = "." }
 dependencies = [
     { name = "mcp" },
@@ -419,7 +419,7 @@ requires-dist = [
     { name = "truststore", specifier = ">=0.10" },
     { name = "typing-extensions", specifier = ">=4.7" },
     { name = "uvicorn", marker = "extra == 'remoto'", specifier = ">=0.54" },
-    { name = "uydatos", extras = ["hojas"], specifier = ">=0.20.1,<0.21" },
+    { name = "uydatos", extras = ["hojas"], specifier = ">=0.21.0,<0.22" },
 ]
 provides-extras = ["remoto", "test"]
 
@@ -1138,11 +1138,11 @@ wheels = [
 
 [[package]]
 name = "uydatos"
-version = "0.20.1"
+version = "0.21.0"
 source = { registry = "https://pypi.org/simple" }
-sdist = { url = "https://files.pythonhosted.org/packages/1a/60/a29bce9233d3f253456aeecded77da98494c603ba05dc2b6458d5d09e1ab/uydatos-0.20.1.tar.gz", hash = "sha256:16e8194ec2bea08d34708b1a8c157afac74e93754dbf3b2d58d7ec5723fba4ee", size = 196001, upload-time = "2026-11-28T03:41:54.116Z" }
+sdist = { url = "https://files.pythonhosted.org/packages/b3/fe/c5466c22046fa477d5976970cb6f6168e7634a7aea19cd91499a3c3fb3af/uydatos-0.21.0.tar.gz", hash = "sha256:02c0a52c872d839d8d6e58be1f62de96ce4b9785c3864898ab40e661a6491dcc", size = 198169, upload-time = "2026-11-28T04:10:58.478Z" }
 wheels = [
-    { url = "https://files.pythonhosted.org/packages/bb/28/2d3ce4ee9331f1ae00eda9fcbacf2bd57aa7914bcd4a82f766b80807dece/uydatos-0.20.1-py3-none-any.whl", hash = "sha256:a8aaf7823f3fd2be2df0d0530dc76960d75c7073079eff978c21d08d2be3cf2f", size = 154607, upload-time = "2026-11-28T03:41:52.886Z" },
+    { url = "https://files.pythonhosted.org/packages/44/12/9dff5b99294f8f0c9e6be898ab44b414a9df835aae33b4743dd06b2aa3aa/uydatos-0.21.0-py3-none-any.whl", hash = "sha256:e35eaf310e3ea6d73cddd3a960f748ce197e3f6c0ca68d94dd0495c1135a729b", size = 156218, upload-time = "2026-11-28T04:10:57.335Z" },
 ]
 
 [package.optional-dependencies]

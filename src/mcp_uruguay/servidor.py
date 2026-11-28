@@ -413,11 +413,11 @@ def resultados_electorales(
 def compras_estado(
     anio: int, organismo: str = "", buscar: str = "", cantidad: int = 10, modalidad: str = ""
 ) -> h.ComprasEstado:
-    """Cuánto adjudicó el Estado uruguayo en un año, en pesos, con los organismos que más
-    compraron y los mayores ítems. Filtros: `organismo` («Intendencia de Salto»), `buscar` en los ítems
-    («ambulancia») y `modalidad` («Compra Directa»); 2 de cada 3 adjudicaciones no traen modalidad
-    (sin_modalidad). Monedas a pesos con la cotización del día. Avisa si un ítem domina el total: hay
-    registros imposibles. La primera consulta de un año baja ~30 MB y tarda."""
+    """Cuánto adjudicó el Estado uruguayo en un año, en pesos, con los organismos que más compraron y
+    los mayores ítems. Filtros: `organismo` («Intendencia de Salto»), `buscar` en los ítems («ambulancia»;
+    trae precios unitarios por unidad) y `modalidad` («Compra Directa»); 2 de cada 3 adjudicaciones no
+    traen modalidad (sin_modalidad). Monedas a pesos con la cotización del día. Avisa si un ítem domina el
+    total: hay registros imposibles. La primera consulta de un año baja ~30 MB y tarda."""
     return h.compras_estado(anio, organismo, buscar, cantidad, modalidad=modalidad)
 
 

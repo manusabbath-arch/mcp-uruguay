@@ -1,5 +1,24 @@
 # Cambios
 
+## 0.18.0 — 2026-11-28
+
+- **`compras_estado` con `buscar` trae precios de referencia** (`precios_unitarios`, `precios_excluidos`),
+  el antecedente que pidieron los compradores en la consulta pública de ARCE (2023): hasta cinco grupos
+  por catálogo, unidad y moneda, con n, organismos, mínimo, cuartiles, máximo, fechas y hasta tres
+  atípicos con su `ocid`. Nunca mezcla una caja con una unidad; los precios 0, sin moneda o sin unidad
+  se excluyen contando el motivo. Si en un grupo más del 20 % de los precios está a más de diez veces
+  de la mediana, el `aviso` dice que la unidad declarada no es confiable. Medido sobre 2025: guantes de
+  látex descartables por UNIDAD, mediana $1,13 (72 precios, 12 organismos); por CAJA, 22 atípicos de
+  63, entre ellos una «caja» a $0,14. Sale de `uydatos.compras.precios_de_referencia` (0.21.0).
+- **Un organismo que no figura como comprador se rechaza con motivo** en vez de devolver 0, y sugiere
+  compradores parecidos. En 2025 las intendencias de Durazno, Lavalleja, Maldonado, Rocha y Soriano no
+  figuran en el archivo de la ARCE: «0 adjudicaciones» se leería como «no compró nada», y el dato
+  abierto no lo prueba.
+- Cada organismo trae `sin_modalidad`, contado sobre los mismos `ocid` que sus `adjudicaciones`.
+  Medido: Intendencia de Montevideo, 10.102 de 12.707.
+- Pin `uydatos>=0.21.0,<0.22`. El tope del presupuesto de definiciones sube de 21.050 a 21.084: la
+  descripción dice que `buscar` trae precios unitarios.
+
 ## 0.17.0 — 2026-11-28
 
 - **`compras_estado` dice la modalidad y filtra por ella** («Compra Directa», «Compra por Excepción»,

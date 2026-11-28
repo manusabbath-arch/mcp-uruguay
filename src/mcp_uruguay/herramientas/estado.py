@@ -164,6 +164,35 @@ class OrganismoComprador(TypedDict):
     nombre: str
     adjudicaciones: int
     pesos: float
+    sin_modalidad: int
+
+
+class PrecioAtipico(TypedDict):
+    ocid: str
+    comprador: str
+    precio_unitario: float
+    cantidad: float
+    veces_la_mediana: float
+
+
+class GrupoDePrecios(TypedDict):
+    """Precios unitarios de un producto en una misma unidad y moneda (`compras.precios_de_referencia`)."""
+
+    catalogo: str
+    descripcion: str
+    unidad: str
+    moneda: str
+    n: int
+    organismos: int
+    minimo: float
+    p25: float
+    mediana: float
+    p75: float
+    maximo: float
+    desde: str
+    hasta: str
+    n_atipicos: int
+    atipicos: list[PrecioAtipico]
 
 
 class ItemMayor(TypedDict):
@@ -195,6 +224,8 @@ class ComprasEstado(cache.Procedencia, TypedDict):
     sin_modalidad: int
     organismos: list[OrganismoComprador]
     mayores_items: list[ItemMayor]
+    precios_unitarios: list[GrupoDePrecios]
+    precios_excluidos: dict[str, int]
     aviso: str
     nota: str
     fuente: str
@@ -209,6 +240,28 @@ UMBRAL_AVISO_PCT = 20.0
 
 
 MINIMO_ITEMS_AVISO = 20  # con pocos ítems, que uno sea mucho del total es lo esperable
+
+
+GRUPOS_DE_PRECIOS = 5  # los de más precios; el resto suele ser el mismo producto con otro catálogo
+
+
+#: Con más de esta fracción de atípicos, la unidad declarada en ese grupo no es confiable.
+FRACCION_ATIPICOS_AVISO = 0.2
+
+
+_PALABRAS_COMUNES = {
+    "INTENDENCIA",
+    "MINISTERIO",
+    "DEPARTAMENTAL",
+    "NACIONAL",
+    "ADMINISTRACION",
+    "CENTRO",
+    "JEFATURA",
+    "POLICIA",
+    "DIRECCION",
+    "GENERAL",
+    "INSTITUTO",
+}
 
 
 _compras_memo: dict[tuple[int, float], list[dict]] = {}
@@ -261,6 +314,8 @@ def _compactar_adjudicaciones(adjudicaciones: Iterable[dict]) -> list[dict]:
                 "items": [
                     {
                         "descripcion": texto(i["descripcion"]),
+                        "catalogo": texto(i.get("catalogo", "")),
+                        "unidad": texto(i.get("unidad", "")),
                         "cantidad": i["cantidad"],
                         "precio_unitario": i["precio_unitario"],
                         "moneda": texto(i["moneda"]),
@@ -288,6 +343,29 @@ def _compras(anio: int) -> tuple[list[dict], str]:
     return _compras_memo[clave], cache.sello(ruta)
 
 
+def _exigir_comprador(adjs: list[dict], organismo: str, org: str, anio: int) -> None:
+    """Un organismo que no figura como comprador se rechaza en vez de devolver 0: en 2025 las intendencias
+    de Durazno, Lavalleja, Maldonado, Rocha y Soriano no figuran, y «0 adjudicaciones» se leería como «no
+    compró nada». Sugiere compradores con alguna palabra distintiva del nombre pedido."""
+    nombres: dict[str, int] = {}
+    for a in adjs:
+        c = a["comprador"]
+        if c is None:
+            continue
+        if org in (_sin_tildes(c["nombre"]), _sin_tildes(c["id"])):
+            return
+        nombres[c["nombre"]] = nombres.get(c["nombre"], 0) + 1
+    todas = set(org.replace(",", " ").split())
+    distintivas = {p for p in todas if len(p) > 3 and p not in _PALABRAS_COMUNES}
+    candidatos = [n for n in nombres if distintivas & set(_sin_tildes(n).split())]
+    parecidos = sorted(candidatos, key=lambda n: (-len(todas & set(_sin_tildes(n).split())), -nombres[n]))[:5]
+    raise ValueError(
+        f"«{organismo}» no figura como comprador en el archivo de la ARCE de {anio}. Eso no prueba que no haya "
+        "comprado: hay organismos que no publican sus adjudicaciones en este archivo."
+        + (f" Compradores parecidos: {', '.join(parecidos)}." if parecidos else "")
+    )
+
+
 def compras_estado(
     anio: int,
     organismo: str = "",
@@ -308,8 +386,10 @@ def compras_estado(
                 f"modalidad «{modalidad}»: no figura en las compras de {anio}. Las que trae el archivo: "
                 + ", ".join(conocidas)
             )
-    base = compras.resumen(adjs, organismo, buscar, modalidad)
     org, txt = _sin_tildes(organismo), _sin_tildes(buscar)
+    if org:
+        _exigir_comprador(adjs, organismo, org, anio)
+    base = compras.resumen(adjs, organismo, buscar, modalidad)
 
     elegidos = []  # (adjudicacion, item) activos que pasan los filtros
     for a in adjs:
@@ -348,8 +428,12 @@ def compras_estado(
         if c["sin_convertir"]:
             continue
         total += c["pesos"]
-        o = por_org.setdefault(comp["id"], {"nombre": comp["nombre"], "ocids": set(), "pesos": 0.0})
+        o = por_org.setdefault(
+            comp["id"], {"nombre": comp["nombre"], "ocids": set(), "sin_modalidad": set(), "pesos": 0.0}
+        )
         o["ocids"].add(a["ocid"])
+        if a.get("modalidad") is None:
+            o["sin_modalidad"].add(a["ocid"])
         o["pesos"] += c["pesos"]
         con_pesos.append((c["pesos"], a, comp, i))
     con_pesos.sort(key=lambda x: -x[0])
@@ -383,9 +467,28 @@ def compras_estado(
         )
         aviso = f"{piso} Además: {aviso}" if aviso else piso
     organismos: list[OrganismoComprador] = [
-        {"nombre": o["nombre"], "adjudicaciones": len(o["ocids"]), "pesos": round(o["pesos"], 2)}
+        {
+            "nombre": o["nombre"],
+            "adjudicaciones": len(o["ocids"]),
+            "pesos": round(o["pesos"], 2),
+            "sin_modalidad": len(o["sin_modalidad"]),  # sobre los mismos ocids que `adjudicaciones`
+        }
         for o in sorted(por_org.values(), key=lambda o: -o["pesos"])[: max(1, min(cantidad, 50))]
     ]
+    precios: dict = {"grupos": [], "excluidos": {}}
+    if txt:
+        precios = compras.precios_de_referencia(adjs, buscar, organismo, modalidad, atipicos=3)
+        dudosos = [
+            g for g in precios["grupos"][:GRUPOS_DE_PRECIOS] if g["n_atipicos"] > FRACCION_ATIPICOS_AVISO * g["n"]
+        ]
+        if dudosos:
+            g = dudosos[0]
+            nota_precios = (
+                f"En «{g['descripcion'][:50]}» por {g['unidad']}, {g['n_atipicos']} de {g['n']} precios están a "
+                "más de diez veces de la mediana: la unidad declarada no es confiable en ese grupo (hay precios "
+                "de una unidad cargados como caja, y al revés). Revisar los atípicos antes de usarlo."
+            )
+            aviso = f"{aviso} Además: {nota_precios}" if aviso else nota_precios
     return {
         "anio": anio,
         "organismo": organismo or None,
@@ -402,6 +505,8 @@ def compras_estado(
         "sin_modalidad": base["sin_modalidad"],
         "organismos": organismos,
         "mayores_items": mayores,
+        "precios_unitarios": precios["grupos"][:GRUPOS_DE_PRECIOS],
+        "precios_excluidos": precios["excluidos"],
         "aviso": aviso,
         "nota": (
             "Adjudicaciones activas del año (los llamados, las anulaciones y las adjudicaciones canceladas, "
@@ -410,7 +515,10 @@ def compras_estado(
             "ítems sin moneda declarada, que no se suman. `aviso` salta cuando, entre al menos 20 ítems, uno solo "
             "pasa del 20% del total. La modalidad (compra directa, licitación…) sale del llamado; unas dos de "
             "cada tres adjudicaciones no lo tienen en el archivo y van en sin_modalidad, nunca como compra "
-            "directa. No se devuelven nombres de proveedores: pueden ser personas físicas."
+            "directa. Con `buscar`, precios_unitarios agrupa por catálogo, unidad y moneda (nunca mezcla una caja con "
+            "una unidad), excluye con motivo los precios 0, sin moneda o sin unidad, y señala con su ocid los "
+            "precios a más de diez veces de la mediana, sin borrarlos. No se devuelven nombres de proveedores: "
+            "pueden ser personas físicas."
         ),
         "fuente": FUENTE_COMPRAS,
         "bajado": bajado,
