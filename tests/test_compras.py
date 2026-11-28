@@ -95,3 +95,51 @@ class TestComprasEstado:
     def test_anio_fuera_de_rango(self, compras_2025):
         with pytest.raises(ValueError, match="2002"):
             h.compras_estado(1995)
+
+
+def _llamado(ocid, modalidad):
+    return {
+        "tag": ["tender"],
+        "ocid": f"ocds-yfs5dr-{ocid}",
+        "date": "2025-02-01T10:00:00Z",
+        "tender": {"id": str(ocid), "procurementMethodDetails": modalidad},
+    }
+
+
+@pytest.fixture
+def compras_con_modalidad(cache_temporal, monkeypatch):
+    """Tres compras de la IM: una directa, una licitación y una sin llamado (modalidad desconocida)."""
+    monkeypatch.setattr(bcu, "descargar", BcuFalso(valor=lambda d: 40.0))
+    carpeta = cache_temporal / "compras"
+    carpeta.mkdir(parents=True)
+    adjs = [
+        _adj(1, IM, [_item("PUBLICIDAD", 1, 1000)]),
+        _adj(2, IM, [_item("ASFALTO", 1, 50000)]),
+        _adj(3, IM, [_item("PUBLICIDAD", 1, 7000)]),
+    ]
+    llamados = [_llamado(1, "Compra Directa"), _llamado(2, "Licitación Abreviada")]
+    with zipfile.ZipFile(carpeta / "2025.zip", "w") as z:
+        z.writestr("2025/a-03-2025.json", json.dumps({"releases": adjs}))
+        z.writestr("2025/l-02-2025.json", json.dumps({"releases": llamados}))
+    return carpeta
+
+
+class TestModalidad:
+    def test_cuenta_por_modalidad_y_las_desconocidas_aparte(self, compras_con_modalidad):
+        r = h.compras_estado(2025)
+        assert r["por_modalidad"] == {"Compra Directa": 1, "Licitación Abreviada": 1}
+        assert r["sin_modalidad"] == 1 and r["modalidad"] is None
+
+    def test_filtra_por_modalidad_y_avisa_que_es_un_piso(self, compras_con_modalidad):
+        """La compra 3 no trae llamado: puede haber sido directa. El total filtrado no es «todas»."""
+        r = h.compras_estado(2025, modalidad="compra directa")
+        assert r["adjudicaciones"] == 1 and r["total_pesos"] == 1000.0
+        assert r["sin_modalidad"] == 1
+        assert "piso" in r["aviso"] and "1 de 3" in r["aviso"]
+
+    def test_una_modalidad_que_no_existe_se_rechaza_con_las_que_hay(self, compras_con_modalidad):
+        with pytest.raises(ValueError, match="Licitación Abreviada"):
+            h.compras_estado(2025, modalidad="a dedo")
+
+    def test_sin_filtro_no_hay_aviso_de_modalidad(self, compras_con_modalidad):
+        assert "piso" not in h.compras_estado(2025)["aviso"]

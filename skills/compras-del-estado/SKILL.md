@@ -16,4 +16,4 @@ description: "Lo que el Estado adjudicó de un producto en un año. Cuánto adju
 
 ## Trampas de las herramientas que nombra
 
-- `compras_estado`: el importe es cantidad por precio unitario; llamados y anulaciones no son compras; un solo ítem puede dominar el total
+- `compras_estado`: el importe es cantidad por precio unitario; un solo ítem puede dominar el total; dos de cada tres adjudicaciones no traen modalidad: «X% fue compra directa» es un piso

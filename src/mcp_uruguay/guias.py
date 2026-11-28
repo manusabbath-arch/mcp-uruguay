@@ -64,8 +64,8 @@ TRAMPAS: dict[str, str] = {
         "solo las comunes deja votos afuera"
     ),
     "compras_estado": (
-        "el importe es cantidad por precio unitario; llamados y anulaciones no son compras; un solo "
-        "ítem puede dominar el total"
+        "el importe es cantidad por precio unitario; un solo ítem puede dominar el total; dos de cada "
+        "tres adjudicaciones no traen modalidad: «X% fue compra directa» es un piso"
     ),
     "asistencia_parlamentaria": (
         "hay más personas que bancas (suplentes) y no hay identificador de persona: los homónimos se confunden"

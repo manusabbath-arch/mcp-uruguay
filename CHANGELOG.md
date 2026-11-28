@@ -1,7 +1,19 @@
 # Cambios
 
-## Sin publicar
+## 0.17.0 — 2026-11-28
 
+- **`compras_estado` dice la modalidad y filtra por ella** («Compra Directa», «Compra por Excepción»,
+  «Licitación Abreviada»…): `por_modalidad`, `sin_modalidad` y el argumento `modalidad`. La modalidad
+  sale del llamado. Medido sobre 2025: **92.246 de 140.128 adjudicaciones activas (65,8 %) no tienen
+  llamado en el archivo** de la ARCE; entre las de «publicidad», 365 de 399 (91,5 %). Esas van en
+  `sin_modalidad`, nunca como compra directa, y al filtrar por modalidad el `aviso` dice que la cifra
+  es un piso y cuántas quedaron sin saber. Una modalidad que el año no trae se rechaza con la lista de
+  las que hay. Motivo: la discusión pública (en X, en la prensa, en las Juntas Departamentales) gira
+  sobre «compra directa a dedo», y un porcentaje calculado con el dato abierto omite dos tercios.
+  Investigación en `docs/2026-11-27-clientes-problemas-y-lo-que-ya-existe.md`.
+- Pin `uydatos>=0.20.1,<0.21`. Leer 2025 tarda ~17 s en vez de 12,7 s, por los archivos de llamados.
+- La descripción de `compras_estado` se reescribió para entrar en el presupuesto de definiciones (21.050
+  caracteres) sin subir el tope.
 - **Bordes de fecha en `semana` y `feriados`.** La semana del 2001-12-31 omitía el feriado del 1 de
   enero de 2002; ahora lo trae y la nota avisa desde qué año se calculan. Las fechas del final del año
   9999 se rechazan con motivo en vez de un error genérico.

@@ -183,6 +183,7 @@ class ComprasEstado(cache.Procedencia, TypedDict):
     anio: int
     organismo: Optional[str]
     buscar: Optional[str]
+    modalidad: Optional[str]
     adjudicaciones: int
     items: int
     total_pesos: float
@@ -190,6 +191,8 @@ class ComprasEstado(cache.Procedencia, TypedDict):
     sin_moneda: float
     sin_convertir: dict[str, float]
     excluidas_por_estado: dict[str, int]
+    por_modalidad: dict[str, int]
+    sin_modalidad: int
     organismos: list[OrganismoComprador]
     mayores_items: list[ItemMayor]
     aviso: str
@@ -254,6 +257,7 @@ def _compactar_adjudicaciones(adjudicaciones: Iterable[dict]) -> list[dict]:
                 "comprador": comp,
                 "proveedor": None if a["proveedor"] is None else _PROVEEDOR_OMITIDO,
                 "estado": texto(a["estado"]),
+                "modalidad": texto(a.get("modalidad")),
                 "items": [
                     {
                         "descripcion": texto(i["descripcion"]),
@@ -285,13 +289,26 @@ def _compras(anio: int) -> tuple[list[dict], str]:
 
 
 def compras_estado(
-    anio: int, organismo: str = "", buscar: str = "", cantidad: int = 10, hoy: Optional[date] = None
+    anio: int,
+    organismo: str = "",
+    buscar: str = "",
+    cantidad: int = 10,
+    hoy: Optional[date] = None,
+    modalidad: str = "",
 ) -> ComprasEstado:
     hoy_ = hoy or cache.hoy()
     if not PRIMER_ANIO_COMPRAS <= anio <= hoy_.year:
         raise ValueError(f"año {anio}: la ARCE publica de {PRIMER_ANIO_COMPRAS} a {hoy_.year}")
     adjs, bajado = _compras(anio)
-    base = compras.resumen(adjs, organismo, buscar)
+    mod = _sin_tildes(modalidad)
+    if mod:
+        conocidas = sorted({a["modalidad"] for a in adjs if a.get("modalidad")})
+        if mod not in {_sin_tildes(m) for m in conocidas}:
+            raise ValueError(
+                f"modalidad «{modalidad}»: no figura en las compras de {anio}. Las que trae el archivo: "
+                + ", ".join(conocidas)
+            )
+    base = compras.resumen(adjs, organismo, buscar, modalidad)
     org, txt = _sin_tildes(organismo), _sin_tildes(buscar)
 
     elegidos = []  # (adjudicacion, item) activos que pasan los filtros
@@ -300,6 +317,8 @@ def compras_estado(
             continue
         comp = a["comprador"] or {"id": "", "nombre": "(sin comprador en el archivo)"}
         if org and org not in (_sin_tildes(comp["nombre"]), _sin_tildes(comp["id"])):
+            continue
+        if mod and _sin_tildes(a.get("modalidad") or "") != mod:
             continue
         for i in a["items"]:
             if i["moneda"] and (not txt or txt in _sin_tildes(i["descripcion"])):
@@ -355,6 +374,14 @@ def compras_estado(
             "En estos archivos hay registros con cantidad × precio imposibles; revisar los mayores ítems antes "
             "de citar el total."
         )
+    if mod and base["sin_modalidad"]:
+        todas = compras.resumen(adjs, organismo, buscar)["adjudicaciones"]  # sin filtrar por modalidad
+        piso = (
+            f"La cifra de «{modalidad}» es un piso: {base['sin_modalidad']} de {todas} adjudicaciones "
+            f"({round(100 * base['sin_modalidad'] / todas, 1)}%) no traen modalidad en el archivo de la "
+            "ARCE (no tienen llamado publicado) y pudieron ser de esta modalidad o de otra."
+        )
+        aviso = f"{piso} Además: {aviso}" if aviso else piso
     organismos: list[OrganismoComprador] = [
         {"nombre": o["nombre"], "adjudicaciones": len(o["ocids"]), "pesos": round(o["pesos"], 2)}
         for o in sorted(por_org.values(), key=lambda o: -o["pesos"])[: max(1, min(cantidad, 50))]
@@ -363,6 +390,7 @@ def compras_estado(
         "anio": anio,
         "organismo": organismo or None,
         "buscar": buscar or None,
+        "modalidad": modalidad or None,
         "adjudicaciones": base["adjudicaciones"],
         "items": base["items"],
         "total_pesos": round(total, 2),
@@ -370,6 +398,8 @@ def compras_estado(
         "sin_moneda": base["sin_moneda"],
         "sin_convertir": sin_convertir,
         "excluidas_por_estado": base["excluidas_por_estado"],
+        "por_modalidad": base["por_modalidad"],
+        "sin_modalidad": base["sin_modalidad"],
         "organismos": organismos,
         "mayores_items": mayores,
         "aviso": aviso,
@@ -378,7 +408,9 @@ def compras_estado(
             "fallidas o pendientes no son gasto). Importe = cantidad × precio unitario; cada moneda se lleva a "
             "pesos con la cotización del BCU del día de la adjudicación (dólar y real billete). sin_moneda son "
             "ítems sin moneda declarada, que no se suman. `aviso` salta cuando, entre al menos 20 ítems, uno solo "
-            "pasa del 20% del total. No se devuelven nombres de proveedores: pueden ser personas físicas."
+            "pasa del 20% del total. La modalidad (compra directa, licitación…) sale del llamado; unas dos de "
+            "cada tres adjudicaciones no lo tienen en el archivo y van en sin_modalidad, nunca como compra "
+            "directa. No se devuelven nombres de proveedores: pueden ser personas físicas."
         ),
         "fuente": FUENTE_COMPRAS,
         "bajado": bajado,
