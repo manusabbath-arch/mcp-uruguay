@@ -266,3 +266,55 @@ navegador.
 - el informe completo de la consulta del SIPC de 2026 (está enlazado desde precios.uy);
 - el informe anual 2025 de la UAIP;
 - tres entrevistas por segmento priorizado.
+
+## 6. Actualización 2026-11-28: X, cobertura de las intendencias y lo que se implementó
+
+**X (con la herramienta `x_search`, que corre sobre Grok).** Pedirle un resumen devuelve prosa genérica
+sin citas; pedirle «transcribí N posts literales con autor, fecha y enlace» devuelve posts reales.
+- **Compras:** 8 posts reales de agosto a noviembre de 2026. La discusión gira sobre «compra directa
+  a dedo» de intendencias y ministerios (publicidad en Canelones y Montevideo, una guardería de
+  Cancillería, residuos en Colonia). Las denuncias se arman buscando a mano en
+  comprasestatales.gub.uy. Ediles de Maldonado pidieron precisiones porque la Intendencia publica en
+  ARCE «solamente una parte» de sus resoluciones.
+- **Tipo de cambio fiscal:** sin quejas reales en X. La confusión documentada en la sección 1.A está
+  en guías y foros de soporte, no en redes.
+
+**Medido sobre el archivo abierto de la ARCE:**
+- **Modalidad:** 92.246 de 140.128 adjudicaciones activas de 2025 (65,8 %) no tienen llamado
+  publicado, así que su modalidad no se sabe; en 2024, el 68,7 %. Entre las de «publicidad», 365 de
+  399 (91,5 %). Un «X % fue compra directa» calculado con este archivo omite dos tercios.
+- **Cobertura de las intendencias en 2025:** Durazno, Lavalleja, Maldonado, Rocha y Soriano no
+  figuran como compradoras. Las que figuran:
+
+  | Intendencia | Adjudicaciones | Sin modalidad |
+  |---|---|---|
+  | Montevideo | 16.752 | 73 % |
+  | Canelones | 1.209 | 39 % |
+  | Paysandú | 824 | 52 % |
+  | Colonia | 536 | 77 % |
+  | Florida | 343 | 92 % |
+  | Salto | 42 | 64 % |
+  | Cerro Largo | 3 | 0 % |
+
+  Que no figuren no prueba que no compren: los gobiernos departamentales publican en otros lugares
+  o parcialmente.
+- **Unidades:** «guantes de látex descartable no estéril» (catálogo 37021) tiene mediana de $1,13
+  por UNIDAD (72 precios) y de $113 por CAJA (63 precios, de los cuales 22 están a más de diez veces
+  de la mediana, como una «caja» a $0,14).
+
+**Implementado y publicado:**
+
+| Versión | Qué agrega |
+|---|---|
+| uydatos 0.20.0 / 0.20.1 | Modalidad de cada adjudicación |
+| uydatos 0.21.0 | `precios_de_referencia` y `sin_modalidad` por comprador |
+| mcp-uruguay 0.17.0 | `compras_estado` con `modalidad`, `sin_modalidad` y el aviso de que la cifra es un piso |
+| mcp-uruguay 0.18.0 | Precios unitarios por unidad con `buscar`; el organismo que no figura se rechaza con motivo |
+| mcp-uruguay 0.18.1 | `cotizacion` cita la guía de la DGI, cómo pedirla y qué serie es |
+
+**Para la estrategia:**
+- El segmento de compras (B) queda con un producto concreto que nadie ofrece: precio de referencia
+  por unidad, con exclusiones y atípicos declarados, más la cobertura de cada organismo.
+- Los interesados visibles son quienes hoy buscan compras directas a mano: periodistas, ediles y
+  militantes de los dos lados. Los compradores públicos piden lo mismo por escrito.
+- **Pendiente:** validar la ficha con un comprador real antes de construir más.

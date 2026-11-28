@@ -1,5 +1,16 @@
 # Cambios
 
+## 0.18.1 — 2026-11-28
+
+- **`cotizacion` cita la regla fiscal en vez de solo desentenderse.** En dólares, pesos argentinos y
+  reales, la nota dice lo que indica la guía de la DGI «Operaciones en moneda extranjera»
+  (interbancario del día anterior a la operación, o del último día hábil anterior), cómo pedirlo con
+  la herramienta (la fecha del día anterior con `hacia_atras=true`), qué serie del BCU es («DLS. USA
+  BILLETE» en dólares) y que circulan otras versiones (compra del BROU; e-Factura no especifica el
+  campo), así que hay que confirmarlo con el contador. No decide por él. En UI sigue la nota anterior.
+- `docs/2026-11-27-clientes-problemas-y-lo-que-ya-existe.md` suma lo que se encontró en X, la
+  cobertura de las intendencias en el archivo de la ARCE y lo implementado.
+
 ## 0.18.0 — 2026-11-28
 
 - **`compras_estado` con `buscar` trae precios de referencia** (`precios_unitarios`, `precios_excluidos`),

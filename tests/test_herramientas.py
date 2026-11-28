@@ -55,6 +55,21 @@ class TestCotizacion:
             h.cotizacion("USD", "08/10/2026")
 
 
+class TestCotizacionYUsoFiscal:
+    """Circulan tres versiones de la regla fiscal (DGI: interbancario del día anterior; guías privadas:
+    compra del BROU; e-Factura: el campo no está especificado). La nota cita la guía de la DGI, dice
+    cómo pedirla y qué serie es, sin decidir por el contador."""
+
+    def test_en_moneda_extranjera_cita_la_guia_de_la_dgi_y_como_pedirla(self, bcu_falso):
+        nota = h.cotizacion("USD", "2026-10-08", hoy=HOY)["nota"]
+        assert "DGI" in nota and "día anterior" in nota and "hacia_atras" in nota
+        assert "DLS. USA BILLETE" in nota
+        assert "BROU" in nota  # que existen otras versiones, para que el contador confirme
+
+    def test_la_ui_no_es_moneda_extranjera_y_no_lleva_la_regla(self, bcu_falso):
+        assert "DGI" not in h.cotizacion("UI", "2026-10-08", hoy=HOY)["nota"]
+
+
 class TestMensual:
     def test_el_mes_en_curso_va_marcado_incompleto(self, bcu_falso):
         r = h.cotizacion_mensual("USD", "2026-09", "2026-10", hoy=HOY)

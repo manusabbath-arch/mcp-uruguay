@@ -136,6 +136,17 @@ def _tipo_de_dia(dia: date) -> str:
     return "no es fin de semana ni feriado nacional"
 
 
+#: Lo que se sabe de la regla fiscal, medido el 2026-11-27 (docs/2026-11-27-clientes-problemas-y-lo-que-ya-existe.md).
+#: Circulan versiones distintas; la herramienta cita la de la DGI y no decide por el contador.
+_USO_FISCAL = (
+    " Uso fiscal: la guía de la DGI «Operaciones en moneda extranjera» (26/09/2023) indica el tipo de cambio "
+    "interbancario del día anterior a la operación, o el del último día hábil anterior; con esta herramienta "
+    "es pedir la fecha del día anterior con hacia_atras=true. Esta serie es la «{serie}» del BCU. Hay guías "
+    "privadas que indican la compra del BROU y e-Factura no especifica el campo: confirmar con el contador."
+)
+_UI_FISCAL = " Qué cotización corresponde para un fin fiscal no lo decide esta herramienta."
+
+
 def cotizacion(moneda: Moneda, fecha: str, hacia_atras: bool = False, hoy: Optional[date] = None) -> Cotizacion:
     dia = _fecha(fecha, "fecha")
     codigo = _codigo(moneda)
@@ -160,7 +171,7 @@ def cotizacion(moneda: Moneda, fecha: str, hacia_atras: bool = False, hoy: Optio
         "fecha_pedida": dia.isoformat(),
         "fecha_cotizacion": usada.isoformat() if usada else None,
         "valor_en_pesos": valor,
-        "nota": nota + " Qué cotización corresponde para un fin fiscal no lo decide esta herramienta.",
+        "nota": nota + (_USO_FISCAL.format(serie=bcu.MONEDAS[codigo]) if moneda != "UI" else _UI_FISCAL),
         "fuente": FUENTE_BCU,
         "bajado": bajado,
     }
